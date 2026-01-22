@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - JobPilot</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0f172a',
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .form-label {
+            color: #4a5568;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            font-size: 0.95rem;
+            color: #1e293b;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .register-button {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 600;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .register-button:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden font-sans bg-white">
+
+    <div class="w-full lg:w-1/2 flex flex-col justify-center p-8 lg:p-20 h-full bg-white relative z-20 overflow-y-auto">
+
+        <div class="lg:hidden mb-8">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                    <i class="fa-solid fa-briefcase text-xs"></i>
+                </div>
+                <span class="text-xl font-bold text-slate-900">JobPilot</span>
+            </div>
+        </div>
+
+        <div class="w-full max-w-sm mx-auto">
+            <div class="mb-10">
+                <h1 class="text-3xl font-bold text-slate-900 mb-2">Créer un compte</h1>
+                <p class="text-slate-500">Rejoignez JobPilot et trouvez l'emploi de vos rêves dès aujourd'hui.</p>
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <button type="button" class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google">
+                    <span class="hidden sm:inline">Google</span>
+                </button>
+
+                <button type="button" class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-linkedin text-blue-600 text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">LinkedIn</span>
+                </button>
+
+                <button type="button" class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md">
+                    <i class="fa-brands fa-github text-slate-800 text-lg group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline">GitHub</span>
+                </button>
+            </div>
+
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-medium">Ou avec email</span></div>
+            </div>
+
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="p-4 rounded-lg bg-red-50 border border-red-100 flex items-start gap-3 text-sm text-red-600">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                        <div>{{ form.non_field_errors }}</div>
+                    </div>
+                {% endif %}
+
+                <!-- Prénom et Nom -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Prénom</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-xs text-red-500 mt-1">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="form-label">Nom</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-xs text-red-500 mt-1">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="form-label">Adresse email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Champs de mot de passe -->
+                {% for field in form %}
+                    {% if field.name not in 'first_name last_name email' %}
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="form-label mb-0">{{ field.label }}</label>
+                            {% if field.name == 'password1' %}
+                            <div class="relative group">
+                                <i class="fa-solid fa-circle-info text-blue-500 text-sm cursor-help hover:text-blue-600 transition-colors"></i>
+                                <!-- Tooltip avec les règles -->
+                                <div class="absolute left-0 bottom-full mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                                    <div class="space-y-1.5">
+                                        <div class="font-semibold mb-2 text-white">Règles de validation :</div>
+                                        <div class="text-slate-200 space-y-1">
+                                            <div>• Votre mot de passe ne peut pas être trop similaire à vos autres informations personnelles.</div>
+                                            <div>• Votre mot de passe doit contenir au moins 8 caractères.</div>
+                                            <div>• Votre mot de passe ne peut pas être un mot de passe couramment utilisé.</div>
+                                            <div>• Votre mot de passe ne peut pas être entièrement numérique.</div>
+                                        </div>
+                                    </div>
+                                    <!-- Flèche du tooltip -->
+                                    <div class="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="relative">
+                            {{ field }}
+                            {% if field.name == 'password1' %}
+                                <button type="button" onclick="togglePassword('password1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                                    <i class="fa-regular fa-eye" id="eyeIcon1"></i>
+                                </button>
+                            {% elif field.name == 'password2' %}
+                                <button type="button" onclick="togglePassword('password2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                                    <i class="fa-regular fa-eye" id="eyeIcon2"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% if field.errors %}
+                            <p class="text-xs text-red-500 mt-1">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+
+                <button type="submit" class="register-button">
+                    Créer mon compte
+                </button>
+            </form>
+
+            <div class="mt-8 text-center text-sm text-slate-500">
+                Vous avez déjà un compte ?
+                <a href="{% url 'login' %}" class="font-semibold text-blue-600 hover:text-blue-700">Se connecter</a>
+            </div>
+        </div>
+
+        <div class="absolute bottom-8 left-8 lg:left-20">
+            <a href="{% url 'home' %}" class="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Retour accueil
+            </a>
+        </div>
+    </div>
+
+    <div class="hidden lg:flex w-1/2 relative flex-col justify-between bg-blue-600 p-16 text-white overflow-hidden">
+        <div></div>
+
+        <div class="relative z-10 text-center">
+            <div class="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <div class="w-20 h-20 bg-white/30 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-briefcase text-white text-3xl"></i>
+                </div>
+            </div>
+
+            <h2 class="text-4xl font-bold mb-4 tracking-tight text-white">Rejoignez JobPilot</h2>
+            <p class="text-blue-100 text-lg font-light max-w-md mx-auto leading-relaxed">
+                Commencez votre parcours vers l'emploi idéal avec notre assistant intelligent
+            </p>
+        </div>
+
+        <div class="relative z-10 grid grid-cols-3 gap-6 pt-12 border-t border-white/20">
+            <div class="text-center group cursor-default">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors duration-300">
+                    <i class="fa-solid fa-wand-magic-sparkles text-white"></i>
+                </div>
+                <h3 class="font-semibold text-sm mb-1 text-white">IA Avancée</h3>
+                <p class="text-xs text-blue-100/70">Lettres générées</p>
+            </div>
+
+            <div class="text-center group cursor-default">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors duration-300">
+                    <i class="fa-solid fa-bolt text-white"></i>
+                </div>
+                <h3 class="font-semibold text-sm mb-1 text-white">Temps Réel</h3>
+                <p class="text-xs text-blue-100/70">Offres France Travail</p>
+            </div>
+
+            <div class="text-center group cursor-default">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors duration-300">
+                    <i class="fa-solid fa-bullseye text-white"></i>
+                </div>
+                <h3 class="font-semibold text-sm mb-1 text-white">Matching</h3>
+                <p class="text-xs text-blue-100/70">Score de pertinence</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldName) {
+            const input = document.querySelector(`input[name="${fieldName}"]`);
+            const iconId = fieldName === 'password1' ? 'eyeIcon1' : 'eyeIcon2';
+            const icon = document.getElementById(iconId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

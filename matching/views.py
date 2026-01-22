@@ -1,0 +1,278 @@
+from django.shortcuts import render, get_object_or_404, redirect  # <--- Ajoute redirect ici
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from resumes.models import Resume
+from .models import JobMatch
+from .services.francetravail import FranceTravail  # Vérifie que ton import est bon selon ton dossier
+from .services.ai_letter_generator import AILetterGenerator
+from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
+
+
+def find_jobs_for_resume(request, resume_id):
+    page_number = request.GET.get('page', 1)
+    resume = get_object_or_404(Resume, id=resume_id)
+    skills = resume.parsed_data.get('skills', [])
+    user = resume.user
+
+    # 1. Partie "Mise à jour via API" (Seulement si compétences trouvées)
+    jobs_found = 0
+    if skills:
+        service = FranceTravail()
+        try:
+            search_query = skills[:3]
+            print(f"🔍 Recherche d'offres avec les compétences: {search_query}")
+            api_results = service.search_jobs(search_query, page=int(page_number))
+            print(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
+            
+            if api_results:
+                saved_matches = service.save_jobs(api_results, user, resume)
+                jobs_found = len(saved_matches)
+                print(f"✅ {jobs_found} offres sauvegardées en base de données")
+            else:
+                print("⚠️ Aucune offre trouvée via l'API")
+        except Exception as e:
+            print(f"❌ Erreur API : {e}")
+            import traceback
+            traceback.print_exc()
+
+    # 2. Partie "Récupération des données" (DOIT ÊTRE AU NIVEAU PRINCIPAL)
+    matches = JobMatch.objects.filter(
+        user=user  # Utilise l'utilisateur du CV (resume.user) au lieu de request.user
+    ).exclude(
+        status='rejected'
+    ).select_related('job_offer').order_by('-score', '-matched_at')
+    paginator = Paginator(matches, 9)
+
+    # Obtenir les objets de la page demandée
+    page_obj = paginator.get_page(page_number)
+
+    
+    print(f"📋 Nombre de matches récupérés de la BDD: {matches.count()}")
+
+    return render(request, 'matching/results.html', {
+        'resume': resume,
+        'matches': matches,
+        'jobs_found': jobs_found,
+        'skills_used': skills[:3] if skills else [],
+        'page_obj': page_obj
+    })
+
+
+@require_POST
+def update_match_status(request, match_id):
+    # Récupérer le match sans filtrer par user (pour permettre les utilisateurs anonymes en développement)
+    # TODO: Réactiver la vérification user=request.user quand l'authentification sera en place
+    match = get_object_or_404(JobMatch, id=match_id)
+    new_status = request.POST.get('status')
+
+    valid_statuses = ['new', 'applied', 'interviewed', 'rejected']
+    if new_status in valid_statuses:
+        match.status = new_status
+        match.save()
+
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def generate_cover_letter(request, match_id):
+    """
+    Vue pour générer une lettre de motivation automatiquement via IA.
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = CoverLetterGenerationForm(request.POST)
+        if form.is_valid():
+            # TODO: Implémenter la génération
+            pass
+    else:
+        form = CoverLetterGenerationForm()
+    
+    return render(request, 'matching/generate_letter.html', {
+        'match': match,
+        'form': form,
+    })
+
+
+@login_required
+@require_POST
+def save_generated_letter(request, match_id):
+    """
+    Vue pour sauvegarder une lettre de motivation générée.
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    # TODO: Implémenter la sauvegarde
+    pass
+
+
+@login_required
+def edit_cover_letter(request, match_id):
+    """
+    Vue pour éditer une lettre de motivation existante.
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = CoverLetterEditForm(request.POST)
+        if form.is_valid():
+            # TODO: Implémenter la sauvegarde
+            pass
+    else:
+        form = CoverLetterEditForm(initial={
+            'cover_letter_content': match.cover_letter_content
+        })
+    
+    return render(request, 'matching/edit_letter.html', {
+        'match': match,
+        'form': form,
+    })
+
+
+@login_required
+@require_POST
+def quick_refine_cover_letter(request, match_id):
+    """
+    Vue pour améliorer rapidement une lettre avec des actions prédéfinies (improve, formalize, etc.).
+    Appelée via AJAX depuis le workspace.
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    # Récupérer le texte actuel depuis le POST (au cas où il a été modifié)
+    current_text = request.POST.get('cover_letter_content', match.cover_letter_content)
+    
+    if not current_text:
+        return JsonResponse({
+            'success': False,
+            'error': "Vous devez d'abord rédiger une lettre de motivation."
+        }, status=400)
+    
+    # Récupérer l'action demandée
+    action = request.POST.get('action', 'improve')
+    
+    # Mapping des actions vers les types d'amélioration
+    action_mapping = {
+        'improve': {
+            'type': 'custom',
+            'instructions': 'Améliore cette lettre de motivation : corrige les fautes, améliore la fluidité, optimise la structure et le style, tout en gardant le contenu factuel intact.'
+        },
+        'formalize': {
+            'type': 'tone',
+            'instructions': 'Rends cette lettre plus formelle et professionnelle, utilise un langage plus soutenu.'
+        },
+        'grammar': {
+            'type': 'grammar',
+            'instructions': 'Corrige toutes les fautes d\'orthographe, de grammaire et de syntaxe.'
+        },
+        'length': {
+            'type': 'length',
+            'instructions': 'Optimise la longueur de cette lettre pour qu\'elle soit concise mais complète.'
+        }
+    }
+    
+    action_config = action_mapping.get(action, action_mapping['improve'])
+    
+    try:
+        generator = AILetterGenerator()
+        
+        # Construire les instructions finales
+        final_instructions = generator._build_refinement_instructions(
+            action_config['instructions'],
+            action_config['type']
+        )
+        
+        # Appeler le service de raffinement
+        refined_letter = generator.refine_cover_letter(
+            current_text,
+            final_instructions
+        )
+        
+        # Sauvegarder la lettre améliorée
+        match.cover_letter_content = refined_letter
+        match.save()
+        
+        return JsonResponse({
+            'success': True,
+            'refined_letter': refined_letter,
+            'message': '✨ Votre lettre a été améliorée avec succès !'
+        })
+        
+    except ValueError as e:
+        return JsonResponse({
+            'success': False,
+            'error': f"Erreur de validation : {str(e)}"
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f"Erreur lors de l'amélioration : {str(e)}"
+        }, status=500)
+
+
+@login_required
+def refine_cover_letter(request, match_id):
+    """
+    Vue pour améliorer une lettre de motivation existante via IA.
+    Peut être appelée en GET (affiche le formulaire) ou POST (traite l'amélioration).
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    # Vérifier que la lettre existe
+    if not match.cover_letter_content:
+        messages.warning(
+            request, 
+            "Vous devez d'abord rédiger une lettre de motivation avant de pouvoir l'améliorer."
+        )
+        return redirect('application_workspace', match_id=match_id)
+    
+    if request.method == 'POST':
+        form = CoverLetterRefineForm(request.POST)
+        if form.is_valid():
+            instructions = form.cleaned_data['instructions']
+            improvement_type = form.cleaned_data.get('improvement_type', 'custom')
+            
+            try:
+                generator = AILetterGenerator()
+                
+                # Construire les instructions finales selon le type d'amélioration
+                final_instructions = generator._build_refinement_instructions(
+                    instructions,
+                    improvement_type
+                )
+                
+                # Appeler le service de raffinement
+                refined_letter = generator.refine_cover_letter(
+                    match.cover_letter_content,
+                    final_instructions
+                )
+                
+                # Sauvegarder la lettre améliorée
+                match.cover_letter_content = refined_letter
+                match.save()
+                
+                messages.success(
+                    request, 
+                    '✨ Votre lettre de motivation a été améliorée avec succès !'
+                )
+                
+                # Rediriger vers le workspace pour voir le résultat
+                return redirect('application_workspace', match_id=match_id)
+                
+            except ValueError as e:
+                messages.error(request, f"Erreur de validation : {str(e)}")
+            except Exception as e:
+                messages.error(
+                    request, 
+                    f"Erreur lors de l'amélioration de la lettre : {str(e)}"
+                )
+    else:
+        form = CoverLetterRefineForm()
+    
+    return render(request, 'matching/refine_letter.html', {
+        'match': match,
+        'form': form,
+        'current_letter': match.cover_letter_content,
+    })

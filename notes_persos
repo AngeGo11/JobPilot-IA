@@ -1,0 +1,11 @@
+toujours faire un python manage.py makemigrations
+avant python manage.py migrate
+à chaque fois que je crée un dossier je ne dois pas oublier de l'enregistrer dans jobpilot/settings/INSTALLED_APPS=[]
+
+Pour démarrer le server
+python manage.py runserver
+Username: axel
+Email address: axelangegomez2004@gmail.com
+Password: axel123
+
+ID connexion France travail: 10513324706

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - JobPilot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Mes Candidatures</h1>
+            <p class="text-slate-500 mt-1">Gérez vos candidatures et lettres de motivation</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Total</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.total }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-briefcase text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Nouveaux</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.new }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-star text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Vus</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.seen }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-eye text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Postulés</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">{{ stats.applied }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-check-circle text-green-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    {% if page_obj %}
+    <!-- Results Info -->
+    <div class="flex items-center justify-between text-sm text-slate-600 mb-4">
+        <p>
+            Affichage de <span class="font-semibold text-slate-900">{{ page_obj.start_index }}</span> à 
+            <span class="font-semibold text-slate-900">{{ page_obj.end_index }}</span> sur 
+            <span class="font-semibold text-slate-900">{{ page_obj.paginator.count }}</span> candidature(s)
+        </p>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <p class="text-slate-500">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Poste</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Entreprise</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                    {% if page_obj %}
+                        {% for match in page_obj %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-slate-900">{{ match.job_offer.title }}</div>
+                            {% if match.job_offer.location %}
+                            <div class="text-sm text-slate-500">
+                                <i class="fa-solid fa-location-dot mr-1"></i>{{ match.job_offer.location }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-slate-900">{{ match.job_offer.company_name|default:"Non spécifié" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-24 bg-slate-200 rounded-full h-2 mr-2">
+                                    <div class="bg-blue-600 from-blue-500 to-teal-400 h-2 rounded-full"
+                                         style="width: {{ match.score }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">{{ match.score }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if match.status == 'new' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Nouveau
+                            </span>
+                            {% elif match.status == 'seen' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                Vu
+                            </span>
+                            {% elif match.status == 'applied' %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                Postulé
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                            {{ match.matched_at|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{% url 'application_workspace' match.id %}"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fa-solid fa-pen-to-square mr-2"></i>Ouvrir Workspace
+                            </a>
+                        </td>
+                    </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4"></i>
+                                    <p class="text-lg font-medium">Aucune candidature pour le moment</p>
+                                    <p class="text-sm mt-1">Commencez par uploader un CV et rechercher des offres</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="text-slate-400">
+                                <i class="fa-solid fa-inbox text-4xl mb-4"></i>
+                                <p class="text-lg font-medium">Aucune candidature pour le moment</p>
+                                <p class="text-sm mt-1">Commencez par uploader un CV et rechercher des offres</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <!-- Pagination -->
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <div class="mt-8 flex items-center justify-center">
+        <nav class="flex items-center space-x-2" aria-label="Pagination">
+            <!-- First Page -->
+            {% if page_obj.has_previous %}
+            <a href="?page=1"
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-angle-double-left"></i>
+            </a>
+            <!-- Previous Page -->
+            <a href="?page={{ page_obj.previous_page_number }}"
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-angle-left"></i>
+            </a>
+            {% else %}
+            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                <i class="fa-solid fa-angle-double-left"></i>
+            </span>
+            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                <i class="fa-solid fa-angle-left"></i>
+            </span>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            <div class="flex items-center space-x-1">
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <!-- Current Page -->
+                        <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-600 rounded-lg">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <!-- Nearby Pages -->
+                        <a href="?page={{ num }}"
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                            {{ num }}
+                        </a>
+                    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                        <!-- First and Last Pages -->
+                        <a href="?page={{ num }}"
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                            {{ num }}
+                        </a>
+                    {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
+                        <!-- Ellipsis -->
+                        <span class="px-2 py-2 text-sm font-medium text-slate-500">
+                            ...
+                        </span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Next Page -->
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-angle-right"></i>
+            </a>
+            <!-- Last Page -->
+            <a href="?page={{ page_obj.paginator.num_pages }}"
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-angle-double-right"></i>
+            </a>
+            {% else %}
+            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                <i class="fa-solid fa-angle-right"></i>
+            </span>
+            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                <i class="fa-solid fa-angle-double-right"></i>
+            </span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

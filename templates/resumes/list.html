@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes CVs - JobPilot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Mes CVs</h1>
+            <p class="text-slate-500 mt-1">Gérez vos CVs et recherchez des offres d'emploi correspondantes</p>
+        </div>
+        <a href="{% url 'upload_resume' %}" 
+           class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg">
+            <i class="fa-solid fa-plus mr-2"></i>Ajouter un CV
+        </a>
+    </div>
+
+    <!-- CVs Grid -->
+    {% if resumes %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% for resume in resumes %}
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+            <!-- Card Header -->
+            <div class="bg-slate-50 from-blue-50 to-teal-50 px-6 py-4 border-b border-slate-200">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-1">{{ resume.title }}</h3>
+                        <p class="text-sm text-slate-500">
+                            <i class="fa-solid fa-calendar mr-1"></i>
+                            Ajouté le {{ resume.uploaded_at|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                    <a href="{{ resume.file.url }}" 
+                       target="_blank"
+                       class="ml-4 p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                       title="Voir le PDF">
+                        <i class="fa-solid fa-file-pdf text-xl"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-6 space-y-4">
+                <!-- Contact Info -->
+                <div class="grid grid-cols-2 gap-4">
+                    {% if resume.parsed_data.email %}
+                    <div class="flex items-center text-sm">
+                        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-envelope text-blue-600 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-500 text-xs">Email</p>
+                            <p class="text-slate-900 font-medium truncate">{{ resume.parsed_data.email }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if resume.parsed_data.phone %}
+                    <div class="flex items-center text-sm">
+                        <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-phone text-green-600 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-slate-500 text-xs">Téléphone</p>
+                            <p class="text-slate-900 font-medium">{{ resume.parsed_data.phone }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Skills -->
+                <div>
+                    <p class="text-sm font-semibold text-slate-700 mb-2">
+                        <i class="fa-solid fa-code mr-1"></i>Compétences détectées
+                    </p>
+                    {% if resume.parsed_data.skills %}
+                    <div class="flex flex-wrap gap-2">
+                        {% for skill in resume.parsed_data.skills %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            {{ skill }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-slate-400 italic">
+                        <i class="fa-solid fa-info-circle mr-1"></i>Aucune compétence détectée
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-3 pt-4 border-t border-slate-200">
+                    <a href="{% url 'find_jobs' resume.id %}" 
+                       class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fa-solid fa-search mr-2"></i>Trouver des offres
+                    </a>
+                    {% if resume.is_primary %}
+                    <span class="px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg border border-green-200">
+                        <i class="fa-solid fa-star mr-1"></i>Principal
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+        <div class="max-w-md mx-auto">
+            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-file-pdf text-3xl text-slate-400"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-900 mb-2">Aucun CV pour le moment</h3>
+            <p class="text-slate-500 mb-6">Commencez par uploader votre premier CV pour rechercher des offres d'emploi correspondantes.</p>
+            <a href="{% url 'upload_resume' %}" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fa-solid fa-plus mr-2"></i>Ajouter mon premier CV
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

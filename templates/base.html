@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobPilot{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-slate-50 min-h-screen">
+    {% if user.is_authenticated %}
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-teal-400 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-briefcase text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold text-slate-900">JobPilot</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'dashboard' %}" class="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fa-solid fa-chart-line mr-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'resume_list' %}" class="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fa-solid fa-file-pdf mr-2"></i>Mes CVs
+                    </a>
+                    <span class="text-slate-500 text-sm">{{ user.username }}</span>
+                    <a href="{% url 'logout' %}" class="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fa-solid fa-sign-out-alt mr-2"></i>Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

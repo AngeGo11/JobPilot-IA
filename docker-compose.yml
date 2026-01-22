@@ -1,0 +1,42 @@
+
+services:
+  # --- Service 1 : La Base de Données PostgreSQL ---
+  db:
+    image: postgres:15
+    container_name: jobpilot_db
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      # On utilise les valeurs par défaut ou celles du .env
+      - POSTGRES_DB=${DB_NAME:-jobpilot_db}
+      - POSTGRES_USER=${DB_USER:-axel}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password123}
+    ports:
+      - "5433:5432" # Port 5433 sur l'hôte pour éviter conflit avec PostgreSQL local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U axel -d jobpilot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Service 2 : Redis (Pour Celery / Cache) ---
+  redis:
+    image: redis:7-alpine
+    container_name: jobpilot_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # --- Service 3 : Interface Adminer (Bonus) ---
+  # Accessible sur http://localhost:8080 pour voir ta BDD
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

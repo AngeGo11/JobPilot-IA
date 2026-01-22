@@ -1,0 +1,7 @@
+.env
+/media/
+./JobPilot/settings.py
+.venv
+
+prompt_logo
+notes_perso
