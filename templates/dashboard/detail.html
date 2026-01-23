@@ -84,21 +84,26 @@
                 
                 <!-- AI Toolbar -->
                 <div class="editor-toolbar px-6 py-3 border-b border-slate-200">
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 flex">
                         <button type="button" 
-                                onclick="handleAIAction('improve')"
+                                onclick="handleAIAction('improve', event)"
                                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 transition-all border border-purple-200">
                             <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Améliorer avec l'IA
                         </button>
                         <button type="button" 
-                                onclick="handleAIAction('formalize')"
+                                onclick="handleAIAction('formalize', event)"
                                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
                             <i class="fa-solid fa-user-tie mr-1.5"></i>Rendre plus formel
                         </button>
                         <button type="button" 
-                                onclick="handleAIAction('generate')"
+                                onclick="handleAIAction('generate', event)"
                                 class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-all border border-teal-200">
                             <i class="fa-solid fa-file-pen mr-1.5"></i>Générer un brouillon
+                        </button>
+                        <button type="button"
+                                onclick="handleAIAction('export-pdf', event)"
+                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition-all border border-teal-200">
+                            <i class="fa-solid fa-file-pdf mr-1.5"></i>Exporter PDF
                         </button>
                     </div>
                 </div>
@@ -242,7 +247,7 @@
         });
     });
     
-    function handleAIAction(action) {
+    function handleAIAction(action, event) {
         // Get content from TinyMCE if available, otherwise from textarea
         let currentText;
         if (tinymceEditor) {
@@ -260,16 +265,19 @@
         }
         
         // Désactiver le bouton pendant le traitement
-        const button = event.target.closest('button');
-        const originalButtonHTML = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Traitement...';
+        const button = event ? event.target.closest('button') : document.querySelector(`button[onclick*="${action}"]`);
+        const originalButtonHTML = button ? button.innerHTML : '';
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Traitement...';
+        }
         
         // Messages selon l'action
         const actionMessages = {
             'improve': '✨ Amélioration avec IA...',
             'formalize': '👔 Formalisation en cours...',
-            'generate': '📝 Génération du brouillon...'
+            'generate': '📝 Génération du brouillon...',
+            'export-pdf': '📄 Export en cours...'
         };
         
         // Show loading state in TinyMCE or textarea
@@ -303,23 +311,57 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Remplacer le contenu par la version améliorée
-                if (tinymceEditor) {
-                    // Convert plain text to HTML paragraphs
-                    const htmlContent = data.refined_letter.split('\n\n').map(para => 
-                        para.trim() ? `<p>${para.trim().replace(/\n/g, '<br>')}</p>` : ''
-                    ).join('');
-                    tinymceEditor.setContent(htmlContent);
-                    tinymceEditor.mode.set('design');
+                // Si c'est un export PDF, télécharger le fichier
+                if (action === 'export-pdf' && data.pdf_data) {
+                    // Convertir le base64 en blob et télécharger
+                    const byteCharacters = atob(data.pdf_data);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                    
+                    // Créer un lien de téléchargement
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = data.filename || 'lettre_motivation.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    // Réactiver l'éditeur
+                    if (tinymceEditor) {
+                        tinymceEditor.mode.set('design');
+                    } else {
+                        const textarea = document.getElementById('cover_letter_content');
+                        textarea.placeholder = originalPlaceholder;
+                        textarea.disabled = false;
+                    }
+                    
+                    // Afficher un message de succès
+                    showMessage(data.message || '📄 PDF téléchargé avec succès !', 'success');
                 } else {
-                    const textarea = document.getElementById('cover_letter_content');
-                    textarea.value = data.refined_letter;
-                    textarea.placeholder = originalPlaceholder;
-                    textarea.disabled = false;
+                    // Remplacer le contenu par la version améliorée
+                    if (tinymceEditor) {
+                        // Convert plain text to HTML paragraphs
+                        const htmlContent = data.refined_letter.split('\n\n').map(para => 
+                            para.trim() ? `<p>${para.trim().replace(/\n/g, '<br>')}</p>` : ''
+                        ).join('');
+                        tinymceEditor.setContent(htmlContent);
+                        tinymceEditor.mode.set('design');
+                    } else {
+                        const textarea = document.getElementById('cover_letter_content');
+                        textarea.value = data.refined_letter;
+                        textarea.placeholder = originalPlaceholder;
+                        textarea.disabled = false;
+                    }
+                    
+                    // Afficher un message de succès
+                    showMessage(data.message || '✨ Lettre améliorée avec succès !', 'success');
                 }
-                
-                // Afficher un message de succès
-                showMessage(data.message || '✨ Lettre améliorée avec succès !', 'success');
             } else {
                 // Afficher l'erreur
                 if (tinymceEditor) {
@@ -345,8 +387,10 @@
         })
         .finally(() => {
             // Réactiver le bouton
-            button.disabled = false;
-            button.innerHTML = originalButtonHTML;
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalButtonHTML;
+            }
         });
     }
     

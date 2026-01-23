@@ -3,7 +3,16 @@ Service pour la génération automatique de lettres de motivation par IA.
 """
 import os
 from typing import Optional
+from io import BytesIO
+from datetime import datetime
 import google.generativeai as genai
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.enums import TA_LEFT, TA_JUSTIFY
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 
@@ -264,3 +273,126 @@ De plus, applique ces instructions personnalisées :
 
         except Exception as e:
             raise Exception(f"Impossible de se connecter à l'API Gemini : {str(e)}")
+    
+    def export_to_pdf(
+            self,
+            cover_letter_content: str,
+            user_name: Optional[str] = None,
+            user_email: Optional[str] = None,
+            user_address: Optional[str] = None,
+            job_title: Optional[str] = None,
+            company_name: Optional[str] = None,
+            recipient_name: Optional[str] = None
+    ) -> BytesIO:
+        """
+        Exporte une lettre de motivation en format PDF professionnel.
+        
+        Args:
+            cover_letter_content: Contenu de la lettre de motivation
+            user_name: Nom complet de l'utilisateur (optionnel)
+            user_email: Email de l'utilisateur (optionnel)
+            user_address: Adresse de l'utilisateur (optionnel)
+            job_title: Titre du poste (optionnel)
+            company_name: Nom de l'entreprise (optionnel)
+            recipient_name: Nom du destinataire (optionnel, par défaut "Madame, Monsieur")
+        
+        Returns:
+            BytesIO: Buffer contenant le PDF généré
+        
+        Raises:
+            ValueError: Si le contenu de la lettre est vide
+            Exception: Si la génération du PDF échoue
+        """
+        if not cover_letter_content or not cover_letter_content.strip():
+            raise ValueError("Le contenu de la lettre de motivation ne peut pas être vide")
+        
+        # Créer un buffer en mémoire pour le PDF
+        buffer = BytesIO()
+        
+        # Créer le document PDF
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        # Styles pour le PDF
+        styles = getSampleStyleSheet()
+        
+        # Style pour l'en-tête (nom, adresse, etc.)
+        header_style = ParagraphStyle(
+            'CustomHeader',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor='black',
+            alignment=TA_LEFT,
+            spaceAfter=12,
+        )
+        
+        # Style pour le titre (objet)
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading2'],
+            fontSize=12,
+            textColor='black',
+            alignment=TA_LEFT,
+            spaceAfter=12,
+            spaceBefore=12,
+        )
+        
+        # Style pour le corps de la lettre
+        body_style = ParagraphStyle(
+            'CustomBody',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor='black',
+            alignment=TA_JUSTIFY,
+            spaceAfter=12,
+            leading=14,
+        )
+        
+        # Style pour la signature
+        signature_style = ParagraphStyle(
+            'CustomSignature',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor='black',
+            alignment=TA_LEFT,
+            spaceBefore=24,
+        )
+        
+        # Construire le contenu du PDF
+        story = []
+        
+        
+
+        # Objet
+        if job_title:
+            story.append(Paragraph(f"<b>Objet : Candidature pour le poste de {job_title}</b>", title_style))
+            story.append(Spacer(1, 0.3*cm))
+        
+        # Corps de la lettre
+        # Convertir le texte en paragraphes (séparés par des sauts de ligne doubles)
+        paragraphs = cover_letter_content.split('\n\n')
+        
+        for para in paragraphs:
+            para = para.strip()
+            if para:
+                # Remplacer les sauts de ligne simples par <br/>
+                para_html = para.replace('\n', '<br/>')
+                # Échapper les caractères HTML spéciaux et convertir en paragraphe
+                story.append(Paragraph(para_html, body_style))
+                story.append(Spacer(1, 0.3*cm))
+        
+
+        
+        # Générer le PDF
+        try:
+            doc.build(story)
+            buffer.seek(0)
+            return buffer
+        except Exception as e:
+            raise Exception(f"Erreur lors de la génération du PDF : {str(e)}")

@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect  # <--- Ajoute redirect ici
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from resumes.models import Resume
 from .models import JobMatch
@@ -153,6 +153,48 @@ def quick_refine_cover_letter(request, match_id):
     # Récupérer l'action demandée
     action = request.POST.get('action', 'improve')
     
+    # Si l'action est export-pdf, rediriger vers la vue d'export
+    if action == 'export-pdf':
+        # Pour l'export PDF, on doit rediriger vers une nouvelle page ou retourner une réponse différente
+        # Mais comme c'est appelé via AJAX, on va retourner une réponse JSON avec l'URL de téléchargement
+        try:
+            generator = AILetterGenerator()
+            
+            # Récupérer les informations
+            user = request.user
+            user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.username
+            user_email = user.email if user.email else None
+            job_offer = match.job_offer
+            job_title = job_offer.title if job_offer else None
+            company_name = job_offer.company_name if job_offer else None
+            
+            # Générer le PDF
+            pdf_buffer = generator.export_to_pdf(
+                cover_letter_content=current_text,
+                user_name=user_name,
+                user_email=user_email,
+                user_address=None,
+                job_title=job_title,
+                company_name=company_name,
+                recipient_name=None
+            )
+            
+            # Retourner le PDF en base64 pour le téléchargement côté client
+            import base64
+            pdf_base64 = base64.b64encode(pdf_buffer.read()).decode('utf-8')
+            
+            return JsonResponse({
+                'success': True,
+                'pdf_data': pdf_base64,
+                'filename': f"lettre_motivation_{job_title or 'candidature'}_{company_name or 'entreprise'}.pdf".replace(' ', '_'),
+                'message': '📄 PDF généré avec succès !'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f"Erreur lors de l'export PDF : {str(e)}"
+            }, status=500)
+    
     # Mapping des actions vers les types d'amélioration
     action_mapping = {
         'improve': {
@@ -276,3 +318,69 @@ def refine_cover_letter(request, match_id):
         'form': form,
         'current_letter': match.cover_letter_content,
     })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def export_cover_letter_pdf(request, match_id):
+    """
+    Vue pour exporter une lettre de motivation en PDF.
+    Peut être appelée en GET (utilise le contenu sauvegardé) ou POST (utilise le contenu fourni).
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    
+    # Récupérer le contenu de la lettre
+    if request.method == 'POST':
+        # Si c'est un POST, récupérer le contenu depuis le formulaire
+        cover_letter_content = request.POST.get('cover_letter_content', match.cover_letter_content)
+    else:
+        # Si c'est un GET, utiliser le contenu sauvegardé
+        cover_letter_content = match.cover_letter_content
+    
+    if not cover_letter_content or not cover_letter_content.strip():
+        messages.error(request, "Vous devez d'abord rédiger une lettre de motivation avant de l'exporter.")
+        return redirect('application_workspace', match_id=match_id)
+    
+    try:
+        generator = AILetterGenerator()
+        
+        # Récupérer les informations de l'utilisateur
+        user = request.user
+        user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.username
+        user_email = user.email if user.email else None
+        
+        # Récupérer les informations de l'offre d'emploi
+        job_offer = match.job_offer
+        job_title = job_offer.title if job_offer else None
+        company_name = job_offer.company_name if job_offer else None
+        
+        # Générer le PDF
+        pdf_buffer = generator.export_to_pdf(
+            cover_letter_content=cover_letter_content,
+            user_name=user_name,
+            user_email=user_email,
+            user_address=None,  # Peut être ajouté plus tard si stocké dans le profil
+            job_title=job_title,
+            company_name=company_name,
+            recipient_name=None  # Par défaut "Madame, Monsieur"
+        )
+        
+        # Préparer le nom du fichier
+        filename = f"lettre_motivation_{job_title or 'candidature'}_{company_name or 'entreprise'}"
+        # Nettoyer le nom de fichier (enlever les caractères spéciaux)
+        filename = "".join(c for c in filename if c.isalnum() or c in (' ', '-', '_')).strip()
+        filename = filename.replace(' ', '_')
+        filename = f"{filename}.pdf"
+        
+        # Créer la réponse HTTP avec le PDF
+        response = HttpResponse(pdf_buffer.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except ValueError as e:
+        messages.error(request, f"Erreur de validation : {str(e)}")
+        return redirect('application_workspace', match_id=match_id)
+    except Exception as e:
+        messages.error(request, f"Erreur lors de l'export PDF : {str(e)}")
+        return redirect('application_workspace', match_id=match_id)

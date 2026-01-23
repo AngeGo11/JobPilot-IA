@@ -10,6 +10,15 @@ def dashboard(request):
     """
     Vue principale du tableau de bord : liste toutes les candidatures de l'utilisateur
     """
+    # Exemple : Récupération des variables de session
+    user_id = request.session.get('user_id')
+    user_email = request.session.get('user_email')
+    resume_count = request.session.get('resume_count', 0)
+    
+    # Vous pouvez utiliser ces variables comme vous le souhaitez
+    # Par exemple, les passer au template ou les utiliser pour des calculs
+    print(f"Session - User ID: {user_id}, Email: {user_email}, Resume count: {resume_count}")
+    
     matches = JobMatch.objects.filter(
         user=request.user
     ).exclude(

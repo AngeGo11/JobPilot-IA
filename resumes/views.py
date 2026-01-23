@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from .forms import ResumeUploadForm
@@ -45,3 +45,12 @@ def upload_resume(request):
 def resume_list(request):
     resumes = Resume.objects.filter(user=request.user)
     return render(request, 'resumes/list.html', {'resumes': resumes})
+
+
+def delete_resume(request, resume_id):
+    resumes = Resume.objects.filter(user=request.user)
+    if request.method == 'POST':
+        resume = get_object_or_404(Resume, pk=resume_id, user = request.user)
+        resume.delete()
+    return render(request, 'resumes/list.html', {'resumes': resumes})
+

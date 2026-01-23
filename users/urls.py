@@ -13,11 +13,8 @@ urlpatterns = [
     # Inscription
     path('register/', views.register, name='register'),
 
-    # Connexion (On utilise la vue standard Django mais avec notre template et notre form)
-    path('login/', auth_views.LoginView.as_view(
-        template_name='users/login.html',
-        authentication_form=UserLoginForm
-    ), name='login'),
+    # Connexion (Vue personnalisée pour gérer les variables de session)
+    path('login/', views.CustomLoginView.as_view(), name='login'),
 
     # Déconnexion
     path('logout/', views.logout_user, name='logout'),

@@ -88,6 +88,8 @@ class UserLoginForm(AuthenticationForm):
         'class': 'w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all',
         'placeholder': '••••••••'
     }))
+
+
     
     def clean_username(self):
         """
