@@ -10,7 +10,7 @@ from .services.francetravail import FranceTravail  # Vérifie que ton import est
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
 
-
+@login_required
 def find_jobs_for_resume(request, resume_id):
     page_number = request.GET.get('page', 1)
     resume = get_object_or_404(Resume, id=resume_id)
@@ -65,6 +65,7 @@ def find_jobs_for_resume(request, resume_id):
 def update_match_status(request, match_id):
     # Récupérer le match sans filtrer par user (pour permettre les utilisateurs anonymes en développement)
     # TODO: Réactiver la vérification user=request.user quand l'authentification sera en place
+
     match = get_object_or_404(JobMatch, id=match_id)
     new_status = request.POST.get('status')
 

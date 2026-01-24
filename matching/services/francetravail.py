@@ -1,6 +1,7 @@
 import os
 import requests
 from django.conf import settings
+from django.db import IntegrityError
 from ..models import JobOffer, JobMatch
 import re
 from django.utils.dateparse import parse_datetime
@@ -126,20 +127,31 @@ class FranceTravail:
             score = self.calculate_match_score(resume.extracted_text, description_offre)
 
             # 3. On crée le Match pour cet utilisateur (s'il n'existe pas déjà)
-            match, match_created = JobMatch.objects.get_or_create(
-                user=user,
-                job_offer=offer,
-                resume=resume,
-                defaults={
-                    'score': score,
-                    'status': 'new'
-                }
-            )
+            try:
+                match, match_created = JobMatch.objects.get_or_create(
+                    user=user,
+                    job_offer=offer,
+                    resume=resume,
+                    defaults={
+                        'score': score,
+                        'status': 'new'
+                    }
+                )
 
-            # Si le match existait déjà, on met à jour le score au cas où l'algo a changé
-            if not match_created:
-                match.score = score
-                match.save()
+                # Si le match existait déjà, on met à jour le score au cas où l'algo a changé
+                if not match_created:
+                    match.score = score
+                    match.save()
+
+            except IntegrityError:
+                # Un match existe déjà pour cet user/offre, mais pas avec ce CV
+                # On récupère le match existant et on le met à jour avec ce nouveau CV/score
+                existing_match = JobMatch.objects.get(user=user, job_offer=offer)
+                existing_match.resume = resume
+                existing_match.score = score
+                existing_match.save()
+                match = existing_match
+                match_created = False
 
             saved_matches.append(match)
             print(f"  ✓ Offre sauvegardée: {offer.title} (Score: {score}%)")

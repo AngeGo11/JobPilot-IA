@@ -1,0 +1,279 @@
+================================================================================
+                    TODOLIST COMPLÈTE - JOBPILOT
+================================================================================
+Date de création : 2026-01-24
+Dernière mise à jour : 2026-01-24
+
+================================================================================
+📋 PRIORITÉ CRITIQUE (À FAIRE EN PREMIER)
+================================================================================
+
+[ ] SÉCURITÉ - Vérifications de propriété
+    [ ] matching/views.py:find_jobs_for_resume() - Ajouter @login_required ✅ et vérifier que request.user == resume.user
+    [ ] matching/views.py:update_match_status() - Réactiver la vérification user=request.user (TODO ligne 67)
+    [ ] resumes/views.py:resume_list() - Ajouter @login_required (manque le décorateur) ✅
+    [ ] resumes/views.py:delete_resume() - Ajouter @login_required (manque le décorateur) ✅
+
+[ ] SÉCURITÉ - Configuration
+    [ ] JobPilot/settings.py - Configurer ALLOWED_HOSTS (actuellement vide, risque en production)
+    [ ] JobPilot/settings.py - Valider que SECRET_KEY existe au démarrage (peut être None) ✅
+    [ ] JobPilot/settings.py - Ajouter validation des variables d'environnement critiques au démarrage
+
+[ ] CODE - Nettoyage et bonnes pratiques
+    [ ] Remplacer TOUS les print() par logging (18 occurrences trouvées)
+        - matching/views.py: 5 occurrences (lignes 26, 28, 33, 35, 37, 53)
+        - dashboard/views.py: 1 occurrence (ligne 20)
+        - users/views.py: 1 occurrence (ligne 16)
+        - matching/services/francetravail.py: 7 occurrences (lignes 38, 41, 42, 72, 81, 107, 145)
+        - resumes/services/pdf_parser.py: 1 occurrence (ligne 28)
+    [ ] Retirer traceback.print_exc() de matching/views.py ligne 39 (production)
+    [ ] Retirer le code de fallback utilisateur par défaut dans resumes/views.py:upload_resume() (lignes 19-25)
+    [ ] Configurer le système de logging Django dans settings.py
+
+[ ] FONCTIONNALITÉS - TODOs existants
+    [ ] matching/views.py:generate_cover_letter() - Implémenter la génération (TODO ligne 89)
+    [ ] matching/views.py:save_generated_letter() - Implémenter la sauvegarde (TODO ligne 108)
+    [ ] matching/views.py:edit_cover_letter() - Implémenter la sauvegarde (TODO ligne 122)
+
+[ ] MODÈLES - Création automatique
+    [ ] users/views.py:register() - Créer automatiquement CandidateProfile après inscription
+        Code à ajouter après user.save():
+        from .models import CandidateProfile
+        CandidateProfile.objects.get_or_create(user=user)
+    [] Changer la méthode de matching (matching par skills devient matching par contenu global (plus particulièrement le titre du cv))
+
+================================================================================
+🔴 PRIORITÉ HAUTE (À FAIRE BIENTÔT)
+================================================================================
+
+[ ] TEMPLATES MANQUANTS
+    [ ] Créer templates/matching/generate_letter.html
+    [ ] Créer templates/matching/edit_letter.html
+    [ ] Créer templates/matching/refine_letter.html
+
+[ ] FONCTIONNALITÉS - Actions manquantes
+    [ ] matching/views.py:quick_refine_cover_letter() - Gérer l'action 'generate' (appelée depuis detail.html ligne 99)
+        Actuellement seulement 'improve', 'formalize', 'grammar', 'length' sont gérées
+    [ ] dashboard/detail.html - Le bouton "Générer un brouillon" appelle action='generate' mais n'est pas implémenté
+
+[ ] PERFORMANCE - Optimisation requêtes DB
+    [ ] dashboard/views.py:dashboard() - Optimiser les statistiques (4 requêtes séparées → 1 seule avec aggregate/annotate)
+        Actuellement:
+        - stats['total'] = matches.count() (requête 1)
+        - stats['new'] = matches.filter(status='new').count() (requête 2)
+        - stats['seen'] = matches.filter(status='seen').count() (requête 3)
+        - stats['applied'] = matches.filter(status='applied').count() (requête 4)
+        À remplacer par une seule requête avec Count() et Case/When
+
+[ ] CONFIGURATION - Settings Django
+    [ ] JobPilot/settings.py - Changer TIME_ZONE de 'UTC' à 'Europe/Paris'
+    [ ] JobPilot/settings.py - Ajouter STATIC_ROOT pour collectstatic
+    [ ] JobPilot/settings.py - Configurer le système de logging (LOGGING dict)
+    [ ] JobPilot/settings.py - Ajouter configuration pour fichiers statiques en production
+
+[ ] GESTION D'ERREURS
+    [ ] matching/services/francetravail.py - Structurer la gestion d'erreurs API (retry logic, timeout)
+    [ ] matching/services/ai_letter_generator.py - Ajouter retry logic pour appels Gemini
+    [ ] matching/services/francetravail.py - Ajouter timeout pour requests.get/post
+    [ ] matching/views.py:find_jobs_for_resume() - Afficher les erreurs API à l'utilisateur (actuellement juste print)
+
+[ ] CODE - Optimisations
+    [ ] resumes/views.py:delete_resume() - Récupération inutile de resumes ligne 51 (déjà fait ligne 53)
+    [ ] matching/views.py:find_jobs_for_resume() - Ajouter select_related('resume') si nécessaire
+    [ ] dashboard/views.py - Retirer les variables de session inutilisées (lignes 14-16, 20) ou les utiliser
+
+================================================================================
+🟡 PRIORITÉ MOYENNE (AMÉLIORATIONS)
+================================================================================
+
+[ ] CACHE ET PERFORMANCE
+    [ ] matching/services/francetravail.py - Implémenter cache pour le token OAuth2 (éviter de le recréer à chaque appel)
+    [ ] matching/services/francetravail.py - Implémenter cache pour les résultats de recherche API (Redis/Memcached)
+    [ ] matching/views.py:find_jobs_for_resume() - Cache des résultats de recherche par CV
+
+[ ] VALIDATION ET SÉCURITÉ FICHIERS
+    [ ] resumes/views.py:upload_resume() - Ajouter validation de taille de fichier PDF (max 10MB recommandé)
+    [ ] resumes/views.py:upload_resume() - Ajouter validation du type MIME (vérifier que c'est bien un PDF)
+    [ ] resumes/views.py:upload_resume() - Ajouter validation du contenu PDF (vérifier qu'il n'est pas corrompu)
+    [ ] resumes/services/pdf_parser.py - Gérer les PDFs scannés (OCR si nécessaire)
+    [ ] Créer une commande de nettoyage pour supprimer les fichiers PDF orphelins
+
+[ ] MODÈLES - Améliorations
+    [ ] matching/models.py:JobMatch - Rendre resume obligatoire (retirer null=True ligne 38)
+    [ ] matching/models.py:JobMatch - Ajouter validation sur score (0-100) dans clean()
+    [ ] matching/models.py:JobOffer - Ajouter max_length sur description si nécessaire
+    [ ] users/models.py:CandidateProfile - Ajouter méthode get_absolute_url()
+    [ ] resumes/models.py:Resume - Ajouter méthode get_absolute_url()
+    [ ] matching/models.py:JobMatch - Ajouter méthode get_absolute_url()
+    [ ] matching/models.py:JobOffer - Ajouter méthode get_absolute_url()
+
+[ ] UX/UI - Améliorations
+    [ ] templates/users/register.html - Retirer ou implémenter les boutons de connexion sociale (Google, LinkedIn, GitHub)
+        Actuellement juste visuels, non fonctionnels (lignes 121-134)
+    [ ] templates/dashboard/detail.html - Ajouter confirmation avant suppression de lettre
+    [ ] templates/resumes/list.html - Ajouter confirmation avant suppression de CV
+    [ ] templates/dashboard/detail.html - Améliorer les messages d'erreur API (afficher à l'utilisateur)
+    [ ] templates/matching/results.html - Ajouter loading states pour les actions longues
+    [ ] templates/dashboard/dashboard.html - Ajouter loading states pour les actions longues
+
+[ ] FONCTIONNALITÉS - Nouvelles
+    [ ] Créer vue et template pour éditer le profil utilisateur (CandidateProfile)
+        - Permettre de modifier téléphone, localisation, code ROME, disponibilité
+    [ ] resumes/views.py - Ajouter fonctionnalité pour définir un CV comme principal (is_primary)
+    [ ] resumes/views.py - Ajouter vue pour voir les détails d'un CV
+    [ ] matching/views.py - Ajouter filtres de recherche sur le dashboard (par statut, score, date)
+    [ ] matching/views.py - Ajouter tri personnalisable sur le dashboard
+    [ ] Créer vue pour exporter toutes les candidatures en CSV/Excel
+
+[ ] SERVICES - Améliorations
+    [ ] matching/services/francetravail.py - Ajouter rate limiting pour éviter de dépasser les quotas API
+    [ ] matching/services/ai_letter_generator.py - Ajouter rate limiting pour Gemini API
+    [ ] matching/services/francetravail.py - Gérer les cas où l'API est down (fallback, message utilisateur)
+    [ ] matching/services/ai_letter_generator.py - Gérer les cas où Gemini API est down
+    [ ] matching/services/ - Améliorer l'algorithme de matching (calculate_match_score)
+        - Utiliser TF-IDF au lieu de simple intersection
+        - Ponderer les compétences techniques vs mots génériques
+        - Prendre en compte l'ordre des mots (bigrams, trigrams)
+
+[ ] PDF PARSER - Améliorations
+    [ ] resumes/services/pdf_parser.py - Étendre la liste KNOWN_SKILLS (plus de langages, frameworks, outils)
+    [ ] resumes/services/pdf_parser.py - Ajouter détection d'années d'expérience
+    [ ] resumes/services/pdf_parser.py - Ajouter détection du niveau (Junior, Senior, etc.)
+    [ ] resumes/services/pdf_parser.py - Ajouter détection des diplômes
+    [ ] resumes/services/pdf_parser.py - Améliorer l'extraction de téléphone (gérer plus de formats)
+    [ ] resumes/services/pdf_parser.py - Ajouter extraction de l'adresse
+
+================================================================================
+🟢 PRIORITÉ BASSE (NICE TO HAVE)
+================================================================================
+
+[ ] TESTS
+    [ ] Créer tests unitaires pour users/views.py
+    [ ] Créer tests unitaires pour resumes/views.py
+    [ ] Créer tests unitaires pour matching/views.py
+    [ ] Créer tests unitaires pour dashboard/views.py
+    [ ] Créer tests unitaires pour matching/services/francetravail.py
+    [ ] Créer tests unitaires pour matching/services/ai_letter_generator.py
+    [ ] Créer tests unitaires pour resumes/services/pdf_parser.py
+    [ ] Créer tests d'intégration pour le flux complet (upload CV → recherche → génération lettre)
+    [ ] Créer tests de performance pour les requêtes DB
+    [ ] Configurer coverage.py pour mesurer la couverture de code
+
+[ ] DOCUMENTATION
+    [ ] Ajouter docstrings complètes sur toutes les fonctions
+    [ ] Documenter les modèles avec des help_text en français
+    [ ] Créer documentation API si nécessaire
+    [ ] Mettre à jour README.md avec les nouvelles fonctionnalités
+    [ ] Créer guide de contribution (CONTRIBUTING.md)
+    [ ] Créer CHANGELOG.md pour suivre les versions
+
+[ ] ACCESSIBILITÉ
+    [ ] Ajouter attributs ARIA sur tous les boutons interactifs
+    [ ] Vérifier le contraste des couleurs (WCAG AA minimum)
+    [ ] Ajouter support clavier pour toutes les actions
+    [ ] Tester avec lecteurs d'écran
+
+[ ] INTERNATIONALISATION
+    [ ] Ajouter support multilingue (i18n) si nécessaire
+    [ ] Externaliser tous les textes dans des fichiers de traduction
+
+[ ] MONITORING ET LOGGING
+    [ ] Configurer Sentry ou équivalent pour le tracking d'erreurs
+    [ ] Ajouter métriques de performance (temps de réponse, requêtes DB)
+    [ ] Ajouter logging structuré pour les actions importantes
+
+[ ] SÉCURITÉ AVANCÉE
+    [ ] Ajouter protection CSRF renforcée
+    [ ] Configurer SECURE_SSL_REDIRECT pour production
+    [ ] Configurer SESSION_COOKIE_SECURE pour production
+    [ ] Configurer CSRF_COOKIE_SECURE pour production
+    [ ] Ajouter rate limiting sur les vues sensibles (login, register)
+    [ ] Implémenter 2FA (authentification à deux facteurs) optionnel
+
+[ ] OPTIMISATIONS AVANCÉES
+    [ ] Implémenter pagination lazy loading (infinite scroll)
+    [ ] Optimiser les images et assets statiques
+    [ ] Implémenter compression gzip pour les réponses HTTP
+    [ ] Ajouter CDN pour les fichiers statiques en production
+    [ ] Optimiser les requêtes avec prefetch_related où nécessaire
+
+[ ] FONCTIONNALITÉS AVANCÉES
+    [ ] Ajouter système de notifications (email, in-app)
+    [ ] Ajouter système de favoris pour les offres
+    [ ] Ajouter historique des modifications de lettres de motivation
+    [ ] Ajouter versioning des CVs
+    [ ] Ajouter système de tags pour organiser les candidatures
+    [ ] Ajouter recherche full-text sur les offres sauvegardées
+    [ ] Ajouter export de données utilisateur (RGPD compliance)
+    [ ] Ajouter fonctionnalité de partage de lettres de motivation
+    [ ] Ajouter templates de lettres de motivation prédéfinis
+
+[ ] INTÉGRATIONS
+    [ ] Implémenter authentification OAuth (Google, LinkedIn, GitHub)
+    [ ] Intégrer avec d'autres APIs d'emploi (APEC, Indeed, etc.)
+    [ ] Ajouter intégration calendrier pour suivre les entretiens
+    [ ] Ajouter intégration email pour envoyer les lettres directement
+
+[ ] ADMIN DJANGO
+    [ ] Personnaliser l'interface admin Django
+    [ ] Ajouter actions personnalisées dans l'admin
+    [ ] Ajouter filtres personnalisés dans l'admin
+    [ ] Ajouter exports CSV/Excel depuis l'admin
+
+[ ] DOCKER ET DÉPLOIEMENT
+    [ ] Optimiser le Dockerfile
+    [ ] Créer docker-compose.yml pour production
+    [ ] Ajouter health checks dans docker-compose
+    [ ] Créer script de déploiement automatisé
+    [ ] Configurer CI/CD (GitHub Actions, GitLab CI, etc.)
+
+[ ] BASE DE DONNÉES
+    [ ] Créer index sur les champs fréquemment recherchés
+    [ ] Ajouter migrations pour optimiser les requêtes
+    [ ] Implémenter full-text search PostgreSQL pour les descriptions d'offres
+    [ ] Ajouter contraintes de base de données supplémentaires
+
+[ ] PDF GENERATOR - Améliorations
+    [ ] matching/services/ai_letter_generator.py:export_to_pdf() - Ajouter en-tête avec coordonnées utilisateur
+    [ ] matching/services/ai_letter_generator.py:export_to_pdf() - Ajouter pied de page avec date
+    [ ] matching/services/ai_letter_generator.py:export_to_pdf() - Améliorer le formatage (polices, espacements)
+    [ ] matching/services/ai_letter_generator.py:export_to_pdf() - Ajouter support pour logo entreprise
+    [ ] matching/services/ai_letter_generator.py:export_to_pdf() - Ajouter watermark optionnel
+
+[ ] ALGORITHME DE MATCHING - Améliorations avancées
+    [ ] Utiliser machine learning pour améliorer le scoring
+    [ ] Prendre en compte les compétences soft skills
+    [ ] Prendre en compte la localisation géographique
+    [ ] Prendre en compte le type de contrat souhaité
+    [ ] Ajouter système de feedback utilisateur pour améliorer l'algorithme
+
+================================================================================
+📝 NOTES ET OBSERVATIONS
+================================================================================
+
+- Le modèle AILetterGenerator utilise 'gemini-2.5-flash' mais devrait vérifier 
+  la disponibilité du modèle
+- Le système de session stocke beaucoup de données qui pourraient être récupérées 
+  à la demande (optimisation mémoire)
+- Les boutons de connexion sociale dans register.html sont décoratifs mais 
+  non fonctionnels - décision à prendre: retirer ou implémenter
+- L'algorithme de matching est très basique (intersection de mots) - 
+  amélioration prioritaire pour la qualité du service
+- Pas de gestion de quota API visible - risque de dépassement de limites
+- Le PDF parser a une liste limitée de compétences - à étendre significativement
+
+================================================================================
+✅ STATISTIQUES
+================================================================================
+
+Total des tâches identifiées : ~150+
+- Priorité Critique : 15
+- Priorité Haute : 20
+- Priorité Moyenne : 35
+- Priorité Basse : 80+
+
+Temps estimé total : ~200-300 heures de développement
+
+================================================================================
+FIN DE LA TODOLIST
+================================================================================

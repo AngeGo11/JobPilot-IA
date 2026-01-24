@@ -42,11 +42,14 @@ def upload_resume(request):
     
     return render(request, 'resumes/upload.html', {'form': form})
 
+
+@login_required
 def resume_list(request):
     resumes = Resume.objects.filter(user=request.user)
     return render(request, 'resumes/list.html', {'resumes': resumes})
 
 
+@login_required
 def delete_resume(request, resume_id):
     resumes = Resume.objects.filter(user=request.user)
     if request.method == 'POST':
