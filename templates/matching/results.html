@@ -18,19 +18,16 @@
         </div>
 
         <!-- Info Box -->
-        {% if skills_used %}
+        {% if job_title_used and job_title_used != 'Non détecté' %}
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div class="flex items-start">
                     <i class="fa-solid fa-info-circle text-blue-600 mr-3 mt-0.5"></i>
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-blue-800 mb-1">Recherche effectuée avec les compétences
-                            :</p>
+                        <p class="text-sm font-semibold text-blue-800 mb-1">Recherche effectuée pour le poste :</p>
                         <div class="flex flex-wrap gap-2 mt-2">
-                            {% for skill in skills_used %}
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                        {{ skill }}
-                    </span>
-                            {% endfor %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                <i class="fa-solid fa-briefcase mr-2"></i>{{ job_title_used }}
+                            </span>
                         </div>
                         {% if jobs_found > 0 %}
                             <p class="text-sm text-blue-700 mt-3">
@@ -38,6 +35,16 @@
                                 trouvée(s) et ajoutée(s) à votre liste
                             </p>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% elif job_title_used == 'Non détecté' %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i class="fa-solid fa-exclamation-triangle text-yellow-600 mr-3 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-yellow-800 mb-1">Aucun titre de poste détecté</p>
+                        <p class="text-sm text-yellow-700">Aucune recherche d'offres n'a pu être effectuée. Veuillez ré-uploader votre CV pour une nouvelle analyse.</p>
                     </div>
                 </div>
             </div>
@@ -163,11 +170,10 @@
                     </div>
                     <h3 class="text-xl font-semibold text-slate-900 mb-2">Aucune offre trouvée</h3>
                     <p class="text-slate-500 mb-2">
-                        {% if skills_used %}
-                            Aucune offre correspondant à vos compétences n'a été trouvée pour le moment.
+                        {% if job_title_used and job_title_used != 'Non détecté' %}
+                            Aucune offre correspondant au poste "{{ job_title_used }}" n'a été trouvée pour le moment.
                         {% else %}
-                            Aucune compétence détectée dans votre CV. Vérifiez que votre parser extrait bien les
-                            compétences.
+                            Aucun titre de poste détecté dans votre CV. Veuillez ré-uploader votre CV pour une nouvelle analyse.
                         {% endif %}
                     </p>
                     <div class="mt-6 space-x-4">

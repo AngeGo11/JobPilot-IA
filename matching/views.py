@@ -14,16 +14,16 @@ from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRe
 def find_jobs_for_resume(request, resume_id):
     page_number = request.GET.get('page', 1)
     resume = get_object_or_404(Resume, id=resume_id)
-    skills = resume.parsed_data.get('skills', [])
     user = resume.user
 
-    # 1. Partie "Mise à jour via API" (Seulement si compétences trouvées)
+    # 1. Partie "Mise à jour via API" - Utilise detected_job_title comme source de vérité
     jobs_found = 0
-    if skills:
+    if resume.detected_job_title:
         service = FranceTravail()
         try:
-            search_query = skills[:3]
-            print(f"🔍 Recherche d'offres avec les compétences: {search_query}")
+            # Utilise le titre du poste détecté par l'IA comme mots-clés de recherche
+            search_query = resume.detected_job_title
+            print(f"🔍 Recherche d'offres avec le titre détecté: {search_query}")
             api_results = service.search_jobs(search_query, page=int(page_number))
             print(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
             
@@ -37,6 +37,8 @@ def find_jobs_for_resume(request, resume_id):
             print(f"❌ Erreur API : {e}")
             import traceback
             traceback.print_exc()
+    else:
+        print("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
     # 2. Partie "Récupération des données" (DOIT ÊTRE AU NIVEAU PRINCIPAL)
     matches = JobMatch.objects.filter(
@@ -56,7 +58,7 @@ def find_jobs_for_resume(request, resume_id):
         'resume': resume,
         'matches': matches,
         'jobs_found': jobs_found,
-        'skills_used': skills[:3] if skills else [],
+        'job_title_used': resume.detected_job_title or 'Non détecté',
         'page_obj': page_obj
     })
 

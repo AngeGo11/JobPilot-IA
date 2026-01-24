@@ -16,9 +16,15 @@ class Resume(models.Model):
     # Contenu brut extrait du PDF (pour la recherche full-text plus tard)
     extracted_text = models.TextField("Texte extrait", blank=True)
 
+    # Titre du poste visé détecté par l'IA (ex: "Stage Data Engineer", "Alternance Développeur Java")
+    detected_job_title = models.CharField("Titre du poste visé", max_length=255, null=True, blank=True)
+
+    # Compétences techniques détectées par l'IA (ex: ["Python", "Django", "Docker"])
+    detected_skills = models.JSONField("Compétences détectées", default=list, blank=True)
+
     # Compétences détectées stockées en JSON (ex: ["Python", "Django", "Docker"])
     # C'est ici que PostgreSQL est super fort : tu pourras faire des requêtes directes sur ce JSON.
-    parsed_skills = models.JSONField("Compétences détectées", default=list, blank=True)
+    parsed_skills = models.JSONField("Compétences détectées (legacy)", default=list, blank=True)
 
     # Infos extraites (ex: {"years_exp": 3, "level": "Junior"})
     parsed_data = models.JSONField("Métadonnées IA", default=dict, blank=True)
