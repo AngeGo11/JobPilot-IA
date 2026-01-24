@@ -40,9 +40,11 @@ def find_jobs_for_resume(request, resume_id):
     else:
         print("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
-    # 2. Partie "Récupération des données" (DOIT ÊTRE AU NIVEAU PRINCIPAL)
+    # 2. Partie "Récupération des données" - Filtrer par CV spécifique
+    # On filtre par resume pour ne montrer QUE les offres liées à ce CV précis
     matches = JobMatch.objects.filter(
-        user=user  # Utilise l'utilisateur du CV (resume.user) au lieu de request.user
+        resume=resume,  # Filtre par CV spécifique (cloisonnement)
+        user=user  # Sécurité : on vérifie aussi que c'est bien l'utilisateur du CV
     ).exclude(
         status='rejected'
     ).select_related('job_offer').order_by('-score', '-matched_at')

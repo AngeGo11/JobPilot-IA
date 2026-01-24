@@ -56,6 +56,7 @@ class JobMatch(models.Model):
     cover_letter_content = models.TextField("Lettre de motivation", blank=True)
 
     class Meta:
-        # Un utilisateur ne peut avoir qu'un seul "Match" pour une même offre
-        unique_together = ('user', 'job_offer')
+        # Un CV ne peut avoir qu'un seul "Match" pour une même offre
+        # Cela permet à un utilisateur d'avoir plusieurs matches pour la même offre avec des CVs différents
+        unique_together = ('resume', 'job_offer')
         ordering = ['-score']  # Les meilleurs scores en premier

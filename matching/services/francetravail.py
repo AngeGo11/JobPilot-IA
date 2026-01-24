@@ -126,32 +126,25 @@ class FranceTravail:
             description_offre = job_data.get('description', '')
             score = self.calculate_match_score(resume.extracted_text, description_offre)
 
-            # 3. On crée le Match pour cet utilisateur (s'il n'existe pas déjà)
-            try:
-                match, match_created = JobMatch.objects.get_or_create(
-                    user=user,
-                    job_offer=offer,
-                    resume=resume,
-                    defaults={
-                        'score': score,
-                        'status': 'new'
-                    }
-                )
+            # 3. On crée le Match pour ce CV spécifique (s'il n'existe pas déjà)
+            # unique_together = ('resume', 'job_offer') permet d'avoir plusieurs matches pour la même offre avec des CVs différents
+            match, match_created = JobMatch.objects.get_or_create(
+                resume=resume,  # Critère principal : un CV ne peut avoir qu'un match par offre
+                job_offer=offer,
+                defaults={
+                    'user': user,  # Assigné à la création
+                    'score': score,
+                    'status': 'new'
+                }
+            )
 
-                # Si le match existait déjà, on met à jour le score au cas où l'algo a changé
-                if not match_created:
-                    match.score = score
-                    match.save()
-
-            except IntegrityError:
-                # Un match existe déjà pour cet user/offre, mais pas avec ce CV
-                # On récupère le match existant et on le met à jour avec ce nouveau CV/score
-                existing_match = JobMatch.objects.get(user=user, job_offer=offer)
-                existing_match.resume = resume
-                existing_match.score = score
-                existing_match.save()
-                match = existing_match
-                match_created = False
+            # Si le match existait déjà, on met à jour le score au cas où l'algo a changé
+            if not match_created:
+                match.score = score
+                # S'assurer que l'utilisateur est bien assigné (au cas où le match existait sans user)
+                if not match.user:
+                    match.user = user
+                match.save()
 
             saved_matches.append(match)
             print(f"  ✓ Offre sauvegardée: {offer.title} (Score: {score}%)")
