@@ -4,16 +4,19 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
 from .forms import UserRegisterForm, UserLoginForm
+from .models import CandidateProfile
+import logging
 
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            CandidateProfile.objects.get_or_create(user=user)
             login(request, user) # On connecte l'utilisateur directement après inscription
             request.session["user_id"] = user.id
             messages.success(request, f'Compte créé pour {user.email} !')
-            print(request.session.get('user_id'))
+            logging.info(request.session.get('user_id'))
             return redirect('dashboard') # Redirection vers le dashboard
     else:
         form = UserRegisterForm()

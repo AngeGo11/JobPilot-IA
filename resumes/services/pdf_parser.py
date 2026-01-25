@@ -1,6 +1,7 @@
 # resumes/pdf_parser.py
 import pdfplumber
 import re
+import logging
 
 
 class PDFParser:
@@ -23,7 +24,7 @@ class PDFParser:
                         self.full_text += text + "\n"
             return self.full_text
         except Exception as e:
-            print(f"Erreur lecture PDF : {e}")
+            logging.info(f"Erreur lecture PDF : {e}")
             return None
 
     def parse_data(self):

@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from matching.models import JobMatch
 from django.core.paginator import Paginator
+from django.db.models import Count, Case, When, IntegerField
+import logging
 
 
 @login_required
@@ -17,7 +19,7 @@ def dashboard(request):
     
     # Vous pouvez utiliser ces variables comme vous le souhaitez
     # Par exemple, les passer au template ou les utiliser pour des calculs
-    print(f"Session - User ID: {user_id}, Email: {user_email}, Resume count: {resume_count}")
+    logging.info(f"Session - User ID: {user_id}, Email: {user_email}, Resume count: {resume_count}")
     
     matches = JobMatch.objects.filter(
         user=request.user
@@ -29,13 +31,15 @@ def dashboard(request):
     paginator = Paginator(matches, 10)
     page_obj = paginator.get_page(page_number)
     
-    # Statistiques rapides
-    stats = {
-        'total': matches.count(),
-        'new': matches.filter(status='new').count(),
-        'seen': matches.filter(status='seen').count(),
-        'applied': matches.filter(status='applied').count(),
-    }
+    # Statistiques optimisées : une seule requête avec aggregate
+    stats = matches.aggregate(
+        total=Count('id'),
+        new=Count(Case(When(status='new', then=1), output_field=IntegerField())),
+        seen=Count(Case(When(status='seen', then=1), output_field=IntegerField())),
+        applied=Count(Case(When(status='applied', then=1), output_field=IntegerField())),
+    )
+
+
     
     return render(request, 'dashboard/dashboard.html', {
         'matches': matches,

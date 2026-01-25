@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
+import logging
 from resumes.models import Resume
 from .models import JobMatch
 from .services.francetravail import FranceTravail  # Vérifie que ton import est bon selon ton dossier
@@ -23,22 +24,21 @@ def find_jobs_for_resume(request, resume_id):
         try:
             # Utilise le titre du poste détecté par l'IA comme mots-clés de recherche
             search_query = resume.detected_job_title
-            print(f"🔍 Recherche d'offres avec le titre détecté: {search_query}")
+            logging.info(f"🔍 Recherche d'offres avec le titre détecté: {search_query}")
             api_results = service.search_jobs(search_query, page=int(page_number))
-            print(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
+            logging.info(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
             
             if api_results:
                 saved_matches = service.save_jobs(api_results, user, resume)
                 jobs_found = len(saved_matches)
-                print(f"✅ {jobs_found} offres sauvegardées en base de données")
+                logging.info(f"✅ {jobs_found} offres sauvegardées en base de données")
             else:
-                print("⚠️ Aucune offre trouvée via l'API")
+                logging.info("⚠️ Aucune offre trouvée via l'API")
         except Exception as e:
-            print(f"❌ Erreur API : {e}")
+            logging.info(f"❌ Erreur API : {e}")
             import traceback
-            traceback.print_exc()
     else:
-        print("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
+        logging.info("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
     # 2. Partie "Récupération des données" - Filtrer par CV spécifique
     # On filtre par resume pour ne montrer QUE les offres liées à ce CV précis
@@ -54,7 +54,7 @@ def find_jobs_for_resume(request, resume_id):
     page_obj = paginator.get_page(page_number)
 
     
-    print(f"📋 Nombre de matches récupérés de la BDD: {matches.count()}")
+    logging.info(f"📋 Nombre de matches récupérés de la BDD: {matches.count()}")
 
     return render(request, 'matching/results.html', {
         'resume': resume,
@@ -146,7 +146,66 @@ def quick_refine_cover_letter(request, match_id):
     """
     match = get_object_or_404(JobMatch, id=match_id, user=request.user)
     
+    # Récupérer l'action demandée
+    action = request.POST.get('action', 'improve')
+    
+    # Si l'action est 'generate', générer une nouvelle lettre de motivation
+    if action == 'generate':
+        try:
+            generator = AILetterGenerator()
+            
+            # Récupérer le CV associé au match, ou le CV principal de l'utilisateur
+            resume = match.resume
+            if not resume:
+                # Si le match n'a pas de CV associé, récupérer le CV principal de l'utilisateur
+                resume = Resume.objects.filter(user=request.user, is_primary=True).first()
+                if not resume:
+                    # Si pas de CV principal, prendre le premier CV de l'utilisateur
+                    resume = Resume.objects.filter(user=request.user).first()
+            
+            if not resume:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Aucun CV trouvé. Veuillez d'abord uploader un CV."
+                }, status=400)
+            
+            if not resume.extracted_text:
+                return JsonResponse({
+                    'success': False,
+                    'error': "Le CV n'a pas de texte extrait. Veuillez ré-uploader le CV."
+                }, status=400)
+            
+            # Générer la lettre de motivation
+            generated_letter = generator.generate_cover_letter(
+                resume=resume,
+                job_match=match,
+                tone="professional"
+            )
+            
+            # Sauvegarder la lettre générée
+            match.cover_letter_content = generated_letter
+            match.save()
+            
+            return JsonResponse({
+                'success': True,
+                'refined_letter': generated_letter,
+                'message': '✨ Lettre de motivation générée avec succès !'
+            })
+            
+        except ValueError as e:
+            return JsonResponse({
+                'success': False,
+                'error': f"Erreur de validation : {str(e)}"
+            }, status=400)
+        except Exception as e:
+            logging.error(f"Erreur lors de la génération de la lettre : {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f"Erreur lors de la génération : {str(e)}"
+            }, status=500)
+    
     # Récupérer le texte actuel depuis le POST (au cas où il a été modifié)
+    # Note: Cette vérification se fait après 'generate' car la génération ne nécessite pas de texte existant
     current_text = request.POST.get('cover_letter_content', match.cover_letter_content)
     
     if not current_text:
@@ -154,9 +213,6 @@ def quick_refine_cover_letter(request, match_id):
             'success': False,
             'error': "Vous devez d'abord rédiger une lettre de motivation."
         }, status=400)
-    
-    # Récupérer l'action demandée
-    action = request.POST.get('action', 'improve')
     
     # Si l'action est export-pdf, rediriger vers la vue d'export
     if action == 'export-pdf':

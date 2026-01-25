@@ -258,8 +258,8 @@
         }
         const matchId = {{ match.id }};
         
-        // Vérifier que le texte n'est pas vide
-        if (!currentText.trim()) {
+        // Vérifier que le texte n'est pas vide (sauf pour l'action 'generate' qui crée une nouvelle lettre)
+        if (action !== 'generate' && !currentText.trim()) {
             alert('Veuillez d\'abord rédiger une lettre de motivation avant de l\'améliorer.');
             return;
         }

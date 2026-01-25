@@ -6,3 +6,9 @@ __pycache__/
 *.pyc
 prompt_logo
 notes_persos
+todolist.txt
+
+# Logs
+/logs/*.log
+/logs/*.log.*
+!logs/.gitkeep

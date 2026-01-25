@@ -15,16 +15,7 @@ def upload_resume(request):
         form = ResumeUploadForm(request.POST, request.FILES)
         if form.is_valid():
             resume = form.save(commit=False)
-            # Assignation de l'utilisateur : connecté ou utilisateur par défaut pour les tests
-            if request.user.is_authenticated:
-                resume.user = request.user
-            else:
-                # Pour les tests sans authentification, utiliser un utilisateur par défaut
-                default_user, _ = User.objects.get_or_create(
-                    username='axel',
-                    defaults={'email': 'axelangegomez2004@gmail.com'}
-                )
-                resume.user = default_user
+            resume.user = request.user
             resume.save()
 
             # --- ÉTAPE 1 : EXTRACTION DU TEXTE DU PDF ---

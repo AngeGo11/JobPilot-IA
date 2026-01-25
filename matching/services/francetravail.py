@@ -1,6 +1,7 @@
 import os
 import requests
 from django.conf import settings
+import logging
 from django.db import IntegrityError
 from ..models import JobOffer, JobMatch
 import re
@@ -36,11 +37,11 @@ class FranceTravail:
         response = requests.post(url, data=payload, headers=headers)
 
         if response.status_code == 200:
-            print("✅ Authentification réussie !")
+            logging.info("✅ Authentification réussie !")
             return response.json()['access_token']
         else:
-            print(f"❌ Erreur Auth : {response.status_code}")
-            print(response.text)
+            logging.info(f"❌ Erreur Auth : {response.status_code}")
+            logging.info(response.text)
             return None
 
     def search_jobs(self, keywords, page: int =1, limit: int = 10):
@@ -70,7 +71,7 @@ class FranceTravail:
             'sort': 1  # 1 = Pertinence
         }
 
-        print(f"🔍 Recherche France Travail avec : {q}")
+        logging.info(f"🔍 Recherche France Travail avec : {q}")
 
         response = requests.get(self.api_url, headers=headers, params=params)
 
@@ -79,7 +80,7 @@ class FranceTravail:
         elif response.status_code == 204:  # Pas de résultats
             return []
         else:
-            print(f"Erreur API : {response.status_code} - {response.text}")
+            logging.info(f"Erreur API : {response.status_code} - {response.text}")
             return []
 
 
@@ -105,7 +106,7 @@ class FranceTravail:
             # S'assurer que l'ID existe
             remote_id = str(job_data.get('id', ''))
             if not remote_id:
-                print(f"⚠️ Offre ignorée : pas d'ID")
+                logging.info(f"⚠️ Offre ignorée : pas d'ID")
                 continue
                 
             offer, created = JobOffer.objects.get_or_create(
@@ -147,7 +148,7 @@ class FranceTravail:
                 match.save()
 
             saved_matches.append(match)
-            print(f"  ✓ Offre sauvegardée: {offer.title} (Score: {score}%)")
+            logging.info(f"  ✓ Offre sauvegardée: {offer.title} (Score: {score}%)")
 
         return saved_matches
 
