@@ -182,14 +182,13 @@ def quick_refine_cover_letter(request, match_id):
                 tone="professional"
             )
             
-            # Sauvegarder la lettre générée
-            match.cover_letter_content = generated_letter
-            match.save()
+            # Ne pas sauvegarder automatiquement - l'utilisateur devra cliquer sur "Sauvegarder"
+            # La lettre est seulement retournée pour être affichée dans l'éditeur
             
             return JsonResponse({
                 'success': True,
                 'refined_letter': generated_letter,
-                'message': '✨ Lettre de motivation générée avec succès !'
+                'message': '✨ Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.'
             })
             
         except ValueError as e:
