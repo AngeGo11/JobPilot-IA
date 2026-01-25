@@ -66,7 +66,7 @@ def logout_user(request):
         request.session.flush()
         messages.success(request, f'Déconnexion effectuée avec succès !')
         return redirect('home') # Redirection vers le dashboard
-    return render(request, 'index.html')
+    return render(request, '../templates/users/login.html')
 
 
 

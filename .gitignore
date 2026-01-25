@@ -2,6 +2,7 @@
 /media/
 ./JobPilot/settings.py
 .venv
-
+__pycache__/
+*.pyc
 prompt_logo
 notes_persos

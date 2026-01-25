@@ -40,7 +40,7 @@ Dernière mise à jour : 2026-01-24
         Code à ajouter après user.save():
         from .models import CandidateProfile
         CandidateProfile.objects.get_or_create(user=user)
-    [] Changer la méthode de matching (matching par skills devient matching par contenu global (plus particulièrement le titre du cv))
+    [] Changer la méthode de matching (matching par skills devient matching par contenu global (plus particulièrement le titre du cv)) ✅
 
 ================================================================================
 🔴 PRIORITÉ HAUTE (À FAIRE BIENTÔT)
