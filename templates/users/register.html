@@ -201,7 +201,7 @@
                             <label class="form-label mb-0">{{ field.label }}</label>
                             {% if field.name == 'password1' %}
                                 <div class="relative group">
-                                    <i class="fa-solid fa-circle-info text-blue-500 text-sm cursor-help hover:text-[#125484] transition-colors"></i>
+                                    <i class="fa-solid fa-circle-info text-[#125484] text-sm cursor-help hover:text-[#125484] transition-colors"></i>
                                     <!-- Tooltip avec les règles -->
                                     <div class="absolute left-0 bottom-full mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
                                         <div class="space-y-1.5">
@@ -244,7 +244,7 @@
                 {% endif %}
             {% endfor %}
 
-            <button type="submit" class="register-button bg-[#125484]">
+            <button type="submit" class="register-button bg-[#125484] hover:bg-[#0f4470]">
                 Créer mon compte
             </button>
         </form>

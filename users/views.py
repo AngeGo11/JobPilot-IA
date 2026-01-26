@@ -70,7 +70,8 @@ def logout_user(request):
         logout(request)
         request.session.flush()
         messages.success(request, f'Déconnexion effectuée avec succès !')
-    return render(request, '../templates/users/login.html')
+    form = UserLoginForm()
+    return render(request,'../templates/users/login.html', {"form":form })
 
 
 class UserSettingsView(LoginRequiredMixin, View):

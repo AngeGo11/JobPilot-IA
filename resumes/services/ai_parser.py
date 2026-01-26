@@ -4,6 +4,7 @@ Utilise Google Gemini pour analyser le texte extrait du PDF.
 """
 import json
 import os
+import logging
 import google.generativeai as genai
 from django.conf import settings
 
@@ -90,8 +91,8 @@ Texte du CV :
                 result = json.loads(response_text)
             except json.JSONDecodeError as e:
                 # Si le JSON est invalide, on essaie d'extraire manuellement
-                print(f"⚠️ Erreur parsing JSON : {e}")
-                print(f"Réponse brute de Gemini : {response_text}")
+                logging.info(f"⚠️ Erreur parsing JSON : {e}")
+                logging.info(f"Réponse brute de Gemini : {response_text}")
                 # Fallback : chercher le JSON dans la réponse
                 import re
                 json_match = re.search(r'\{[^{}]*"job_title"[^{}]*"skills"[^{}]*\}', response_text, re.DOTALL)
@@ -122,5 +123,5 @@ Texte du CV :
             }
             
         except Exception as e:
-            print(f"❌ Erreur lors de l'appel à Gemini : {e}")
+            logging.info(f"❌ Erreur lors de l'appel à Gemini : {e}")
             raise Exception(f"Erreur lors de l'analyse IA du CV : {str(e)}")
