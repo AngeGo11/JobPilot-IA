@@ -52,7 +52,7 @@ class AIParser:
         # Prompt pour Gemini - demande un JSON strict
         prompt = f"""Analyse ce CV et extrais les informations suivantes au format JSON strict :
 
-1. **job_title** (LE PLUS IMPORTANT) : Le titre du poste que le candidat recherche ou vise.
+1. **job_title** (LE PLUS IMPORTANT) : Le titre du poste que le candidat recherche ou vise. Généralement sur les premières lignes du cv
    Exemples : "Stage Data Engineer", "Alternance Développeur Java", "CDI Développeur Full Stack", "Boulanger", "Stage Marketing Digital"
    Si le CV ne mentionne pas explicitement un poste recherché, essaie de l'inférer à partir du contenu (expériences, formations, compétences).
    Si vraiment impossible à déterminer, retourne null.

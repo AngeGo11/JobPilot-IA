@@ -55,7 +55,7 @@ class CustomLoginView(LoginView):
         self.request.session['resume_count'] = resume_count
         
         # Message de bienvenue
-        messages.success(self.request, f'Bienvenue {user.get_full_name() or user.username} !')
+        messages.success(self.request, f'Bienvenue {user.get_full_name()} !')
         
         # Sauvegarder la session
         self.request.session.save()
@@ -68,7 +68,6 @@ def logout_user(request):
         logout(request)
         request.session.flush()
         messages.success(request, f'Déconnexion effectuée avec succès !')
-        return redirect('home') # Redirection vers le dashboard
     return render(request, '../templates/users/login.html')
 
 

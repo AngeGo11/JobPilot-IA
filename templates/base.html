@@ -44,7 +44,7 @@
                     <a href="{% url 'resume_list' %}" class="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fa-solid fa-file-pdf mr-2"></i>Mes CVs
                     </a>
-                    <span class="text-slate-500 text-sm">{{ user.username }}</span>
+                    <span class="text-slate-500 text-sm">{{ user.get_full_name }}</span>
                     <a href="{% url 'logout' %}" class="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">
                         <i class="fa-solid fa-sign-out-alt mr-2"></i>Déconnexion
                     </a>
