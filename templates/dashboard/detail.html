@@ -20,7 +20,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <div class="flex items-center justify-between">
             <div>
-                <a href="{% url 'dashboard' %}" class="text-blue-600 hover:text-blue-700 text-sm font-medium mb-2 inline-flex items-center">
+                <a href="{% url 'dashboard' %}" class="text-[#125484] hover:text-blue-700 text-sm font-medium mb-2 inline-flex items-center">
                     <i class="fa-solid fa-arrow-left mr-2"></i>Retour au dashboard
                 </a>
                 <h1 class="text-2xl font-bold text-slate-900">{{ job_offer.title }}</h1>
@@ -39,7 +39,7 @@
                     <div class="flex items-center">
                         <span class="text-sm font-medium text-slate-700 mr-2">Score:</span>
                         <div class="w-20 bg-slate-200 rounded-full h-2 mr-2">
-                            <div class="bg-blue-600 from-blue-500 to-teal-400 h-2 rounded-full"
+                            <div class="bg-[#125484] from-blue-500 to-teal-400 h-2 rounded-full"
                                  style="width: {{ match.score }}%"></div>
                         </div>
                         <span class="text-sm font-bold text-slate-900">{{ match.score }}%</span>
@@ -61,7 +61,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
                 <h2 class="text-lg font-semibold text-slate-900">
-                    <i class="fa-solid fa-file-lines mr-2 text-blue-600"></i>Description du Poste
+                    <i class="fa-solid fa-file-lines mr-2 text-[#125484]"></i>Description du Poste
                 </h2>
             </div>
             <div class="p-6">
@@ -75,7 +75,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
                 <h2 class="text-lg font-semibold text-slate-900">
-                    <i class="fa-solid fa-pen-to-square mr-2 text-blue-600"></i>Lettre de Motivation
+                    <i class="fa-solid fa-pen-to-square mr-2 text-[#125484]"></i>Lettre de Motivation
                 </h2>
             </div>
             
@@ -137,7 +137,7 @@
                 <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
                     <button type="submit" 
                             name="save"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
                         <i class="fa-solid fa-floppy-disk mr-2"></i>Sauvegarder
                     </button>
                     <button type="submit" 
@@ -219,7 +219,7 @@
                     // Set initial state of toggle button
                     const toggleBtn = document.getElementById('tinymce_toolbar_toggle');
                     if (toggleBtn) {
-                        toggleBtn.classList.remove('text-blue-600');
+                        toggleBtn.classList.remove('text-[#125484]');
                     }
                 });
                 
@@ -234,11 +234,11 @@
                             
                             // Visual feedback: change button color when toolbar is active
                             if (isVisible) {
-                                toggleBtn.classList.remove('text-blue-600');
+                                toggleBtn.classList.remove('text-[#125484]');
                                 toggleBtn.classList.add('text-slate-400');
                             } else {
                                 toggleBtn.classList.remove('text-slate-400');
-                                toggleBtn.classList.add('text-blue-600');
+                                toggleBtn.classList.add('text-[#125484]');
                             }
                         }
                     });

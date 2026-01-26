@@ -1,7 +1,6 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm, PasswordResetForm
 from .models import CustomUser
-from django.contrib.auth.forms import PasswordResetForm  # <--- N'oublie pas cet import
 
 
 class UserRegisterForm(UserCreationForm):
@@ -119,3 +118,63 @@ class CustomPasswordResetForm(PasswordResetForm):
         'class': 'w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all',
         'placeholder': 'you@example.com'
     }))
+
+
+class UserUpdateForm(forms.ModelForm):
+    """
+    Formulaire pour mettre à jour les informations personnelles de l'utilisateur.
+    """
+    first_name = forms.CharField(
+        label='Prénom',
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': 'Jean'
+        })
+    )
+    last_name = forms.CharField(
+        label='Nom',
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': 'Dupont'
+        })
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': 'jean.dupont@example.com'
+        })
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email']
+
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """
+    Formulaire personnalisé pour le changement de mot de passe avec widgets stylisés.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Styliser le champ ancien mot de passe
+        self.fields['old_password'].widget.attrs.update({
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': '••••••••'
+        })
+        self.fields['old_password'].label = 'Mot de passe actuel'
+        
+        # Styliser le champ nouveau mot de passe
+        self.fields['new_password1'].widget.attrs.update({
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': '••••••••'
+        })
+        self.fields['new_password1'].label = 'Nouveau mot de passe'
+        
+        # Styliser le champ confirmation
+        self.fields['new_password2'].widget.attrs.update({
+            'class': 'w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-[#125484] focus:ring-2 focus:ring-[#125484]/20 outline-none transition-all',
+            'placeholder': '••••••••'
+        })
+        self.fields['new_password2'].label = 'Confirmer le nouveau mot de passe'

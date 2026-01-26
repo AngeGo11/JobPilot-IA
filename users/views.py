@@ -3,7 +3,9 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
-from .forms import UserRegisterForm, UserLoginForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import View
+from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm, CustomPasswordChangeForm
 from .models import CandidateProfile
 import logging
 
@@ -69,6 +71,26 @@ def logout_user(request):
         request.session.flush()
         messages.success(request, f'Déconnexion effectuée avec succès !')
     return render(request, '../templates/users/login.html')
+
+
+class UserSettingsView(LoginRequiredMixin, View):
+    """
+    Vue pour la page de paramètres utilisateur.
+    Permet de modifier les informations personnelles (prénom, nom, email).
+    """
+    template_name = 'users/settings.html'
+    
+    def get(self, request):
+        form = UserUpdateForm(instance=request.user)
+        return render(request, self.template_name, {'form': form})
+    
+    def post(self, request):
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Vos informations ont été mises à jour.')
+            return redirect('user_settings')
+        return render(request, self.template_name, {'form': form})
 
 
 

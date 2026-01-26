@@ -8,11 +8,11 @@
         <div class="flex items-center justify-between">
             <div>
                 <a href="{% url 'resume_list' %}"
-                   class="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
+                   class="inline-flex items-center text-[#125484] hover:text-blue-700 text-sm font-medium mb-4">
                     <i class="fa-solid fa-arrow-left mr-2"></i>Retour à mes CVs
                 </a>
                 <h1 class="text-3xl font-bold text-slate-900">Résultats pour <span
-                        class="text-blue-600">{{ resume.title }}</span></h1>
+                        class="text-[#125484]">{{ resume.title }}</span></h1>
                 <p class="text-slate-500 mt-1">Offres triées par pertinence pour votre profil</p>
             </div>
         </div>
@@ -21,7 +21,7 @@
         {% if job_title_used and job_title_used != 'Non détecté' %}
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div class="flex items-start">
-                    <i class="fa-solid fa-info-circle text-blue-600 mr-3 mt-0.5"></i>
+                    <i class="fa-solid fa-info-circle text-[#125484] mr-3 mt-0.5"></i>
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-blue-800 mb-1">Recherche effectuée pour le poste :</p>
                         <div class="flex flex-wrap gap-2 mt-2">
@@ -96,7 +96,7 @@
 
                             <!-- Score Bar -->
                             <div class="w-full bg-slate-200 rounded-full h-2 mb-4">
-                                <div class="bg-blue-600 from-blue-500 to-teal-400 h-2 rounded-full transition-all"
+                                <div class="bg-[#125484] from-blue-500 to-teal-400 h-2 rounded-full transition-all"
                                      style="width: {{ match.score|default:0 }}%"></div>
                             </div>
 
@@ -126,7 +126,7 @@
                         <div class="mt-auto bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center">
                             {% if match.job_offer.url %}
                                 <a href="{{ match.job_offer.url }}" target="_blank"
-                                   class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                   class="text-[#125484] hover:text-blue-800 text-sm font-medium flex items-center">
                                     Voir l'offre <i class="fa-solid fa-external-link-alt ml-1 text-xs"></i>
                                 </a>
                             {% else %}
@@ -150,7 +150,7 @@
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="applied">
                                         <button type="submit"
-                                                class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors shadow-sm font-medium">
+                                                class="bg-[#125484] hover:bg-[#0f4470] text-white text-xs px-3 py-1.5 rounded-lg transition-colors shadow-sm font-medium">
                                             Postuler
                                         </button>
                                     </form>
@@ -182,7 +182,7 @@
                             <i class="fa-solid fa-arrow-left mr-2"></i>Retour aux CVs
                         </a>
                         <a href="{% url 'find_jobs' resume.id %}"
-                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                           class="inline-flex items-center px-4 py-2 bg-[#125484] text-white font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
                             <i class="fa-solid fa-refresh mr-2"></i>Réessayer
                         </a>
                     </div>
@@ -198,12 +198,12 @@
             <!-- First Page -->
             {% if page_obj.has_previous %}
             <a href="?page=1" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
                 <i class="fa-solid fa-angle-double-left"></i>
             </a>
             <!-- Previous Page -->
             <a href="?page={{ page_obj.previous_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
                 <i class="fa-solid fa-angle-left"></i>
             </a>
             {% else %}
@@ -220,19 +220,19 @@
                 {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                         <!-- Current Page -->
-                        <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-600 rounded-lg">
+                        <span class="px-4 py-2 text-sm font-semibold text-white bg-[#125484] border border-blue-600 rounded-lg">
                             {{ num }}
                         </span>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <!-- Nearby Pages -->
                         <a href="?page={{ num }}" 
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
                             {{ num }}
                         </a>
                     {% elif num == 1 or num == page_obj.paginator.num_pages %}
                         <!-- First and Last Pages -->
                         <a href="?page={{ num }}" 
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
                             {{ num }}
                         </a>
                     {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
@@ -247,12 +247,12 @@
             <!-- Next Page -->
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
                 <i class="fa-solid fa-angle-right"></i>
             </a>
             <!-- Last Page -->
             <a href="?page={{ page_obj.paginator.num_pages }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
                 <i class="fa-solid fa-angle-double-right"></i>
             </a>
             {% else %}

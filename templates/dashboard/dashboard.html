@@ -21,7 +21,7 @@
                 <p class="text-4xl font-bold text-slate-900">{{ stats.total }}</p>
             </div>
             <div class="absolute right-4 top-4 opacity-10">
-                <i class="fa-solid fa-briefcase text-blue-600 text-6xl"></i>
+                <i class="fa-solid fa-briefcase text-[#125484] text-6xl"></i>
             </div>
         </div>
 
@@ -88,7 +88,7 @@
                     <div class="flex items-start gap-4 mb-3">
                         <div class="flex-1">
                             <h3 class="text-lg font-bold text-slate-900 mb-1">{{ match.job_offer.title }}</h3>
-                            <p class="text-base font-semibold text-blue-600">{{ match.job_offer.company_name|default:"Non spécifié" }}</p>
+                            <p class="text-base font-semibold text-[#125484]">{{ match.job_offer.company_name|default:"Non spécifié" }}</p>
                         </div>
                     </div>
                     
@@ -103,7 +103,7 @@
                         <!-- Score -->
                         <div class="flex items-center gap-2">
                             <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
-                                <div class="bg-blue-600 h-full rounded-full transition-all duration-500"
+                                <div class="bg-[#125484] h-full rounded-full transition-all duration-500"
                                      style="width: {{ match.score }}%"></div>
                             </div>
                             <span class="text-sm font-bold text-slate-700 min-w-[2.5rem]">{{ match.score }}%</span>
@@ -136,7 +136,7 @@
                 <!-- Right: Actions -->
                 <div class="flex items-center gap-3 flex-shrink-0">
                     <a href="{% url 'application_workspace' match.id %}"
-                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
+                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#125484] text-white text-sm font-semibold rounded-lg hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
                         <i class="fa-solid fa-pen-to-square text-xs"></i>
                         <span>Workspace</span>
                     </a>
@@ -178,12 +178,12 @@
             <!-- First Page -->
             {% if page_obj.has_previous %}
             <a href="?page=1"
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                 <i class="fa-solid fa-angle-double-left"></i>
             </a>
             <!-- Previous Page -->
             <a href="?page={{ page_obj.previous_page_number }}"
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                 <i class="fa-solid fa-angle-left"></i>
             </a>
             {% else %}
@@ -200,19 +200,19 @@
                 {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                         <!-- Current Page -->
-                        <span class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 border border-blue-600 rounded-lg">
+                        <span class="px-4 py-2 text-sm font-semibold text-white bg-[#125484] border border-blue-600 rounded-lg">
                             {{ num }}
                         </span>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <!-- Nearby Pages -->
                         <a href="?page={{ num }}"
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                             {{ num }}
                         </a>
                     {% elif num == 1 or num == page_obj.paginator.num_pages %}
                         <!-- First and Last Pages -->
                         <a href="?page={{ num }}"
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                             {{ num }}
                         </a>
                     {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
@@ -227,12 +227,12 @@
             <!-- Next Page -->
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}"
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                 <i class="fa-solid fa-angle-right"></i>
             </a>
             <!-- Last Page -->
             <a href="?page={{ page_obj.paginator.num_pages }}"
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200">
+               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] hover:border-blue-300 transition-all duration-200">
                 <i class="fa-solid fa-angle-double-right"></i>
             </a>
             {% else %}

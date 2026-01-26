@@ -27,4 +27,16 @@ urlpatterns = [
     # Pour l'instant on utilise le template par défaut de Django pour aller vite,
     # mais tu pourras le styliser plus tard.
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    
+    # Paramètres utilisateur
+    path('settings/', views.UserSettingsView.as_view(), name='user_settings'),
+    
+    # Changement de mot de passe (vue Django standard avec formulaire personnalisé)
+    path('password-change/', auth_views.PasswordChangeView.as_view(
+        template_name='users/password_change.html',
+        form_class=views.CustomPasswordChangeForm
+    ), name='password_change'),
+    path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
+        template_name='users/password_change_done.html'
+    ), name='password_change_done'),
 ]

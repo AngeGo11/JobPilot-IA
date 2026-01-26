@@ -34,7 +34,7 @@
             <!-- Header -->
             <div>
                 <a href="{% url 'resume_list' %}"
-                   class="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
+                   class="inline-flex items-center text-[#125484] hover:text-blue-700 text-sm font-medium mb-4">
                     <i class="fa-solid fa-arrow-left mr-2"></i>Retour à mes CVs
                 </a>
                 <h1 class="text-3xl font-bold text-slate-900">Uploader un CV</h1>
@@ -68,7 +68,7 @@
                     <div>
                         <label for="{{ form.title.id_for_label }}"
                                class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-heading mr-2 text-blue-600"></i>Titre du CV
+                            <i class="fa-solid fa-heading mr-2 text-[#125484]"></i>Titre du CV
                         </label>
                         <input
                                 type="text"
@@ -92,7 +92,7 @@
                     <!-- File Upload Field -->
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-file-pdf mr-2 text-blue-600"></i>Fichier PDF
+                            <i class="fa-solid fa-file-pdf mr-2 text-[#125484]"></i>Fichier PDF
                         </label>
 
                         <!-- Drag & Drop Zone -->
@@ -101,7 +101,7 @@
                             <div class="space-y-4">
                                 <div class="flex justify-center">
                                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-blue-600"></i>
+                                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-[#125484]"></i>
                                     </div>
                                 </div>
                                 <div>
@@ -112,7 +112,7 @@
                                 </div>
                                 <div class="file-input-wrapper">
                                     <label for="{{ form.file.id_for_label }}" class="file-input-label">
-                                    <span class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                                    <span class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors cursor-pointer">
                                         <i class="fa-solid fa-folder-open mr-2"></i>Parcourir les fichiers
                                     </span>
                                     </label>
@@ -159,7 +159,7 @@
                     <!-- Info Box -->
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div class="flex items-start">
-                            <i class="fa-solid fa-lightbulb text-blue-600 mr-3 mt-0.5"></i>
+                            <i class="fa-solid fa-lightbulb text-[#125484] mr-3 mt-0.5"></i>
                             <div class="flex-1 text-sm text-blue-800">
                                 <p class="font-semibold mb-1">Conseil</p>
                                 <p>Une fois votre CV uploadé, notre système analysera automatiquement votre document
@@ -173,7 +173,7 @@
                     <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
                         <button
                                 type="submit"
-                                class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+                                class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-[#125484] text-white font-semibold rounded-lg hover:bg-[#0f4470] transition-colors shadow-md hover:shadow-lg"
                         >
                             <i class="fa-solid fa-upload mr-2"></i>Uploader le CV
                         </button>
