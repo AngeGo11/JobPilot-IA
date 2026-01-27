@@ -28,6 +28,7 @@ urlpatterns = [
     path('resumes/', include('resumes.urls')),
     path('matching/', include('matching.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('subscriptions/', include('subscriptions.urls')),
 ]
 
 # Permet de servir les fichiers médias en mode DEBUG (Dev)

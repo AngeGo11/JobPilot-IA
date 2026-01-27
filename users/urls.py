@@ -39,4 +39,7 @@ urlpatterns = [
     path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
         template_name='users/password_change_done.html'
     ), name='password_change_done'),
+
+    # Page de chargement intermédiaire après login/inscription
+    path('loading/', views.PostLoginLoadingView.as_view(), name='post_login_loading'),
 ]

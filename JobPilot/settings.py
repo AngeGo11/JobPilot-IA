@@ -159,7 +159,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-LOGIN_REDIRECT_URL = 'dashboard'  # Redirige vers le dashboard après login
+LOGIN_REDIRECT_URL = 'post_login_loading'  # Page de chargement puis dashboard
 LOGIN_URL = 'login'       # L'URL de la page de login (si accès refusé ailleurs)
 # settings.py
 

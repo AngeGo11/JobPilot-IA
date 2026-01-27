@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm, CustomPasswordChangeForm
 from .models import CandidateProfile
 import logging
@@ -19,7 +19,7 @@ def register(request):
             request.session["user_id"] = user.id
             messages.success(request, f'Compte créé pour {user.email} !')
             logging.info(request.session.get('user_id'))
-            return redirect('dashboard') # Redirection vers le dashboard
+            return redirect('post_login_loading')  # Même flux que login
     else:
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
@@ -65,13 +65,37 @@ class CustomLoginView(LoginView):
         return response
 
 
+class PostLoginLoadingView(LoginRequiredMixin, TemplateView):
+    """
+    Page de chargement intermédiaire affichée après connexion ou inscription réussie.
+    Redirige automatiquement vers le dashboard après un court délai.
+    """
+    template_name = 'users/loading.html'
+
+
 def logout_user(request):
-    if request.method == 'POST':
-        logout(request)
-        request.session.flush()
-        messages.success(request, f'Déconnexion effectuée avec succès !')
-    form = UserLoginForm()
-    return render(request,'../templates/users/login.html', {"form":form })
+    """
+    Vue pour la déconnexion de l'utilisateur.
+    Accepte GET et POST pour faciliter l'utilisation depuis un lien.
+    """
+    # Déconnecter l'utilisateur (cela vide les données d'authentification mais garde la session)
+    logout(request)
+    
+    # Vider toutes les variables de session personnalisées pour éviter les conflits
+    # On garde la session pour préserver les messages
+    session_keys_to_delete = ['user_id', 'user_email', 'user_username', 'login_time', 'resume_count']
+    for key in session_keys_to_delete:
+        if key in request.session:
+            del request.session[key]
+    
+    # Ajouter le message de succès
+    messages.success(request, 'Déconnexion effectuée avec succès !')
+    
+    # Forcer la sauvegarde de la session pour s'assurer que le message est stocké
+    request.session.save()
+    
+    # Rediriger vers la page de login
+    return redirect('login')
 
 
 class UserSettingsView(LoginRequiredMixin, View):
@@ -92,8 +116,6 @@ class UserSettingsView(LoginRequiredMixin, View):
             messages.success(request, 'Vos informations ont été mises à jour.')
             return redirect('user_settings')
         return render(request, self.template_name, {'form': form})
-
-
 
 
 

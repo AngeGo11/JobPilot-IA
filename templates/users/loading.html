@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chargement - JobPilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --brand-blue: #125484;
+            --bg-light: #F8FAFC;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+        }
+        
+        /* Pulse de l'avion (zoom in/out) */
+        @keyframes plane-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        
+        .plane-pulse {
+            animation: plane-pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* Spinner ring qui tourne */
+        @keyframes spin-ring {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .spin-ring {
+            animation: spin-ring 1.2s linear infinite;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: '#125484',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+    <div class="flex flex-col items-center justify-center">
+        <!-- Conteneur : cercle spinner + avion au centre -->
+        <div class="relative w-36 h-36 flex items-center justify-center mb-8">
+            <!-- Cercle de chargement fin (spinner ring) - bleu #125484 -->
+            <div class="spin-ring absolute inset-0 w-full h-full rounded-full border-[3px] border-[#125484]/15" style="border-top-color: #125484; border-right-color: #125484;"></div>
+            
+            <!-- Logo avion avec animation pulse -->
+            <div class="plane-pulse relative z-10 w-20 h-20 flex items-center justify-center">
+                <img src="/media/logo/Logo.png" alt="JobPilot" class="w-full h-full object-contain" />
+            </div>
+        </div>
+        
+        <!-- Texte d'ambiance -->
+        <p class="text-lg font-medium text-center" style="color: #125484; font-family: 'Outfit', sans-serif;">
+            Préparation de votre cockpit...
+        </p>
+    </div>
+
+    <script>
+        (function() {
+            var dashboardUrl = "{% url 'dashboard' %}";
+            setTimeout(function() {
+                window.location.href = dashboardUrl;
+            }, 2200);
+        })();
+    </script>
+</body>
+</html>

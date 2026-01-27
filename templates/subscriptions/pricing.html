@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Tarifs - JobPilot{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-16">
+            <h1 class="text-5xl font-bold text-slate-900 mb-4 font-display">Formules</h1>
+            <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+                Choisissez la formule qui correspond à vos besoins de recherche d'emploi
+            </p>
+        </div>
+
+        <!-- Pricing Cards Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Card 1: Pass 24h -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col transition-all duration-200 hover:shadow-md">
+                <!-- Icon -->
+                <div class="w-16 h-16 bg-[#125484]/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-clock text-[#125484] text-2xl"></i>
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Pass 24h</h3>
+                
+                <!-- Subtext -->
+                <p class="text-slate-600 mb-6">Parfait pour une recherche intensive sur une journée</p>
+                
+                <!-- Features List -->
+                <ul class="space-y-3 mb-8 flex-grow">
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Recherches illimitées</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Valable 24 heures</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Accès à toutes les fonctionnalités</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Matching intelligent</span>
+                    </li>
+                </ul>
+                
+                <!-- Price -->
+                <div class="mb-6">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-[#125484] font-display">2,99</span>
+                        <span class="text-xl text-slate-600">€</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mt-1">Paiement unique</p>
+                </div>
+                
+                <!-- Button -->
+                <button class="w-full py-3 px-6 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
+                    Choisir ce plan
+                </button>
+            </div>
+
+            <!-- Card 2: Sprint (Popular) -->
+            <div class="bg-white rounded-xl shadow-lg border-2 border-[#125484] p-8 flex flex-col transform scale-105 transition-all duration-200 hover:shadow-xl relative">
+                <!-- Popular Badge -->
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span class="bg-[#125484] text-white px-4 py-1 rounded-full text-sm font-semibold">
+                        Populaire
+                    </span>
+                </div>
+                
+                <!-- Icon -->
+                <div class="w-16 h-16 bg-[#125484]/20 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-rocket text-[#125484] text-2xl"></i>
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Sprint</h3>
+                
+                <!-- Subtext -->
+                <p class="text-slate-600 mb-6">Idéal pour une recherche active sur une semaine</p>
+                
+                <!-- Features List -->
+                <ul class="space-y-3 mb-8 flex-grow">
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Recherches illimitées</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Valable 7 jours</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Accès à toutes les fonctionnalités</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Matching intelligent</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Support prioritaire</span>
+                    </li>
+                </ul>
+                
+                <!-- Price -->
+                <div class="mb-6">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-[#125484] font-display">5,99</span>
+                        <span class="text-xl text-slate-600">€</span>
+                        <span class="text-slate-500 text-sm">/ semaine</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mt-1">Renouvellement automatique</p>
+                </div>
+                
+                <!-- Button -->
+                <button class="w-full py-3 px-6 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95">
+                    Choisir ce plan
+                </button>
+            </div>
+
+            <!-- Card 3: Recharge Mensuelle -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 flex flex-col transition-all duration-200 hover:shadow-md">
+                <!-- Icon -->
+                <div class="w-16 h-16 bg-[#125484]/10 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-calendar-check text-[#125484] text-2xl"></i>
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Recharge</h3>
+                
+                <!-- Subtext -->
+                <p class="text-slate-600 mb-6">Pour une recherche longue durée ou en veille active</p>
+                
+                <!-- Features List -->
+                <ul class="space-y-3 mb-8 flex-grow">
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Recherches illimitées</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Valable 30 jours</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Accès à toutes les fonctionnalités</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Matching intelligent</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="fa-solid fa-check text-[#125484] mt-1"></i>
+                        <span class="text-slate-700">Support prioritaire</span>
+                    </li>
+                </ul>
+                
+                <!-- Price -->
+                <div class="mb-6">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-[#125484] font-display">19,99</span>
+                        <span class="text-xl text-slate-600">€</span>
+                        <span class="text-slate-500 text-sm">/ mois</span>
+                    </div>
+                    <p class="text-sm text-slate-500 mt-1">Renouvellement automatique</p>
+                </div>
+                
+                <!-- Button -->
+                <button class="w-full py-3 px-6 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
+                    Choisir ce plan
+                </button>
+            </div>
+        </div>
+
+        <!-- Additional Option: Pack Recharge -->
+        <div class="max-w-2xl mx-auto mt-12">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-[#125484]/10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-shopping-bag text-[#125484] text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-900 font-display">Pack Recharge</h4>
+                            <p class="text-sm text-slate-600">10 recherches - Sans abonnement</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-[#125484] font-display">4,99</span>
+                                <span class="text-lg text-slate-600">€</span>
+                            </div>
+                            <p class="text-xs text-slate-500">Paiement unique</p>
+                        </div>
+                        <button class="px-6 py-2.5 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
+                            Acheter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
