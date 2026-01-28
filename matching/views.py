@@ -4,12 +4,30 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 import logging
 from resumes.models import Resume
 from .models import JobMatch
 from .services.francetravail import FranceTravail  # Vérifie que ton import est bon selon ton dossier
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
+
+
+class FindJobsLoadingView(LoginRequiredMixin, TemplateView):
+    """
+    Page de chargement intermédiaire affichée après avoir cliqué sur "Trouver des offres".
+    Redirige automatiquement vers la recherche d'offres après un court délai.
+    """
+    template_name = 'matching/loading.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        resume_id = self.kwargs.get('resume_id')
+        context['resume_id'] = resume_id
+        context['find_jobs_url'] = f'/matching/search/{resume_id}/'
+        return context
+
 
 @login_required
 def find_jobs_for_resume(request, resume_id):

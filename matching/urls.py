@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('search-loading/<int:resume_id>/', views.FindJobsLoadingView.as_view(), name='find_jobs_loading'),
     path('search/<int:resume_id>/', views.find_jobs_for_resume, name='find_jobs'),
 # Nouvelle route pour changer le statut
     path('update-status/<int:match_id>/', views.update_match_status, name='update_match_status'),

@@ -66,6 +66,8 @@ def upload_resume(request):
     return render(request, 'resumes/upload.html', {'form': form})
 
 
+
+
 @login_required
 def resume_list(request):
     resumes = Resume.objects.filter(user=request.user)
