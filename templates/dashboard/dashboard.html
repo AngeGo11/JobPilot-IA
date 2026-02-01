@@ -36,16 +36,6 @@
             </div>
         </div>
 
-        <!-- Vus -->
-        <div class="relative bg-white rounded-xl shadow-sm p-6 border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-md">
-            <div class="relative z-10">
-                <p class="text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">Vus</p>
-                <p class="text-4xl font-bold text-slate-900">{{ stats.seen }}</p>
-            </div>
-            <div class="absolute right-4 top-4 opacity-10">
-                <i class="fa-solid fa-eye text-purple-600 text-6xl"></i>
-            </div>
-        </div>
 
         <!-- Postulés -->
         <div class="relative bg-white rounded-xl shadow-sm p-6 border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-md">
@@ -55,6 +45,18 @@
             </div>
             <div class="absolute right-4 top-4 opacity-10">
                 <i class="fa-solid fa-check-circle text-green-600 text-6xl"></i>
+            </div>
+        </div>
+
+
+        <!-- CVs téléchargés -->
+        <div class="relative bg-white rounded-xl shadow-sm p-6 border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-md">
+            <div class="relative z-10">
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">CVs téléchargés</p>
+                <p class="text-4xl font-bold text-slate-900">{{ resume_count }}</p>
+            </div>
+            <div class="absolute right-4 top-4 opacity-10">
+                <i class="fa-solid fa-file-pdf text-[#125484] text-6xl"></i>
             </div>
         </div>
     </div>

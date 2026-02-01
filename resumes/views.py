@@ -5,6 +5,7 @@ from django.contrib import messages
 from .forms import ResumeUploadForm
 from .models import Resume
 from .services.pdf_parser import PDFParser
+from matching.models import JobAlert
 from .services.ai_parser import AIParser
 
 User = get_user_model()
@@ -41,12 +42,12 @@ def upload_resume(request):
                     if resume.detected_job_title:
                         messages.success(
                             request, 
-                            f'✅ CV analysé ! Poste détecté : {resume.detected_job_title}'
+                            f'CV analysé ! Poste détecté : {resume.detected_job_title}'
                         )
                     else:
                         messages.warning(
                             request, 
-                            '⚠️ CV analysé mais aucun titre de poste détecté. La recherche d\'emploi pourrait être limitée.'
+                            'CV analysé mais aucun titre de poste détecté. La recherche d\'emploi pourrait être limitée.'
                         )
                         
                 except Exception as e:
@@ -71,14 +72,20 @@ def upload_resume(request):
 @login_required
 def resume_list(request):
     resumes = Resume.objects.filter(user=request.user)
-    return render(request, 'resumes/list.html', {'resumes': resumes})
+    active_alert_resume_ids = set(
+        JobAlert.objects.filter(resume__user=request.user, is_active=True).values_list('resume_id', flat=True)
+    )
+    return render(request, 'resumes/list.html', {
+        'resumes': resumes,
+        'active_alert_resume_ids': active_alert_resume_ids,
+    })
 
 
 @login_required
 def delete_resume(request, resume_id):
-    resumes = Resume.objects.filter(user=request.user)
     if request.method == 'POST':
-        resume = get_object_or_404(Resume, pk=resume_id, user = request.user)
+        resume = get_object_or_404(Resume, pk=resume_id, user=request.user)
         resume.delete()
-    return render(request, 'resumes/list.html', {'resumes': resumes})
+        messages.success(request, 'CV supprimé.')
+    return redirect('resume_list')
 

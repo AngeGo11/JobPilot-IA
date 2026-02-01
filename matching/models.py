@@ -60,3 +60,26 @@ class JobMatch(models.Model):
         # Cela permet à un utilisateur d'avoir plusieurs matches pour la même offre avec des CVs différents
         unique_together = ('resume', 'job_offer')
         ordering = ['-score']  # Les meilleurs scores en premier
+
+
+class JobAlert(models.Model):
+    """
+    Alerte : notifier l'utilisateur par email lorsqu'une nouvelle offre correspondant à son CV est détectée.
+    Basé sur le CV (resume) et le titre de poste détecté (resume.detected_job_title).
+    """
+    resume = models.ForeignKey(
+        Resume,
+        on_delete=models.CASCADE,
+        related_name='job_alerts'
+    )
+    is_active = models.BooleanField("Actif", default=True)
+    last_checked = models.DateTimeField("Dernière vérification", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Un CV ne peut avoir qu'une alerte active à la fois (on peut réutiliser le même en activant/désactivant)
+        unique_together = ('resume',)
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Alerte pour {self.resume.title} (actif={self.is_active})"

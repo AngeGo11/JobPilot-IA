@@ -3,196 +3,259 @@
 {% block title %}{{ job_offer.title }} - Workspace{% endblock %}
 
 {% block extra_css %}
-<style>
-    .editor-toolbar {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: white;
-        border-bottom: 1px solid #e2e8f0;
-    }
-</style>
+    <style>
+        .editor-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="space-y-4">
-    <!-- Header -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <a href="{% url 'dashboard' %}" class="text-[#125484] hover:text-blue-700 text-sm font-medium mb-2 inline-flex items-center">
-                    <i class="fa-solid fa-arrow-left mr-2"></i>Retour au dashboard
-                </a>
-                <h1 class="text-2xl font-bold text-slate-900">{{ job_offer.title }}</h1>
-                <p class="text-slate-600 mt-1">{{ job_offer.company_name }}</p>
-                <div class="flex items-center gap-4 mt-2">
-                    {% if job_offer.location %}
-                    <span class="text-sm text-slate-500">
-                        <i class="fa-solid fa-location-dot mr-1"></i>{{ job_offer.location }}
-                    </span>
-                    {% endif %}
-                    {% if job_offer.contract_type %}
-                    <span class="text-sm text-slate-500">
-                        <i class="fa-solid fa-file-contract mr-1"></i>{{ job_offer.contract_type }}
-                    </span>
-                    {% endif %}
-                    <div class="flex items-center">
-                        <span class="text-sm font-medium text-slate-700 mr-2">Score:</span>
-                        <div class="w-20 bg-slate-200 rounded-full h-2 mr-2">
-                            <div class="bg-[#125484] from-blue-500 to-teal-400 h-2 rounded-full"
-                                 style="width: {{ match.score }}%"></div>
+    <div class="space-y-4">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                    <a href="{% url 'dashboard' %}"
+                       class="text-[#125484] hover:text-blue-700 text-sm font-medium mb-2 inline-flex items-center">
+                        <i class="fa-solid fa-arrow-left mr-2"></i>Retour au dashboard
+                    </a>
+                    <h1 class="text-2xl font-bold text-slate-900 mt-1">{{ job_offer.title }}</h1>
+                    <p class="text-slate-600 mt-1">{{ job_offer.company_name }}</p>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                        {% if job_offer.location %}
+                            <span class="text-sm text-slate-500">
+                                <i class="fa-solid fa-location-dot mr-1"></i>{{ job_offer.location }}
+                            </span>
+                        {% endif %}
+                        {% if job_offer.contract_type %}
+                            <span class="text-sm text-slate-500">
+                                <i class="fa-solid fa-file-contract mr-1"></i>{{ job_offer.contract_type }}
+                            </span>
+                        {% endif %}
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-slate-700">Score</span>
+                            <div class="w-20 bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="bg-[#125484] h-2 rounded-full transition-all"
+                                     style="width: {{ match.score }}%"></div>
+                            </div>
+                            <span class="text-sm font-bold text-slate-900 tabular-nums">{{ match.score }}%</span>
                         </div>
-                        <span class="text-sm font-bold text-slate-900">{{ match.score }}%</span>
                     </div>
                 </div>
-            </div>
-            {% if job_offer.url %}
-            <a href="{{ job_offer.url }}" target="_blank" 
-               class="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors">
-                <i class="fa-solid fa-external-link-alt mr-2"></i>Voir l'offre
-            </a>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Split Screen Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Column: Job Description -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                <h2 class="text-lg font-semibold text-slate-900">
-                    <i class="fa-solid fa-file-lines mr-2 text-[#125484]"></i>Description du Poste
-                </h2>
-            </div>
-            <div class="p-6">
-                <div class="prose max-w-none text-slate-700 whitespace-pre-wrap">
-                    {{ job_offer.description|default:"Aucune description disponible." }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Cover Letter Editor -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                <h2 class="text-lg font-semibold text-slate-900">
-                    <i class="fa-solid fa-pen-to-square mr-2 text-[#125484]"></i>Lettre de Motivation
-                </h2>
-            </div>
-            
-            <form method="POST" class="flex flex-col flex-1">
-                {% csrf_token %}
-                
-                <!-- AI Toolbar -->
-                <div class="editor-toolbar px-6 py-3 border-b border-slate-200">
-                    <div class="flex items-center gap-2 flex">
-                        <button type="button" 
-                                onclick="handleAIAction('improve', event)"
-                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 transition-all border border-purple-200">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Améliorer avec l'IA
-                        </button>
-                        <button type="button" 
-                                onclick="handleAIAction('formalize', event)"
-                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                            <i class="fa-solid fa-user-tie mr-1.5"></i>Rendre plus formel
-                        </button>
-                        <button type="button" 
-                                onclick="handleAIAction('generate', event)"
-                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                            <i class="fa-solid fa-file-pen mr-1.5"></i>Générer un brouillon
-                        </button>
-                        <button type="button"
-                                onclick="handleAIAction('export-pdf', event)"
-                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                            <i class="fa-solid fa-file-pdf mr-1.5"></i>Exporter PDF
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Textarea Editor with TinyMCE -->
-                <div class="flex-1 p-6 relative flex flex-col">
-                    <div class="relative flex-1 min-h-0">
-                        <!-- Toggle Button for Toolbar -->
-                        <button 
-                            type="button"
-                            id="tinymce_toolbar_toggle"
-                            class="absolute top-2 right-2 z-20 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
-                            title="Afficher/Masquer la barre d'outils"
-                            aria-label="Toggle toolbar"
-                        >
-                            <i class="fa-solid fa-ellipsis-v"></i>
-                        </button>
-                        
-                        <!-- TinyMCE Editor Container -->
-                        <textarea 
-                            name="cover_letter_content" 
-                            id="cover_letter_content"
-                            rows="20" 
-                            class="w-full h-full border border-slate-300 rounded-lg p-4 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                            placeholder="Commencez à rédiger votre lettre de motivation ici...&#10;&#10;Astuce: Utilisez les outils IA ci-dessus pour améliorer votre texte."
-                        >{{ match.cover_letter_content|default:"" }}</textarea>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
-                    <button type="submit" 
-                            name="save"
-                            class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
-                        <i class="fa-solid fa-floppy-disk mr-2"></i>Sauvegarder
-                    </button>
-                    <button type="submit" 
-                            name="mark_as_applied"
-                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fa-solid fa-check-circle mr-2"></i>Marquer comme Postulé
+                <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+                    {% if job_offer.url %}
+                        <a href="{{ job_offer.url }}" target="_blank" rel="noopener noreferrer"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors border border-slate-200">
+                            <i class="fa-solid fa-external-link-alt text-xs"></i>
+                            <span>Voir l'offre</span>
+                        </a>
+                    {% endif %}
+                    <button type="button"
+                            onclick="openCvOptimizerModal(event)"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100  border border-blue-200  transition-all shadow-sm hover:shadow border-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                        <span>Améliorer mon CV pour cette offre</span>
                     </button>
                 </div>
-            </form>
+            </div>
+        </div>
+
+        <!-- Split Screen Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column: Job Description -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">
+                        <i class="fa-solid fa-file-lines mr-2 text-[#125484]"></i>Description du Poste
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="prose max-w-none text-slate-700 whitespace-pre-wrap">
+                        {{ job_offer.description|default:"Aucune description disponible." }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Cover Letter Editor -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">
+                        <i class="fa-solid fa-pen-to-square mr-2 text-[#125484]"></i>Lettre de Motivation
+                    </h2>
+                </div>
+
+                <form method="POST" class="flex flex-col flex-1">
+                    {% csrf_token %}
+
+                    <!-- AI Toolbar -->
+                    <div class="editor-toolbar px-6 py-3 border-b border-slate-200">
+                        <div class="flex items-center gap-2 flex">
+                            <button type="button"
+                                    onclick="handleAIAction('improve', event)"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 transition-all border border-purple-200">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Améliorer avec l'IA
+                            </button>
+                            <button type="button"
+                                    onclick="handleAIAction('formalize', event)"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
+                                <i class="fa-solid fa-user-tie mr-1.5"></i>Rendre plus formel
+                            </button>
+                            <button type="button"
+                                    onclick="handleAIAction('generate', event)"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
+                                <i class="fa-solid fa-file-pen mr-1.5"></i>Générer un brouillon
+                            </button>
+                            <button type="button"
+                                    onclick="handleAIAction('export-pdf', event)"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
+                                <i class="fa-solid fa-file-pdf mr-1.5"></i>Exporter PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Textarea Editor with TinyMCE -->
+                    <div class="flex-1 p-6 relative flex flex-col">
+                        <div class="relative flex-1 min-h-0">
+                            <!-- Toggle Button for Toolbar -->
+                            <button
+                                    type="button"
+                                    id="tinymce_toolbar_toggle"
+                                    class="absolute top-2 right-2 z-20 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
+                                    title="Afficher/Masquer la barre d'outils"
+                                    aria-label="Toggle toolbar"
+                            >
+                                <i class="fa-solid fa-ellipsis-v"></i>
+                            </button>
+
+                            <!-- TinyMCE Editor Container -->
+                            <textarea
+                                    name="cover_letter_content"
+                                    id="cover_letter_content"
+                                    rows="20"
+                                    class="w-full h-full border border-slate-300 rounded-lg p-4 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                    placeholder="Commencez à rédiger votre lettre de motivation ici...&#10;&#10;Astuce: Utilisez les outils IA ci-dessus pour améliorer votre texte."
+                            >{{ match.cover_letter_content|default:"" }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                        <button type="submit"
+                                name="save"
+                                class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
+                            <i class="fa-solid fa-floppy-disk mr-2"></i>Sauvegarder
+                        </button>
+                        <button type="submit"
+                                name="mark_as_applied"
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fa-solid fa-check-circle mr-2"></i>Marquer comme Postulé
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modale CV Optimizer -->
+        <div id="cvOptimizerModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
+             role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                <div class="fixed inset-0 bg-slate-500/75 transition-opacity" aria-hidden="true"
+                     onclick="closeCvOptimizerModal()"></div>
+                <div class="relative inline-block w-full max-w-2xl p-0 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                    <div class="bg-[#125484] from-purple-600 to-indigo-600 px-6 py-4">
+                        <h3 class="text-lg font-semibold text-white" id="modal-title">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Suggestions pour adapter votre CV
+                        </h3>
+                        <p class="text-white text-sm mt-1">Recommandations IA pour coller à cette offre</p>
+                    </div>
+                    <div id="cvOptimizerLoading" class="px-6 py-12 text-center">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-[#125484] mb-4"></i>
+                        <p class="text-slate-600">Analyse de votre CV en cours...</p>
+                    </div>
+                    <div id="cvOptimizerContent" class="hidden px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                                <i class="fa-solid fa-key mr-2 text-[#125484]"></i>Mots-clés à ajouter
+                            </h4>
+                            <div id="cvOptimizerKeywords" class="flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                                <i class="fa-solid fa-quote-left mr-2 text-[#125484]"></i>Résumé suggéré
+                            </h4>
+                            <p id="cvOptimizerSummary"
+                               class="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-lg border border-slate-200"></p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                                <i class="fa-solid fa-briefcase mr-2 text-[#125484]"></i>Suggestions pour vos
+                                expériences
+                            </h4>
+                            <ul id="cvOptimizerExperiences" class="space-y-3"></ul>
+                        </div>
+                    </div>
+                    <div id="cvOptimizerError" class="hidden px-6 py-6">
+                        <p class="text-red-600 text-sm" id="cvOptimizerErrorText"></p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                        <button type="button" onclick="closeCvOptimizerModal()"
+                                class="inline-flex items-center px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition-colors">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- TinyMCE CDN -->
-<!-- 
-    IMPORTANT: Pour utiliser votre clé API, vous devez enregistrer votre domaine dans le portail TinyMCE :
-    1. Allez sur https://www.tiny.cloud/auth/login/
-    2. Account → Domains → Ajoutez: localhost, 127.0.0.1, localhost:8000
-    
-    En attendant, utilisez 'no-api-key' pour le développement (fonctionnalités limitées)
--->
+    <!-- TinyMCE CDN -->
+    <!--
+        IMPORTANT: Pour utiliser votre clé API, vous devez enregistrer votre domaine dans le portail TinyMCE :
+        1. Allez sur https://www.tiny.cloud/auth/login/
+        2. Account → Domains → Ajoutez: localhost, 127.0.0.1, localhost:8000
 
- <!--  // Une fois le domaine enregistré, remplacez la ligne ci-dessus par : -->
-    <script src="https://cdn.tiny.cloud/1/9zmcrtlxdl1l1mml08505dly2i0kt3ut2zgzq8rxwd3ll5m6/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+        En attendant, utilisez 'no-api-key' pour le développement (fonctionnalités limitées)
+    -->
+
+    <!--  // Une fois le domaine enregistré, remplacez la ligne ci-dessus par : -->
+    <script src="https://cdn.tiny.cloud/1/9zmcrtlxdl1l1mml08505dly2i0kt3ut2zgzq8rxwd3ll5m6/tinymce/8/tinymce.min.js"
+            referrerpolicy="origin" crossorigin="anonymous"></script>
 
 
-<script>
-    // Initialize TinyMCE
-    let tinymceEditor;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        tinymce.init({
-            selector: '#cover_letter_content',
-            plugins: [
-                // Core editing features (disponibles sans clé API)
-                'anchor', 'autolink', 'charmap', 'link', 'lists', 'searchreplace', 'wordcount',
-                // Note: Les plugins premium nécessitent une clé API valide avec domaine enregistré
-                // Décommentez après avoir enregistré le domaine dans le portail TinyMCE :
-                 'checklist', 'casechange', 'formatpainter', 'a11ychecker', 'tinymcespellchecker',
-                 'powerpaste', 'typography', 'autocorrect'
-            ],
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link | align lineheight | numlist bullist indent outdent | charmap | removeformat',
-            // Configuration pour les fonctionnalités premium (décommentez après enregistrement du domaine)
-             a11ychecker_level: 'wcag2aa',
-             spellchecker_language: 'fr_FR',
-             typography_default_lang: 'fr',
-             autocorrect_restrict: false,
-            menubar: false,
-            statusbar: false,
-            height: 500,
-            min_height: 400,
-            branding: false,
-            content_style: `
+    <script>
+        // Initialize TinyMCE
+        let tinymceEditor;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            tinymce.init({
+                selector: '#cover_letter_content',
+                plugins: [
+                    // Core editing features (disponibles sans clé API)
+                    'anchor', 'autolink', 'charmap', 'link', 'lists', 'searchreplace', 'wordcount',
+                    // Note: Les plugins premium nécessitent une clé API valide avec domaine enregistré
+                    // Décommentez après avoir enregistré le domaine dans le portail TinyMCE :
+                    'checklist', 'casechange', 'formatpainter', 'a11ychecker', 'tinymcespellchecker',
+                    'powerpaste', 'typography', 'autocorrect'
+                ],
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link | align lineheight | numlist bullist indent outdent | charmap | removeformat',
+                // Configuration pour les fonctionnalités premium (décommentez après enregistrement du domaine)
+                a11ychecker_level: 'wcag2aa',
+                spellchecker_language: 'fr_FR',
+                typography_default_lang: 'fr',
+                autocorrect_restrict: false,
+                menubar: false,
+                statusbar: false,
+                height: 500,
+                min_height: 400,
+                branding: false,
+                content_style: `
                 body {
                     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
                     font-size: 15px;
@@ -201,250 +264,313 @@
                     padding: 16px;
                 }
             `,
-            setup: function(editor) {
-                tinymceEditor = editor;
-                
-                // Auto-save on change events
-                editor.on('change', function() {
-                    editor.save();
-                });
-                
-                // Hide toolbar on init
-                editor.on('init', function() {
-                    const toolbar = document.querySelector('.tox-editor-header');
-                    if (toolbar) {
-                        toolbar.style.display = 'none';
-                    }
-                    
-                    // Set initial state of toggle button
-                    const toggleBtn = document.getElementById('tinymce_toolbar_toggle');
-                    if (toggleBtn) {
-                        toggleBtn.classList.remove('text-[#125484]');
-                    }
-                });
-                
-                // Toggle button click handler
-                const toggleBtn = document.getElementById('tinymce_toolbar_toggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', function() {
+                setup: function (editor) {
+                    tinymceEditor = editor;
+
+                    // Auto-save on change events
+                    editor.on('change', function () {
+                        editor.save();
+                    });
+
+                    // Hide toolbar on init
+                    editor.on('init', function () {
                         const toolbar = document.querySelector('.tox-editor-header');
                         if (toolbar) {
-                            const isVisible = toolbar.style.display !== 'none';
-                            toolbar.style.display = isVisible ? 'none' : 'flex';
-                            
-                            // Visual feedback: change button color when toolbar is active
-                            if (isVisible) {
-                                toggleBtn.classList.remove('text-[#125484]');
-                                toggleBtn.classList.add('text-slate-400');
-                            } else {
-                                toggleBtn.classList.remove('text-slate-400');
-                                toggleBtn.classList.add('text-[#125484]');
-                            }
+                            toolbar.style.display = 'none';
+                        }
+
+                        // Set initial state of toggle button
+                        const toggleBtn = document.getElementById('tinymce_toolbar_toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('text-[#125484]');
                         }
                     });
+
+                    // Toggle button click handler
+                    const toggleBtn = document.getElementById('tinymce_toolbar_toggle');
+                    if (toggleBtn) {
+                        toggleBtn.addEventListener('click', function () {
+                            const toolbar = document.querySelector('.tox-editor-header');
+                            if (toolbar) {
+                                const isVisible = toolbar.style.display !== 'none';
+                                toolbar.style.display = isVisible ? 'none' : 'flex';
+
+                                // Visual feedback: change button color when toolbar is active
+                                if (isVisible) {
+                                    toggleBtn.classList.remove('text-[#125484]');
+                                    toggleBtn.classList.add('text-slate-400');
+                                } else {
+                                    toggleBtn.classList.remove('text-slate-400');
+                                    toggleBtn.classList.add('text-[#125484]');
+                                }
+                            }
+                        });
+                    }
                 }
-            }
+            });
         });
-    });
-    
-    function handleAIAction(action, event) {
-        // Get content from TinyMCE if available, otherwise from textarea
-        let currentText;
-        if (tinymceEditor) {
-            currentText = tinymceEditor.getContent({ format: 'text' });
-        } else {
-            const textarea = document.getElementById('cover_letter_content');
-            currentText = textarea.value;
-        }
-        const matchId = {{ match.id }};
-        
-        // Vérifier que le texte n'est pas vide (sauf pour l'action 'generate' qui crée une nouvelle lettre)
-        if (action !== 'generate' && !currentText.trim()) {
-            alert('Veuillez d\'abord rédiger une lettre de motivation avant de l\'améliorer.');
-            return;
-        }
-        
-        // Désactiver le bouton pendant le traitement
-        const button = event ? event.target.closest('button') : document.querySelector(`button[onclick*="${action}"]`);
-        const originalButtonHTML = button ? button.innerHTML : '';
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Traitement...';
-        }
-        
-        // Messages selon l'action
-        const actionMessages = {
-            'improve': 'Amélioration en cours...',
-            'formalize': 'Formalisation en cours...',
-            'generate': 'Génération du brouillon...',
-            'export-pdf': 'Export en cours...'
-        };
-        
-        // Show loading state in TinyMCE or textarea
-        let originalPlaceholder = null;
-        if (tinymceEditor) {
-            tinymceEditor.setContent(`<p><em>${actionMessages[action] || 'Traitement en cours...'}</em></p>`);
-            tinymceEditor.mode.set('readonly');
-        } else {
-            const textarea = document.getElementById('cover_letter_content');
-            if (textarea) {
-                originalPlaceholder = textarea.placeholder;
-                textarea.placeholder = actionMessages[action] || 'Traitement en cours...';
-                textarea.disabled = true;
-            }
-        }
-        
-        // Préparer les données pour l'envoi
-        const formData = new FormData();
-        formData.append('cover_letter_content', currentText);
-        formData.append('action', action);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        
-        // Appel AJAX à l'API
-        fetch(`{% url 'quick_refine_cover_letter' match.id %}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Si c'est un export PDF, télécharger le fichier
-                if (action === 'export-pdf' && data.pdf_data) {
-                    // Convertir le base64 en blob et télécharger
-                    const byteCharacters = atob(data.pdf_data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: 'application/pdf' });
-                    
-                    // Créer un lien de téléchargement
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = data.filename || 'lettre_motivation.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    
-                    // Réactiver l'éditeur
-                    if (tinymceEditor) {
-                        tinymceEditor.mode.set('design');
-                    } else {
-                        const textarea = document.getElementById('cover_letter_content');
-                        textarea.placeholder = originalPlaceholder;
-                        textarea.disabled = false;
-                    }
-                    
-                    // Afficher un message de succès
-                    showMessage(data.message || '📄 PDF téléchargé avec succès !', 'success');
-                } else {
-                    // Remplacer le contenu par la version améliorée
-                    if (tinymceEditor) {
-                        // Convert plain text to HTML paragraphs
-                        const htmlContent = data.refined_letter.split('\n\n').map(para => 
-                            para.trim() ? `<p>${para.trim().replace(/\n/g, '<br>')}</p>` : ''
-                        ).join('');
-                        tinymceEditor.setContent(htmlContent);
-                        tinymceEditor.mode.set('design');
-                    } else {
-                        const textarea = document.getElementById('cover_letter_content');
-                        textarea.value = data.refined_letter;
-                        textarea.placeholder = originalPlaceholder;
-                        textarea.disabled = false;
-                    }
-                    
-                    // Afficher un message de succès
-                    showMessage(data.message || '✨ Lettre améliorée avec succès !', 'success');
-                }
-            } else {
-                // Afficher l'erreur
-                if (tinymceEditor) {
-                    tinymceEditor.mode.set('design');
-                } else {
-                    const textarea = document.getElementById('cover_letter_content');
-                    textarea.placeholder = originalPlaceholder;
-                    textarea.disabled = false;
-                }
-                showMessage(data.error || 'Erreur lors de l\'amélioration', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
+
+        function handleAIAction(action, event) {
+            // Get content from TinyMCE if available, otherwise from textarea
+            let currentText;
             if (tinymceEditor) {
-                tinymceEditor.mode.set('design');
+                currentText = tinymceEditor.getContent({format: 'text'});
             } else {
                 const textarea = document.getElementById('cover_letter_content');
-                textarea.placeholder = originalPlaceholder;
-                textarea.disabled = false;
+                currentText = textarea.value;
             }
-            showMessage('Erreur de connexion. Veuillez réessayer.', 'error');
-        })
-        .finally(() => {
-            // Réactiver le bouton
+            const matchId = {{ match.id }};
+
+            // Vérifier que le texte n'est pas vide (sauf pour l'action 'generate' qui crée une nouvelle lettre)
+            if (action !== 'generate' && !currentText.trim()) {
+                alert('Veuillez d\'abord rédiger une lettre de motivation avant de l\'améliorer.');
+                return;
+            }
+
+            // Désactiver le bouton pendant le traitement
+            const button = event ? event.target.closest('button') : document.querySelector(`button[onclick*="${action}"]`);
+            const originalButtonHTML = button ? button.innerHTML : '';
             if (button) {
-                button.disabled = false;
-                button.innerHTML = originalButtonHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Traitement...';
             }
-        });
-    }
-    
-    function showMessage(message, type) {
-        // Créer un élément de message temporaire
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
-            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`;
-        messageDiv.innerHTML = `
+
+            // Messages selon l'action
+            const actionMessages = {
+                'improve': 'Amélioration en cours...',
+                'formalize': 'Formalisation en cours...',
+                'generate': 'Génération du brouillon...',
+                'export-pdf': 'Export en cours...'
+            };
+
+            // Show loading state in TinyMCE or textarea
+            let originalPlaceholder = null;
+            if (tinymceEditor) {
+                tinymceEditor.setContent(`<p><em>${actionMessages[action] || 'Traitement en cours...'}</em></p>`);
+                tinymceEditor.mode.set('readonly');
+            } else {
+                const textarea = document.getElementById('cover_letter_content');
+                if (textarea) {
+                    originalPlaceholder = textarea.placeholder;
+                    textarea.placeholder = actionMessages[action] || 'Traitement en cours...';
+                    textarea.disabled = true;
+                }
+            }
+
+            // Préparer les données pour l'envoi
+            const formData = new FormData();
+            formData.append('cover_letter_content', currentText);
+            formData.append('action', action);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            // Appel AJAX à l'API
+            fetch(`{% url 'quick_refine_cover_letter' match.id %}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Si c'est un export PDF, télécharger le fichier
+                        if (action === 'export-pdf' && data.pdf_data) {
+                            // Convertir le base64 en blob et télécharger
+                            const byteCharacters = atob(data.pdf_data);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], {type: 'application/pdf'});
+
+                            // Créer un lien de téléchargement
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = data.filename || 'lettre_motivation.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+
+                            // Réactiver l'éditeur
+                            if (tinymceEditor) {
+                                tinymceEditor.mode.set('design');
+                            } else {
+                                const textarea = document.getElementById('cover_letter_content');
+                                textarea.placeholder = originalPlaceholder;
+                                textarea.disabled = false;
+                            }
+
+                            // Afficher un message de succès
+                            showMessage(data.message || '📄 PDF téléchargé avec succès !', 'success');
+                        } else {
+                            // Remplacer le contenu par la version améliorée
+                            if (tinymceEditor) {
+                                // Convert plain text to HTML paragraphs
+                                const htmlContent = data.refined_letter.split('\n\n').map(para =>
+                                    para.trim() ? `<p>${para.trim().replace(/\n/g, '<br>')}</p>` : ''
+                                ).join('');
+                                tinymceEditor.setContent(htmlContent);
+                                tinymceEditor.mode.set('design');
+                            } else {
+                                const textarea = document.getElementById('cover_letter_content');
+                                textarea.value = data.refined_letter;
+                                textarea.placeholder = originalPlaceholder;
+                                textarea.disabled = false;
+                            }
+
+                            // Afficher un message de succès
+                            showMessage(data.message || '✨ Lettre améliorée avec succès !', 'success');
+                        }
+                    } else {
+                        // Afficher l'erreur
+                        if (tinymceEditor) {
+                            tinymceEditor.mode.set('design');
+                        } else {
+                            const textarea = document.getElementById('cover_letter_content');
+                            textarea.placeholder = originalPlaceholder;
+                            textarea.disabled = false;
+                        }
+                        showMessage(data.error || 'Erreur lors de l\'amélioration', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    if (tinymceEditor) {
+                        tinymceEditor.mode.set('design');
+                    } else {
+                        const textarea = document.getElementById('cover_letter_content');
+                        textarea.placeholder = originalPlaceholder;
+                        textarea.disabled = false;
+                    }
+                    showMessage('Erreur de connexion. Veuillez réessayer.', 'error');
+                })
+                .finally(() => {
+                    // Réactiver le bouton
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = originalButtonHTML;
+                    }
+                });
+        }
+
+        function openCvOptimizerModal(event) {
+            const modal = document.getElementById('cvOptimizerModal');
+            const loading = document.getElementById('cvOptimizerLoading');
+            const content = document.getElementById('cvOptimizerContent');
+            const errorDiv = document.getElementById('cvOptimizerError');
+            const errorText = document.getElementById('cvOptimizerErrorText');
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            const matchId = {{ match.id }};
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            fetch(`/matching/optimize-cv/${matchId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loading.classList.add('hidden');
+                    if (data.success && data.data) {
+                        const d = data.data;
+                        const keywordsEl = document.getElementById('cvOptimizerKeywords');
+                        keywordsEl.innerHTML = '';
+                        (d.missing_keywords || []).forEach(kw => {
+                            const span = document.createElement('span');
+                            span.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200';
+                            span.textContent = kw;
+                            keywordsEl.appendChild(span);
+                        });
+                        document.getElementById('cvOptimizerSummary').textContent = d.suggested_summary || 'Aucune suggestion.';
+                        const expEl = document.getElementById('cvOptimizerExperiences');
+                        expEl.innerHTML = '';
+                        (d.experience_suggestions || []).forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = 'bg-slate-50 border border-slate-200 rounded-lg p-3';
+                            li.innerHTML = `<p class="font-medium text-slate-800 text-sm">${escapeHtml(item.experience)}</p><p class="text-slate-600 text-sm mt-1">${escapeHtml(item.suggestion)}</p>`;
+                            expEl.appendChild(li);
+                        });
+                        content.classList.remove('hidden');
+                    } else {
+                        errorText.textContent = data.error || 'Une erreur est survenue.';
+                        errorDiv.classList.remove('hidden');
+                    }
+                })
+                .catch(err => {
+                    loading.classList.add('hidden');
+                    errorText.textContent = 'Erreur de connexion. Veuillez réessayer.';
+                    errorDiv.classList.remove('hidden');
+                });
+        }
+
+        function closeCvOptimizerModal() {
+            document.getElementById('cvOptimizerModal').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(message, type) {
+            // Créer un élément de message temporaire
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            messageDiv.innerHTML = `
             <div class="flex items-center">
                 <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
                 <span>${message}</span>
             </div>
         `;
-        document.body.appendChild(messageDiv);
-        
-        // Supprimer après 3 secondes
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 3000);
-    }
-    
-    // Auto-save optionnel (toutes les 30 secondes)
-    let autoSaveTimer;
-    const form = document.querySelector('form');
-    
-    // Handle form submission - ensure TinyMCE content is saved
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (tinymceEditor) {
-                tinymceEditor.save();
-            }
-        });
-    }
-    
-    // Auto-save listener for TinyMCE
-    if (tinymceEditor) {
-        tinymceEditor.on('change', function() {
-            clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(() => {
-                console.log('Auto-save déclenché...');
-            }, 30000);
-        });
-    } else {
-        const textarea = document.getElementById('cover_letter_content');
-        if (textarea) {
-            textarea.addEventListener('input', () => {
+            document.body.appendChild(messageDiv);
+
+            // Supprimer après 3 secondes
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Auto-save optionnel (toutes les 30 secondes)
+        let autoSaveTimer;
+        const form = document.querySelector('form');
+
+        // Handle form submission - ensure TinyMCE content is saved
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (tinymceEditor) {
+                    tinymceEditor.save();
+                }
+            });
+        }
+
+        // Auto-save listener for TinyMCE
+        if (tinymceEditor) {
+            tinymceEditor.on('change', function () {
                 clearTimeout(autoSaveTimer);
                 autoSaveTimer = setTimeout(() => {
                     console.log('Auto-save déclenché...');
                 }, 30000);
             });
+        } else {
+            const textarea = document.getElementById('cover_letter_content');
+            if (textarea) {
+                textarea.addEventListener('input', () => {
+                    clearTimeout(autoSaveTimer);
+                    autoSaveTimer = setTimeout(() => {
+                        console.log('Auto-save déclenché...');
+                    }, 30000);
+                });
+            }
         }
-    }
-</script>
+    </script>
 {% endblock %}

@@ -8,10 +8,11 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 import logging
 from resumes.models import Resume
-from .models import JobMatch
+from .models import JobMatch, JobAlert
 from .services.francetravail import FranceTravail  # Vérifie que ton import est bon selon ton dossier
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
+from resumes.services.ai_optimizer import AIOptimizer
 
 
 class FindJobsLoadingView(LoginRequiredMixin, TemplateView):
@@ -329,6 +330,95 @@ def quick_refine_cover_letter(request, match_id):
         return JsonResponse({
             'success': False,
             'error': f"Erreur lors de l'amélioration : {str(e)}"
+        }, status=500)
+
+
+@login_required
+@require_POST
+def toggle_job_alert(request, resume_id):
+    """
+    Crée ou active/désactive l'alerte (JobAlert) pour un CV.
+    Appelée en AJAX depuis la liste des CVs (toggle "M'alerter des nouvelles offres").
+    """
+    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    alert, created = JobAlert.objects.get_or_create(
+        resume=resume,
+        defaults={'is_active': True, 'last_checked': None}
+    )
+    if not created:
+        alert.is_active = not alert.is_active
+        alert.save(update_fields=['is_active'])
+    return JsonResponse({
+        'success': True,
+        'is_active': alert.is_active,
+        'message': 'Alerte activée.' if alert.is_active else 'Alerte désactivée.'
+    })
+
+
+@login_required
+def job_alert_status(request, resume_id):
+    """
+    Retourne le statut de l'alerte pour un CV (pour afficher le toggle correctement).
+    """
+    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    alert = JobAlert.objects.filter(resume=resume).first()
+    return JsonResponse({
+        'success': True,
+        'is_active': alert.is_active if alert else False
+    })
+
+
+@login_required
+@require_POST
+def optimize_cv_view(request, match_id):
+    """
+    Lance l'analyse d'adaptation du CV à l'offre (CV Optimizer) et retourne les suggestions en JSON.
+    Appelée via AJAX depuis le workspace (bouton "Adapter mon CV à cette offre").
+    """
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    resume = match.resume
+    if not resume:
+        resume = Resume.objects.filter(user=request.user, is_primary=True).first()
+        if not resume:
+            resume = Resume.objects.filter(user=request.user).first()
+    if not resume:
+        return JsonResponse({
+            'success': False,
+            'error': "Aucun CV trouvé. Veuillez d'abord uploader un CV."
+        }, status=400)
+    if not resume.extracted_text or not resume.extracted_text.strip():
+        return JsonResponse({
+            'success': False,
+            'error': "Le CV n'a pas de texte extrait. Veuillez ré-uploader le CV."
+        }, status=400)
+    job_offer = match.job_offer
+    if not job_offer:
+        return JsonResponse({
+            'success': False,
+            'error': "Offre d'emploi introuvable."
+        }, status=400)
+    try:
+        optimizer = AIOptimizer()
+        result = optimizer.optimize_for_offer(
+            cv_text=resume.extracted_text,
+            job_description=job_offer.description or '',
+            job_title=job_offer.title or ''
+        )
+        return JsonResponse({
+            'success': True,
+            'data': result,
+            'message': "Suggestions d'adaptation du CV générées avec succès."
+        })
+    except ValueError as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+    except Exception as e:
+        logging.error(f"Erreur CV Optimizer : {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f"Erreur lors de l'analyse : {str(e)}"
         }, status=500)
 
 

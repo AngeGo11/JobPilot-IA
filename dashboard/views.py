@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from matching.models import JobMatch
+from resumes.models import Resume
 from django.core.paginator import Paginator
 from django.db.models import Count, Case, When, IntegerField
 import logging
@@ -38,13 +39,13 @@ def dashboard(request):
         seen=Count(Case(When(status='seen', then=1), output_field=IntegerField())),
         applied=Count(Case(When(status='applied', then=1), output_field=IntegerField())),
     )
+    resume_count = Resume.objects.filter(user=request.user).count()
 
-
-    
     return render(request, 'dashboard/dashboard.html', {
         'matches': matches,
         'stats': stats,
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'resume_count': resume_count,
     })
 
 

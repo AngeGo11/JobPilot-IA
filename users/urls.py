@@ -24,10 +24,20 @@ urlpatterns = [
     ), name='password_reset'),
 
     # Django a besoin de cette URL pour dire "Email envoyé !"
-    # Pour l'instant on utilise le template par défaut de Django pour aller vite,
-    # mais tu pourras le styliser plus tard.
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
-    
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(
+        template_name='users/password_reset_done.html'
+    ), name='password_reset_done'),
+
+    # Page du lien reçu par email (uidb64 + token)
+    path('password-reset/confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='users/password_reset_confirm.html'
+    ), name='password_reset_confirm'),
+
+    # Page "Mot de passe réinitialisé"
+    path('password-reset/complete/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='users/password_reset_complete.html'
+    ), name='password_reset_complete'),
+
     # Paramètres utilisateur
     path('settings/', views.UserSettingsView.as_view(), name='user_settings'),
     

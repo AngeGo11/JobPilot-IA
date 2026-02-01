@@ -12,4 +12,7 @@ urlpatterns = [
     path('edit-letter/<int:match_id>/', views.edit_cover_letter, name='edit_cover_letter'),
     path('refine-letter/<int:match_id>/', views.refine_cover_letter, name='refine_cover_letter'),
     path('quick-refine-letter/<int:match_id>/', views.quick_refine_cover_letter, name='quick_refine_cover_letter'),
+    path('optimize-cv/<int:match_id>/', views.optimize_cv_view, name='optimize_cv'),
+    path('alert/<int:resume_id>/', views.toggle_job_alert, name='toggle_job_alert'),
+    path('alert/<int:resume_id>/status/', views.job_alert_status, name='job_alert_status'),
 ]
