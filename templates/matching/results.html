@@ -3,17 +3,17 @@
 {% block title %}Résultats de recherche - JobPilot{% endblock %}
 
 {% block content %}
-    <div class="space-y-6">
+    <div class="space-y-4 md:space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between">
-            <div>
+            <div class="min-w-0 flex-1">
                 <a href="{% url 'resume_list' %}"
-                   class="inline-flex items-center text-[#125484] hover:text-blue-700 text-sm font-medium mb-4">
+                   class="inline-flex items-center text-[#125484] hover:text-blue-700 text-sm font-medium mb-2 md:mb-4">
                     <i class="fa-solid fa-arrow-left mr-2"></i>Retour à mes CVs
                 </a>
-                <h1 class="text-3xl font-bold text-slate-900">Résultats pour <span
+                <h1 class="text-2xl md:text-4xl font-bold text-slate-900 break-words">Résultats pour <span
                         class="text-[#125484]">{{ resume.title }}</span></h1>
-                <p class="text-slate-500 mt-1">Offres triées par pertinence pour votre profil</p>
+                <p class="text-slate-500 mt-1 text-sm md:text-base">Offres triées par pertinence pour votre profil</p>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
         <!-- Results Grid -->
         {% if page_obj %}
             <!-- Results Info -->
-            <div class="flex items-center justify-between text-sm text-slate-600 mb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-slate-600 mb-4">
                 <p>
                     Affichage de <span class="font-semibold text-slate-900">{{ page_obj.start_index }}</span> à 
                     <span class="font-semibold text-slate-900">{{ page_obj.end_index }}</span> sur 
@@ -66,12 +66,12 @@
                 {% endif %}
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {% for match in page_obj %}
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-200 overflow-hidden flex flex-col w-full">
 
                         <!-- Card Header -->
-                        <div class="p-6 pb-4">
+                        <div class="p-4 md:p-6 pb-4">
                             <div class="flex justify-between items-start mb-4">
                                 {% if match.status == 'new' %}
                                     <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Nouveau</span>
@@ -89,7 +89,7 @@
                                 </div>
                             </div>
 
-                            <h3 class="text-lg font-bold text-slate-900 leading-tight mb-1">{{ match.job_offer.title|default:"Titre non disponible" }}</h3>
+                            <h3 class="text-base md:text-lg font-bold text-slate-900 leading-tight mb-1">{{ match.job_offer.title|default:"Titre non disponible" }}</h3>
                             <p class="text-sm text-slate-500 font-medium mb-4">
                                 <i class="fa-solid fa-building mr-1"></i> {{ match.job_offer.company_name|default:"Entreprise non spécifiée" }}
                             </p>
@@ -123,34 +123,35 @@
                         </div>
 
                         <!-- Card Footer -->
-                        <div class="mt-auto bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center">
+                        <div class="mt-auto bg-slate-50 px-4 md:px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                             {% if match.job_offer.url %}
                                 <a href="{{ match.job_offer.url }}" target="_blank"
-                                   class="text-[#125484] hover:text-blue-800 text-sm font-medium flex items-center">
+                                   class="text-[#125484] hover:text-blue-800 text-sm font-medium flex items-center order-2 sm:order-1">
                                     Voir l'offre <i class="fa-solid fa-external-link-alt ml-1 text-xs"></i>
                                 </a>
                             {% else %}
-                                <span class="text-slate-400 text-sm">Lien non disponible</span>
+                                <span class="text-slate-400 text-sm order-2 sm:order-1">Lien non disponible</span>
                             {% endif %}
 
-                            <div class="flex space-x-2">
+                            <div class="flex items-center gap-2 order-1 sm:order-2">
                                 <form action="{% url 'update_match_status' match.id %}" method="POST" class="inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="status" value="rejected">
                                     <button type="submit"
-                                            class="text-slate-400 hover:text-red-500 transition-colors p-1.5"
-                                            title="Ignorer">
+                                            class="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-slate-100"
+                                            title="Ignorer"
+                                            aria-label="Ignorer l'offre">
                                         <i class="fa-solid fa-trash text-sm"></i>
                                     </button>
                                 </form>
 
                                 {% if match.status != 'applied' %}
                                     <form action="{% url 'update_match_status' match.id %}" method="POST"
-                                          class="inline">
+                                          class="inline flex-1 sm:flex-initial">
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="applied">
                                         <button type="submit"
-                                                class="bg-[#125484] hover:bg-[#0f4470] text-white text-xs px-3 py-1.5 rounded-lg transition-colors shadow-sm font-medium">
+                                                class="w-full sm:w-auto min-h-[44px] bg-[#125484] hover:bg-[#0f4470] text-white text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm font-medium">
                                             Postuler
                                         </button>
                                     </form>
@@ -163,26 +164,26 @@
             </div>
         {% else %}
             <!-- Empty State -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-12 text-center">
                 <div class="max-w-md mx-auto">
-                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-400"></i>
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-magnifying-glass text-2xl md:text-3xl text-slate-400"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-slate-900 mb-2">Aucune offre trouvée</h3>
-                    <p class="text-slate-500 mb-2">
+                    <h3 class="text-lg md:text-xl font-semibold text-slate-900 mb-2">Aucune offre trouvée</h3>
+                    <p class="text-slate-500 mb-4 text-sm md:text-base">
                         {% if job_title_used and job_title_used != 'Non détecté' %}
                             Aucune offre correspondant au poste "{{ job_title_used }}" n'a été trouvée pour le moment.
                         {% else %}
                             Aucun titre de poste détecté dans votre CV. Veuillez ré-uploader votre CV pour une nouvelle analyse.
                         {% endif %}
                     </p>
-                    <div class="mt-6 space-x-4">
+                    <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:space-x-0 sm:gap-4 justify-center">
                         <a href="{% url 'resume_list' %}"
-                           class="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors">
+                           class="inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors">
                             <i class="fa-solid fa-arrow-left mr-2"></i>Retour aux CVs
                         </a>
                         <a href="{% url 'find_jobs_loading' resume.id %}"
-                           class="inline-flex items-center px-4 py-2 bg-[#125484] text-white font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
+                           class="inline-flex items-center justify-center min-h-[44px] px-4 py-2 bg-[#125484] text-white font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
                             <i class="fa-solid fa-refresh mr-2"></i>Réessayer
                         </a>
                     </div>
@@ -193,8 +194,8 @@
 
     <!-- Pagination -->
     {% if page_obj.paginator.num_pages > 1 %}
-    <div class="mt-8 flex items-center justify-center">
-        <nav class="flex items-center space-x-2" aria-label="Pagination">
+    <div class="mt-6 md:mt-8 flex items-center justify-center">
+        <nav class="flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
             <!-- First Page -->
             {% if page_obj.has_previous %}
             <a href="?page=1" 
