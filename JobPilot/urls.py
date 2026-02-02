@@ -29,6 +29,7 @@ urlpatterns = [
     path('matching/', include('matching.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('subscriptions/', include('subscriptions.urls')),
+    path('accounts/', include('allauth.urls')),
 ]
 
 # Permet de servir les fichiers médias en mode DEBUG (Dev)

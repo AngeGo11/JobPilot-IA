@@ -6,3 +6,5 @@ pdfplumber
 google-generativeai
 reportlab
 logging
+django-allauth
+PyJWT

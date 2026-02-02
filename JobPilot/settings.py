@@ -36,7 +36,8 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") == 'True'
 
-ALLOWED_HOSTS = ['10.192.66.109', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['10.192.66.109', 'localhost', '127.0.0.1', 'autohypnotic-lashay-undecretory.ngrok-free.dev']
+CSRF_TRUSTED_ORIGINS = ['https://autohypnotic-lashay-undecretory.ngrok-free.dev']
 
 
 # Application definition
@@ -48,10 +49,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'users',
     'resumes',
     'matching',
     'dashboard',
+
+# --- Allauth Core (Authentification) ---
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # --- Allauth Providers (Réseaux sociaux) ---
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.linkedin_oauth2',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +74,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware'
 ]
 
 ROOT_URLCONF = 'JobPilot.urls'
@@ -267,3 +280,8 @@ LOGGING = {
         },
     },
 }
+
+SITE_ID = 1
+
+# Désactive la confirmation pour le login social
+SOCIALACCOUNT_LOGIN_ON_GET = True
