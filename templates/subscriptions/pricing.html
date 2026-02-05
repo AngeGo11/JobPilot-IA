@@ -178,29 +178,32 @@
         </div>
 
         <!-- Additional Option: Pack Recharge -->
-        <div class="max-w-2xl mx-auto mt-12">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-[#125484]/10 rounded-lg flex items-center justify-center">
-                            <i class="fa-solid fa-shopping-bag text-[#125484] text-xl"></i>
+        <div class="max-w-2xl mx-auto mt-12 px-0 sm:px-0">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
+                    <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-[#125484]/10 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-shopping-bag text-[#125484] text-lg sm:text-xl"></i>
                         </div>
-                        <div>
-                            <h4 class="text-lg font-bold text-slate-900 font-display">Pack Recharge</h4>
-                            <p class="text-sm text-slate-600">10 recherches - Sans abonnement</p>
+                        <div class="min-w-0">
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900 font-display">Pack Recharge</h4>
+                            <p class="text-xs sm:text-sm text-slate-600">10 recherches - Sans abonnement</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-bold text-[#125484] font-display">4,99</span>
-                                <span class="text-lg text-slate-600">€</span>
-                            </div>
-                            <p class="text-xs text-slate-500">Paiement unique</p>
-                        </div>
-                        <button class="px-6 py-2.5 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
+                    <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+                        <button class="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-[#125484] text-white font-semibold rounded-full hover:bg-[#0f4470] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95">
                             Acheter
                         </button>
+                        <div class="flex flex-col sm:items-end">
+                            <div class="flex items-baseline justify-between sm:justify-end gap-2 w-full sm:w-auto">
+                                <span class="text-slate-500 text-xs sm:hidden">Paiement unique</span>
+                                <div class="flex items-baseline gap-1 sm:gap-2">
+                                    <span class="text-xl sm:text-2xl font-bold text-[#125484] font-display">4,99</span>
+                                    <span class="text-base sm:text-lg text-slate-600">€</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 hidden sm:block">Paiement unique</p>
+                        </div>
                     </div>
                 </div>
             </div>

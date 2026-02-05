@@ -59,7 +59,7 @@
                             onclick="openCvOptimizerModal(event)"
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100  border border-blue-200  transition-all shadow-sm hover:shadow border-0">
                         <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-                        <span>Améliorer mon CV pour cette offre</span>
+                        <span>Suggestions CV pour cette offre</span>
                     </button>
                 </div>
             </div>
@@ -75,7 +75,7 @@
                     </h2>
                 </div>
                 <div class="p-6">
-                    <div class="prose max-w-none text-slate-700 whitespace-pre-wrap">
+                    <div class="prose max-w-none text-slate-700 text-justify leading-relaxed">
                         {{ job_offer.description|default:"Aucune description disponible." }}
                     </div>
                 </div>
@@ -180,7 +180,7 @@
                     <div id="cvOptimizerContent" class="hidden px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
                         <div>
                             <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
-                                <i class="fa-solid fa-key mr-2 text-[#125484]"></i>Mots-clés à ajouter
+                                <i class="fa-solid fa-key mr-2 text-[#125484]"></i> Suggestions de mots-clés à ajouter
                             </h4>
                             <div id="cvOptimizerKeywords" class="flex flex-wrap gap-2"></div>
                         </div>
