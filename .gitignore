@@ -12,3 +12,8 @@ todolist.txt
 /logs/*.log
 /logs/*.log.*
 !logs/.gitkeep
+
+
+test.html
+strategie_prix
+prompt_strategie_prix
