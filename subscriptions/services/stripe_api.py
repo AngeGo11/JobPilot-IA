@@ -82,7 +82,8 @@ def apply_plan_to_user(user_id, plan_slug):
     now = timezone.now()
     if 'duration_days' in plan_config:
         user.subscription_end_date = now + timedelta(days=plan_config['duration_days'])
-        user.save(update_fields=['subscription_end_date'])
+        user.subscription_plan = plan_slug
+        user.save(update_fields=['subscription_end_date', 'subscription_plan'])
         logger.info("Abonnement mis à jour: user_id=%s plan=%s jusqu'à %s", user_id, plan_slug, user.subscription_end_date)
     if plan_config.get('credits'):
         user.ai_credits = (user.ai_credits or 0) + plan_config['credits']
@@ -104,15 +105,15 @@ def handle_checkout_completed(session):
     if mode == 'subscription':
         subscription_id = session.get('subscription')
         if subscription_id:
-            _link_subscription_and_set_end_date(client_reference_id, subscription_id)
+            _link_subscription_and_set_end_date(client_reference_id, subscription_id, plan)
         else:
             apply_plan_to_user(client_reference_id, plan)
     else:
         apply_plan_to_user(client_reference_id, plan)
 
 
-def _link_subscription_and_set_end_date(user_id, stripe_subscription_id):
-    """Récupère la période courante Stripe et met à jour l'utilisateur."""
+def _link_subscription_and_set_end_date(user_id, stripe_subscription_id, plan_slug):
+    """Récupère la période courante Stripe et met à jour l'utilisateur (date + type d'abonnement)."""
     from django.contrib.auth import get_user_model
     from subscriptions.models import StripeSubscription
 
@@ -127,15 +128,19 @@ def _link_subscription_and_set_end_date(user_id, stripe_subscription_id):
     except Exception as e:
         logger.exception("Erreur récupération abonnement Stripe: %s", e)
         return
-    period_end = sub.get('current_period_end')
+    # Stripe renvoie un objet (attributs) : current_period_end est un timestamp Unix
+    period_end = getattr(sub, 'current_period_end', None)
+    update_fields = ['subscription_plan']
     if period_end:
         user.subscription_end_date = timezone.datetime.fromtimestamp(period_end, tz=timezone.get_current_timezone())
-        user.save(update_fields=['subscription_end_date'])
+        update_fields.append('subscription_end_date')
+    user.subscription_plan = plan_slug if plan_slug in ('pass24h', 'sprint', 'pro') else user.subscription_plan
+    user.save(update_fields=update_fields)
     StripeSubscription.objects.update_or_create(
         user=user,
         defaults={'stripe_subscription_id': stripe_subscription_id}
     )
-    logger.info("Abonnement lié: user_id=%s subscription_id=%s jusqu'à %s", user_id, stripe_subscription_id, user.subscription_end_date)
+    logger.info("Abonnement lié: user_id=%s subscription_id=%s plan=%s jusqu'à %s", user_id, stripe_subscription_id, plan_slug, user.subscription_end_date)
 
 
 def handle_subscription_updated(subscription):
@@ -145,8 +150,8 @@ def handle_subscription_updated(subscription):
     """
     from subscriptions.models import StripeSubscription
 
-    sub_id = subscription.get('id')
-    period_end = subscription.get('current_period_end')
+    sub_id = subscription.get('id') if hasattr(subscription, 'get') else getattr(subscription, 'id', None)
+    period_end = subscription.get('current_period_end') if hasattr(subscription, 'get') else getattr(subscription, 'current_period_end', None)
     if not period_end:
         return
     try:
@@ -170,6 +175,7 @@ def handle_subscription_deleted(subscription):
         return
     user_id = stripe_sub.user_id
     stripe_sub.user.subscription_end_date = timezone.now()
-    stripe_sub.user.save(update_fields=['subscription_end_date'])
+    stripe_sub.user.subscription_plan = None
+    stripe_sub.user.save(update_fields=['subscription_end_date', 'subscription_plan'])
     stripe_sub.delete()
     logger.info("Abonnement annulé: user_id=%s", user_id)

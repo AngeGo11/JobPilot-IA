@@ -3,6 +3,11 @@ from django.db import models
 from django.utils import timezone
 
 
+class SubscriptionPlan(models.TextChoices):
+    PASS24H = "pass24h", "Pass 24h"
+    SPRINT = "sprint", "Sprint"
+    PRO = "pro", "Pro"
+
 class CustomUser(AbstractUser):
     """
     On utilise notre propre classe User pour pouvoir ajouter des champs plus tard
@@ -11,6 +16,13 @@ class CustomUser(AbstractUser):
     """
     ai_credits = models.IntegerField("Crédits IA", default=3)
     subscription_end_date = models.DateTimeField("Fin d'abonnement", null=True, blank=True)
+    subscription_plan = models.CharField(
+        "Type d'abonnement",
+        max_length=20,
+        choices=SubscriptionPlan.choices,
+        null=True,
+        blank=True,
+    )
 
     @property
     def is_premium(self):

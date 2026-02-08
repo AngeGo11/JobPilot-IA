@@ -48,7 +48,7 @@
                         <i class="fa-solid fa-tags mr-2"></i>Tarifs
                     </a>
                     {% if user.is_premium %}
-                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-infinity mr-2"></i>Crédits illimités jusqu'au  {{ user.subscription_end_date|date:"d/m/Y" }}</span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-crown mr-1.5"></i>Abonné {{ user.get_subscription_plan_display|default:"Premium" }} – jusqu'au {{ user.subscription_end_date|date:"d/m/Y" }}</span>
                     {% else %}
                     <a href="{% url 'pricing' %}" class="px-3 py-1.5 rounded-lg text-xs font-medium {% if user.ai_credits == 0 %}bg-red-100 text-red-700 border border-red-200 hover:bg-red-200{% else %}bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200{% endif %} transition-colors">
                         {% if user.ai_credits == 0 %}<i class="fa-solid fa-coins mr-1"></i>0 Crédit – Recharger{% else %}<i class="fa-solid fa-coins mr-1"></i>{{ user.ai_credits }} Crédit{{ user.ai_credits|pluralize }}{% endif %}
@@ -80,7 +80,7 @@
                         <i class="fa-solid fa-tags mr-3 w-5"></i>Tarifs
                     </a>
                     {% if user.is_premium %}
-                    <span class="block px-4 py-3 text-xs font-semibold text-emerald-800 bg-emerald-50 rounded-lg"><i class="fa-solid fa-infinity mr-2"></i>Crédits illimités jusqu'au  {{ user.subscription_end_date|date:"d/m/Y" }}</span>
+                    <span class="block px-4 py-3 text-xs font-semibold text-emerald-800 bg-emerald-50 rounded-lg"><i class="fa-solid fa-crown mr-2"></i>Abonné {{ user.get_subscription_plan_display|default:"Premium" }} – jusqu'au {{ user.subscription_end_date|date:"d/m/Y" }}</span>
                     {% else %}
                     <a href="{% url 'pricing' %}" class="block px-4 py-3 rounded-lg text-xs font-medium min-h-[44px] flex items-center {% if user.ai_credits == 0 %}text-red-700 bg-red-50 hover:bg-red-100{% else %}text-slate-700 bg-slate-100 hover:bg-slate-200{% endif %}">
                         <i class="fa-solid fa-coins mr-3 w-5"></i>{% if user.ai_credits == 0 %}0 Crédit – Recharger{% else %}{{ user.ai_credits }} Crédit{{ user.ai_credits|pluralize }}{% endif %}
