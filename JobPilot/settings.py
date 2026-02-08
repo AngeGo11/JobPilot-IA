@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'resumes',
     'matching',
     'dashboard',
+    'subscriptions',
 
 # --- Allauth Core (Authentification) ---
     'allauth',
@@ -154,6 +155,17 @@ USE_TZ = True
 CLIENT_ID = os.getenv('ID_CLIENT')
 CLIENT_SECRET_KEY = os.getenv('CLIENT_SECRET')
 API_URL = os.getenv('API_BASE_URL')
+
+# --- 4. STRIPE (Via .env) ---
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+# Price IDs créés dans le Dashboard Stripe (Produits > Prix)
+STRIPE_PRICE_PASS24H = os.getenv('STRIPE_PRICE_PASS24H')   # Paiement unique 2,99 €
+STRIPE_PRICE_SPRINT = os.getenv('STRIPE_PRICE_SPRINT')      # Abonnement 5,99 € / semaine
+STRIPE_PRICE_PRO = os.getenv('STRIPE_PRICE_PRO')           # Abonnement 14,99 € / mois
+STRIPE_PRICE_PACK = os.getenv('STRIPE_PRICE_PACK')         # Paiement unique 4,99 € (10 crédits)
+
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Static files (CSS, JavaScript, Images)

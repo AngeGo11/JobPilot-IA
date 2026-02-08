@@ -169,11 +169,21 @@
                         </div>
                     </div>
 
+                    {% if not user.can_generate %}
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p class="text-amber-800 text-sm font-medium"><i class="fa-solid fa-exclamation-triangle mr-2"></i>Crédits insuffisants pour l'analyse IA. <a href="{% url 'pricing' %}" class="underline font-semibold">Recharger ou passer Premium</a>.</p>
+                    </div>
+                    {% endif %}
+
                     <!-- Submit Button -->
                     <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
+                        {% if not user.is_premium and user.can_generate %}
+                        <span class="text-sm text-slate-500"><i class="fa-solid fa-coins mr-1"></i>Coût : 1 crédit</span>
+                        {% endif %}
                         <button
                                 type="submit"
-                                class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-[#125484] text-white font-semibold rounded-lg hover:bg-[#0f4470] transition-colors shadow-md hover:shadow-lg"
+                                {% if not user.can_generate %}disabled{% endif %}
+                                class="flex-1 inline-flex items-center justify-center px-6 py-3 {% if user.can_generate %}bg-[#125484] text-white hover:bg-[#0f4470]{% else %}bg-slate-300 text-slate-500 cursor-not-allowed{% endif %} font-semibold rounded-lg transition-colors shadow-md"
                         >
                             <i class="fa-solid fa-upload mr-2"></i>Uploader le CV
                         </button>

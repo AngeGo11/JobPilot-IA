@@ -6,6 +6,7 @@ from .forms import ResumeUploadForm
 from .models import Resume
 from .services.pdf_parser import PDFParser
 from matching.models import JobAlert
+from matching.services import consume_credit
 from .services.ai_parser import AIParser
 
 User = get_user_model()
@@ -29,7 +30,13 @@ def upload_resume(request):
                 resume.parsed_data = parsed_data
                 resume.save()
 
-                # --- ÉTAPE 2 : ANALYSE IA AVEC GEMINI ---
+                # --- ÉTAPE 2 : ANALYSE IA AVEC GEMINI (consomme 1 crédit) ---
+                if not consume_credit(request.user):
+                    messages.error(
+                        request,
+                        "Crédits insuffisants pour l'analyse IA. Passez Premium ou rechargez vos crédits."
+                    )
+                    return redirect('pricing')
                 try:
                     ai_parser = AIParser()
                     job_info = ai_parser.extract_job_info(extracted_text)

@@ -9,7 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import logging
 from resumes.models import Resume
 from .models import JobMatch, JobAlert
-from .services.francetravail import FranceTravail  # Vérifie que ton import est bon selon ton dossier
+from .services import consume_credit
+from .services.francetravail import FranceTravail
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
 from resumes.services.ai_optimizer import AIOptimizer
@@ -164,9 +165,16 @@ def quick_refine_cover_letter(request, match_id):
     Appelée via AJAX depuis le workspace.
     """
     match = get_object_or_404(JobMatch, id=match_id, user=request.user)
-    
-    # Récupérer l'action demandée
     action = request.POST.get('action', 'improve')
+
+    # Consommer 1 crédit pour les actions IA (sauf export-pdf qui n'utilise pas l'IA générative)
+    if action != 'export-pdf':
+        if not consume_credit(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': 'Crédits insuffisants. Passez Premium ou rechargez vos crédits.',
+                'redirect': '/subscriptions/pricing/',
+            }, status=402)
     
     # Si l'action est 'generate', générer une nouvelle lettre de motivation
     if action == 'generate':
@@ -338,8 +346,14 @@ def quick_refine_cover_letter(request, match_id):
 def toggle_job_alert(request, resume_id):
     """
     Crée ou active/désactive l'alerte (JobAlert) pour un CV.
-    Appelée en AJAX depuis la liste des CVs (toggle "M'alerter des nouvelles offres").
+    Réservé aux utilisateurs Premium.
     """
+    if not getattr(request.user, 'is_premium', False):
+        return JsonResponse({
+            'success': False,
+            'error': "Les alertes email sont réservées aux abonnés Premium.",
+            'redirect': '/subscriptions/pricing/',
+        }, status=403)
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
     alert, created = JobAlert.objects.get_or_create(
         resume=resume,
@@ -359,12 +373,20 @@ def toggle_job_alert(request, resume_id):
 def job_alert_status(request, resume_id):
     """
     Retourne le statut de l'alerte pour un CV (pour afficher le toggle correctement).
+    Les non-premium reçoivent is_active=False et can_use_alerts=False.
     """
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    if not getattr(request.user, 'is_premium', False):
+        return JsonResponse({
+            'success': True,
+            'is_active': False,
+            'can_use_alerts': False,
+        })
     alert = JobAlert.objects.filter(resume=resume).first()
     return JsonResponse({
         'success': True,
-        'is_active': alert.is_active if alert else False
+        'is_active': alert.is_active if alert else False,
+        'can_use_alerts': True,
     })
 
 
@@ -376,6 +398,12 @@ def optimize_cv_view(request, match_id):
     Appelée via AJAX depuis le workspace (bouton "Adapter mon CV à cette offre").
     """
     match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    if not consume_credit(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Crédits insuffisants. Passez Premium ou rechargez vos crédits.',
+            'redirect': '/subscriptions/pricing/',
+        }, status=402)
     resume = match.resume
     if not resume:
         resume = Resume.objects.filter(user=request.user, is_primary=True).first()
@@ -441,6 +469,12 @@ def refine_cover_letter(request, match_id):
     if request.method == 'POST':
         form = CoverLetterRefineForm(request.POST)
         if form.is_valid():
+            if not consume_credit(request.user):
+                messages.error(
+                    request,
+                    "Crédits insuffisants pour améliorer la lettre. Passez Premium ou rechargez vos crédits."
+                )
+                return redirect('pricing')
             instructions = form.cleaned_data['instructions']
             improvement_type = form.cleaned_data.get('improvement_type', 'custom')
             

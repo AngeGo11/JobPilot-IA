@@ -118,17 +118,26 @@
                                    class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
                                     <i class="fa-solid fa-search mr-2"></i>Trouver des offres
                                 </a>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-slate-600 whitespace-nowrap"> <i class="fa-solid fa-bell mr-1"></i> M'alerter des nouvelles offres</span>
-                                    <button type="button"
-                                            data-resume-id="{{ resume.id }}"
-                                            data-initial-active="{% if resume.id in active_alert_resume_ids %}true{% else %}false{% endif %}"
-                                            class="job-alert-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#125484] focus:ring-offset-2 {% if resume.id in active_alert_resume_ids %}bg-[#125484]{% else %}bg-slate-200{% endif %}"
-                                            role="switch"
-                                            aria-checked="{% if resume.id in active_alert_resume_ids %}true{% else %}false{% endif %}"
-                                            aria-label="Activer ou désactiver l'alerte offres pour ce CV">
-                                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if resume.id in active_alert_resume_ids %}translate-x-5{% else %}translate-x-1{% endif %}"></span>
-                                    </button>
+                                <!-- Conteneur Alertes Email (même style que les boutons IA du workspace) -->
+                                <div class="relative rounded-lg border p-3 overflow-hidden min-w-0 transition-all {% if user.is_premium %}border-slate-200{% else %}border-slate-200 bg-white/80 text-slate-500 opacity-60{% endif %}">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm whitespace-nowrap inline-flex items-center gap-1.5 {% if user.is_premium %}text-slate-600{% endif %}">
+                                            {% if not user.is_premium %}<i class="fa-solid fa-lock text-[#125484] text-xs"></i>{% endif %}
+                                            <i class="fa-solid fa-bell text-xs {% if user.is_premium %}text-slate-500{% else %}text-slate-400{% endif %}"></i>
+                                            <span>M'alerter des nouvelles offres</span>
+                                        </span>
+                                        <button type="button"
+                                                data-resume-id="{{ resume.id }}"
+                                                data-initial-active="{% if resume.id in active_alert_resume_ids %}true{% else %}false{% endif %}"
+                                                {% if not user.is_premium %}disabled aria-disabled="true" title="Fonctionnalité Premium"{% endif %}
+                                                class="job-alert-toggle relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#125484] focus:ring-offset-2 {% if resume.id in active_alert_resume_ids %}bg-[#125484] cursor-pointer{% else %}bg-slate-200{% endif %} {% if not user.is_premium %}cursor-not-allowed{% else %}cursor-pointer{% endif %}"
+                                                role="switch"
+                                                aria-checked="{% if resume.id in active_alert_resume_ids %}true{% else %}false{% endif %}"
+                                                aria-label="Activer ou désactiver l'alerte offres pour ce CV">
+                                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if resume.id in active_alert_resume_ids %}translate-x-5{% else %}translate-x-1{% endif %}"></span>
+                                        </button>
+                                    </div>
+                                    
                                 </div>
                                 {% if resume.is_primary %}
                                     <span class="px-3 py-2 bg-green-100 text-green-700 text-xs font-semibold rounded-lg border border-green-200">

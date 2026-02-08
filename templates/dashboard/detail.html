@@ -58,9 +58,13 @@
 
                     <button type="button"
                             onclick="openCvOptimizerModal(event)"
-                            class="flex-1 sm:flex-none justify-center inline-flex items-center gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all shadow-sm hover:shadow border-0 whitespace-nowrap">
+                            {% if not user.can_generate %}disabled{% endif %}
+                            title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Suggestions pour adapter votre CV à cette offre{% endif %}"
+                            class="flex-1 sm:flex-none justify-center inline-flex items-center gap-1.5 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg border transition-all shadow-sm border-0 whitespace-nowrap {% if user.can_generate %}border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:shadow{% else %}border-slate-200 bg-white/80 text-slate-500 opacity-60 cursor-not-allowed{% endif %}">
+                        {% if not user.can_generate %}<i class="fa-solid fa-lock text-[#125484] text-xs"></i>{% endif %}
                         <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
                         <span>Suggestions CV pour cette offre</span>
+                        {% if user.can_generate and not user.is_premium %}<span class="text-xs opacity-80">(1 crédit)</span>{% endif %}
                     </button>
 
                 </div>
@@ -95,27 +99,41 @@
                     {% csrf_token %}
 
                     <!-- AI Toolbar -->
-                    <div class="editor-toolbar px-6 py-3 border-b border-slate-200">
-                        <div class="flex items-center gap-2 flex">
+                    <div class="editor-toolbar px-4 py-3 sm:px-6 border-b border-slate-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-2 items-stretch gap-2">
                             <button type="button"
                                     onclick="handleAIAction('improve', event)"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 transition-all border border-purple-200">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>Améliorer avec l'IA
+                                    {% if not user.can_generate %}disabled{% endif %}
+                                    title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Améliorer avec l'IA{% endif %}"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg border border-purple-200 transition-all min-h-[44px] sm:min-h-0 {% if user.can_generate %}bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100{% else %}bg-white/80 text-slate-500 border-slate-200 opacity-60 cursor-not-allowed{% endif %}">
+                                {% if not user.can_generate %}<i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
+                                <i class="fa-solid fa-wand-magic-sparkles shrink-0"></i>
+                                <span class="truncate">Améliorer avec l'IA</span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('formalize', event)"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                                <i class="fa-solid fa-user-tie mr-1.5"></i>Rendre plus formel
+                                    {% if not user.can_generate %}disabled{% endif %}
+                                    title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Rendre plus formel{% endif %}"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg border border-blue-200 transition-all min-h-[44px] sm:min-h-0 {% if user.can_generate %}bg-blue-50 text-blue-700 hover:bg-blue-100{% else %}bg-white/80 text-slate-500 border-slate-200 opacity-60 cursor-not-allowed{% endif %}">
+                                {% if not user.can_generate %}<i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
+                                <i class="fa-solid fa-user-tie shrink-0"></i>
+                                <span class="truncate">Rendre plus formel</span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('generate', event)"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                                <i class="fa-solid fa-file-pen mr-1.5"></i>Générer un brouillon
+                                    {% if not user.can_generate %}disabled{% endif %}
+                                    title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Générer un brouillon{% endif %}"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg border border-blue-200 transition-all min-h-[44px] sm:min-h-0 {% if user.can_generate %}bg-blue-50 text-blue-700 hover:bg-blue-100{% else %}bg-white/80 text-slate-500 border-slate-200 opacity-60 cursor-not-allowed{% endif %}">
+                                {% if not user.can_generate %}<i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
+                                <i class="fa-solid fa-file-pen shrink-0"></i>
+                                <span class="truncate">Générer un brouillon</span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('export-pdf', event)"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200">
-                                <i class="fa-solid fa-file-pdf mr-1.5"></i>Exporter PDF
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all border border-blue-200 min-h-[44px] sm:min-h-0"
+                                    title="Exporter en PDF">
+                                <i class="fa-solid fa-file-pdf shrink-0"></i>
+                                <span class="truncate">Exporter PDF</span>
                             </button>
                         </div>
                     </div>
@@ -428,7 +446,10 @@
                             showMessage(data.message || '✨ Lettre améliorée avec succès !', 'success');
                         }
                     } else {
-                        // Afficher l'erreur
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                            return;
+                        }
                         if (tinymceEditor) {
                             tinymceEditor.mode.set('design');
                         } else {
@@ -501,6 +522,10 @@
                         });
                         content.classList.remove('hidden');
                     } else {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                            return;
+                        }
                         errorText.textContent = data.error || 'Une erreur est survenue.';
                         errorDiv.classList.remove('hidden');
                     }

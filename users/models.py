@@ -1,13 +1,28 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 
 class CustomUser(AbstractUser):
     """
     On utilise notre propre classe User pour pouvoir ajouter des champs plus tard
     (ex: is_recruiter, is_candidate) si besoin.
+    Modèle hybride : crédits IA + abonnement premium.
     """
-    pass
+    ai_credits = models.IntegerField("Crédits IA", default=3)
+    subscription_end_date = models.DateTimeField("Fin d'abonnement", null=True, blank=True)
+
+    @property
+    def is_premium(self):
+        """True si l'utilisateur a un abonnement actif (date de fin dans le futur)."""
+        if not self.subscription_end_date:
+            return False
+        return self.subscription_end_date > timezone.now()
+
+    @property
+    def can_generate(self):
+        """True si l'utilisateur peut utiliser les outils IA (premium ou crédits > 0)."""
+        return self.is_premium or (self.ai_credits and self.ai_credits > 0)
 
 
 class CandidateProfile(models.Model):
