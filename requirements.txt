@@ -9,3 +9,4 @@ logging
 django-allauth
 PyJWT
 stripe
+python-docx

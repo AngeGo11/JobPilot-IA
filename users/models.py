@@ -14,7 +14,7 @@ class CustomUser(AbstractUser):
     (ex: is_recruiter, is_candidate) si besoin.
     Modèle hybride : crédits IA + abonnement premium.
     """
-    ai_credits = models.IntegerField("Crédits IA", default=3)
+    ai_credits = models.IntegerField("Crédits IA", default=5)
     subscription_end_date = models.DateTimeField("Fin d'abonnement", null=True, blank=True)
     subscription_plan = models.CharField(
         "Type d'abonnement",
