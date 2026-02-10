@@ -4,6 +4,10 @@
 .venv
 __pycache__/
 *.pyc
+
+.DS_Store
+**/.DS_Store
+
 prompt_logo
 notes_persos
 todolist.txt
@@ -17,5 +21,5 @@ todolist.txt
 test.html
 strategie_prix
 prompt_strategie_prix
-
+prompt_rating_limit
 docs

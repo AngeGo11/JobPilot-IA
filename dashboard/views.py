@@ -41,11 +41,18 @@ def dashboard(request):
     )
     resume_count = Resume.objects.filter(user=request.user).count()
 
+    # Modale de bienvenue : affichée une seule fois après la première inscription
+    show_welcome = False
+    if request.session.get('show_welcome_modal'):
+        show_welcome = True
+        request.session.pop('show_welcome_modal', None)
+
     return render(request, 'dashboard/dashboard.html', {
         'matches': matches,
         'stats': stats,
         'page_obj': page_obj,
         'resume_count': resume_count,
+        'show_welcome': show_welcome,
     })
 
 

@@ -57,6 +57,13 @@ class UserRegisterForm(UserCreationForm):
                     'placeholder': '••••••••'
                 })
     
+    def clean_email(self):
+        """Vérifier que l'email n'est pas déjà utilisé."""
+        email = self.cleaned_data.get('email')
+        if email and CustomUser.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Un compte avec ce mail existe déjà.")
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
         # Générer le username à partir de l'email (partie avant @)

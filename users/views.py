@@ -9,20 +9,25 @@ from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm, CustomPasswo
 from .models import CandidateProfile
 import logging
 
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             CandidateProfile.objects.get_or_create(user=user)
-            login(request, user) # On connecte l'utilisateur directement après inscription
+            login(request, user)  # Connexion directe après inscription
             request.session["user_id"] = user.id
+            request.session["show_welcome_modal"] = True  # Modale bienvenue au premier accès dashboard
             messages.success(request, f'Compte créé pour {user.email} !')
-            logging.info(request.session.get('user_id'))
+            logging.info("user_id after register: %s", request.session.get('user_id'))
             return redirect('post_login_loading')  # Même flux que login
     else:
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
+
+
+
 
 
 

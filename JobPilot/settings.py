@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'users',
+    'users.apps.UsersConfig',
     'resumes',
     'matching',
     'dashboard',
