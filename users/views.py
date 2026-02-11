@@ -19,6 +19,8 @@ def register(request):
             login(request, user)  # Connexion directe après inscription
             request.session["user_id"] = user.id
             request.session["show_welcome_modal"] = True  # Modale bienvenue au premier accès dashboard
+            from .services.welcome_email import send_welcome_email
+            send_welcome_email(user, request=request)
             messages.success(request, f'Compte créé pour {user.email} !')
             logging.info("user_id after register: %s", request.session.get('user_id'))
             return redirect('post_login_loading')  # Même flux que login
