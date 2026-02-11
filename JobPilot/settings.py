@@ -188,8 +188,18 @@ LOGIN_REDIRECT_URL = 'post_login_loading'  # Page de chargement puis dashboard
 LOGIN_URL = 'login'       # L'URL de la page de login (si accès refusé ailleurs)
 # settings.py
 
-# Affiche les emails dans le terminal au lieu de les envoyer
+# --- Email (dev : console pour voir les mails dans le terminal) ---
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# --- Email (prod : envoie les mails via SMTP) ---
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Adresse qui apparaît comme expéditeur (ex. "JobPilot <noreply@votredomaine.com>")
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = os.getenv('SERVER_EMAIL')  # pour les erreurs envoyées aux admins
+
+# --- Allauth : email requis et vérification ---
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # ou 'optional' pour désactiver l'obligation
 
 
 TINYMCE_JS_URL = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js'
