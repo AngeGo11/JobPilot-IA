@@ -30,4 +30,4 @@ class Resume(models.Model):
     parsed_data = models.JSONField("Métadonnées IA", default=dict, blank=True)
 
     def __str__(self):
-        return f"{self.title} ({self.user.username})"
+        return f"{self.title} ({self.user.email})"

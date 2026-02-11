@@ -121,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
         'OPTIONS': {
-            'user_attributes': ('username', 'email', 'first_name', 'last_name'),
+            'user_attributes': ('email', 'first_name', 'last_name'),
             'max_similarity': 0.7,
         }
     },
@@ -189,16 +189,22 @@ LOGIN_URL = 'login'       # L'URL de la page de login (si accès refusé ailleur
 # settings.py
 
 # --- Email (dev : console pour voir les mails dans le terminal) ---
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # --- Email (prod : envoie les mails via SMTP) ---
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Adresse qui apparaît comme expéditeur (ex. "JobPilot <noreply@votredomaine.com>")
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 SERVER_EMAIL = os.getenv('SERVER_EMAIL')  # pour les erreurs envoyées aux admins
 
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
 # --- Allauth : email requis et vérification ---
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # ou 'optional' pour désactiver l'obligation
 
 

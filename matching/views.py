@@ -248,7 +248,7 @@ def quick_refine_cover_letter(request, match_id):
             
             # Récupérer les informations
             user = request.user
-            user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.username
+            user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.email
             user_email = user.email if user.email else None
             job_offer = match.job_offer
             job_title = job_offer.title if job_offer else None
@@ -547,7 +547,7 @@ def export_cover_letter_pdf(request, match_id):
         
         # Récupérer les informations de l'utilisateur
         user = request.user
-        user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.username
+        user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.email
         user_email = user.email if user.email else None
         
         # Récupérer les informations de l'offre d'emploi

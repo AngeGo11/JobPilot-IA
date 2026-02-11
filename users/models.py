@@ -13,7 +13,13 @@ class CustomUser(AbstractUser):
     On utilise notre propre classe User pour pouvoir ajouter des champs plus tard
     (ex: is_recruiter, is_candidate) si besoin.
     Modèle hybride : crédits IA + abonnement premium.
+    Identification par email ; username gardé pour compatibilité (valeur par défaut).
     """
+    username = models.CharField(max_length=150, default="temp_user", unique=True)
+    email = models.EmailField("adresse e-mail", unique=True)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
     ai_credits = models.IntegerField("Crédits IA", default=5)
     subscription_end_date = models.DateTimeField("Fin d'abonnement", null=True, blank=True)
     subscription_plan = models.CharField(
@@ -23,6 +29,12 @@ class CustomUser(AbstractUser):
         null=True,
         blank=True,
     )
+
+    def save(self, *args, **kwargs):
+        # Si username pas déjà défini (création), on le remplit avec l'email
+        if not self.username or self.username == "temp_user":
+            self.username = self.email
+        super().save(*args, **kwargs)
 
     @property
     def is_premium(self):
@@ -50,4 +62,4 @@ class CandidateProfile(models.Model):
     is_available = models.BooleanField("En recherche active", default=True)
 
     def __str__(self):
-        return f"Profil de {self.user.username}"
+        return f"Profil de {self.user.get_full_name()}"

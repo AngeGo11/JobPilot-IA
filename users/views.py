@@ -52,7 +52,6 @@ class CustomLoginView(LoginView):
         # Stocker des variables dans la session
         self.request.session['user_id'] = user.id
         self.request.session['user_email'] = user.email
-        self.request.session['user_username'] = user.username
         self.request.session['login_time'] = str(self.request.user.last_login) if self.request.user.last_login else None
         
         # Vous pouvez ajouter d'autres variables de session ici
@@ -88,7 +87,7 @@ def logout_user(request):
     
     # Vider toutes les variables de session personnalisées pour éviter les conflits
     # On garde la session pour préserver les messages
-    session_keys_to_delete = ['user_id', 'user_email', 'user_username', 'login_time', 'resume_count']
+    session_keys_to_delete = ['user_id', 'user_email', 'login_time', 'resume_count']
     for key in session_keys_to_delete:
         if key in request.session:
             del request.session[key]
