@@ -71,6 +71,12 @@ class UserRegisterForm(UserCreationForm):
         return user
 
 class UserLoginForm(AuthenticationForm):
+    """
+    Formulaire de connexion par email.
+    AuthenticationForm utilise 'username' en interne, mais avec CustomUser (USERNAME_FIELD=email)
+    on envoie l'email. On expose un champ 'email' dans le formulaire et on mappe vers
+    l'authentification dans clean().
+    """
     email = forms.CharField(
         label='Email',
         widget=forms.EmailInput(attrs={
@@ -82,6 +88,27 @@ class UserLoginForm(AuthenticationForm):
         'class': 'w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all',
         'placeholder': '••••••••'
     }))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Cacher le champ username du parent : le template n'affiche que email/password
+        if 'username' in self.fields:
+            del self.fields['username']
+
+    def clean(self):
+        email = self.cleaned_data.get('email')
+        password = self.cleaned_data.get('password')
+        if email is not None and password:
+            from django.contrib.auth import authenticate
+            # CustomUser a USERNAME_FIELD = 'email', donc authenticate attend l'email en 'username'
+            user = authenticate(self.request, username=email.strip(), password=password)
+            if user is None:
+                raise forms.ValidationError(
+                    'Email ou mot de passe incorrect.',
+                    code='invalid_login',
+                )
+            self.user_cache = user
+        return self.cleaned_data
 
 
 
