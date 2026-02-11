@@ -26,7 +26,9 @@ def send_welcome_email(user, request=None):
     Envoie l'email de bienvenue à l'utilisateur après sa première inscription.
     Appelé depuis le formulaire d'inscription et le signal allauth user_signed_up.
     """
-    if not user or not getattr(user, "email", None):
+    email = getattr(user, "email", None) if user else None
+    if not user or not email:
+        logger.warning("send_welcome_email skipped: no user or no email")
         return
     site_url = get_site_url(request)
     context = {"user": user, "site_url": site_url}
@@ -34,12 +36,14 @@ def send_welcome_email(user, request=None):
     subject = "Bienvenue sur JobPilot"
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "JobPilot <noreply@jobpilot.example.com>")
     try:
-        msg = EmailMultiAlternatives(subject, strip_html_to_plain(html_content), from_email, [user.email])
+        msg = EmailMultiAlternatives(subject, strip_html_to_plain(html_content), from_email, [email])
         msg.attach_alternative(html_content, "text/html")
         msg.send(fail_silently=False)
-        logger.info("Welcome email sent to %s", user.email)
+        logger.info("Welcome email sent to %s", email)
     except Exception as e:
-        logger.exception("Failed to send welcome email to %s: %s", getattr(user, "email", ""), e)
+        logger.exception("Failed to send welcome email to %s: %s", email, e)
+        if getattr(settings, "DEBUG", False):
+            raise
 
 
 def strip_html_to_plain(html):

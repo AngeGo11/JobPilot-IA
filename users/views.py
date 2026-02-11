@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View, TemplateView
 from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm, CustomPasswordChangeForm
 from .models import CandidateProfile
+from .services.welcome_email import send_welcome_email
 import logging
 
 
@@ -19,7 +20,6 @@ def register(request):
             login(request, user)  # Connexion directe après inscription
             request.session["user_id"] = user.id
             request.session["show_welcome_modal"] = True  # Modale bienvenue au premier accès dashboard
-            from .services.welcome_email import send_welcome_email
             send_welcome_email(user, request=request)
             messages.success(request, f'Compte créé pour {user.email} !')
             logging.info("user_id after register: %s", request.session.get('user_id'))
