@@ -24,17 +24,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 
 if not SECRET_KEY:
     raise RuntimeError(
-        "DJANGO_SECRET_KEY manquant. "
-        "Définissez la variable d’environnement DJANGO_SECRET_KEY."
+        "SECRET_KEY manquante. "
+        "Définissez la variable d’environnement SECRET_KEY (ou DJANGO_SECRET_KEY)."
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG") == 'True'
+DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "yes")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+_PROD_SECURITY = not DEBUG or ENVIRONMENT == "production"
+
+# Paramètres de sécurité (toujours définis pour satisfaire check —deploy)
+SECURE_SSL_REDIRECT = _PROD_SECURITY
+SESSION_COOKIE_SECURE = _PROD_SECURITY
+CSRF_COOKIE_SECURE = _PROD_SECURITY
+SECURE_HSTS_SECONDS = 31536000 if _PROD_SECURITY else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _PROD_SECURITY
+SECURE_HSTS_PRELOAD = _PROD_SECURITY
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if _PROD_SECURITY else None
 
 ALLOWED_HOSTS = ['10.192.66.109', 'localhost', '127.0.0.1', 'autohypnotic-lashay-undecretory.ngrok-free.dev']
 CSRF_TRUSTED_ORIGINS = ['https://autohypnotic-lashay-undecretory.ngrok-free.dev']
@@ -110,7 +121,7 @@ DATABASES = {
         'USER': os.getenv('DB_USER', 'axel'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'localhost'),  # 'localhost' en local, 'db' dans Docker
-        'PORT': os.getenv('DB_PORT', '5433'),  # Port 5433 pour Docker, 5432 si PostgreSQL local
+        'PORT': os.getenv('DB_PORT', '5433'),  # Port 5433 pour Docker, 5432 si PostgresSQL local
     }
 }
 
@@ -313,3 +324,4 @@ SITE_ID = 1
 
 # Désactive la confirmation pour le login social
 SOCIALACCOUNT_LOGIN_ON_GET = True
+

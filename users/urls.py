@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 from .forms import UserLoginForm, CustomPasswordResetForm  # Import du form de login
 
-# path('register/', views.register, name='register')
+#     path('register/', views.register, name='register')
 # views.register <== appel de la fonction register
 # name = 'register' <== nom de l'URL quand on fait par exemple: {% url 'register' %}
 #
