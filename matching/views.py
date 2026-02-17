@@ -41,6 +41,14 @@ def find_jobs_for_resume(request, resume_id):
     jobs_found = 0
     if resume.detected_job_title:
         service = FranceTravail()
+
+        #if not consume_credit(request.user):
+         #   messages.error(
+          #      request,
+           #     "Crédits insuffisants pour l'analyse IA. Passez Premium ou rechargez vos crédits."
+            #)
+            #return redirect('pricing')
+
         try:
             # Utilise le titre du poste détecté par l'IA comme mots-clés de recherche
             search_query = resume.detected_job_title

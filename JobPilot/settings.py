@@ -35,10 +35,11 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "yes")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
-_PROD_SECURITY = not DEBUG or ENVIRONMENT == "production"
+ENVIRONMENT = os.getenv("ENVIRONMENT").lower()
+# Sécurité HTTPS uniquement en production (évite la redirection HTTPS avec runserver en local)
+_PROD_SECURITY = (not DEBUG) and (ENVIRONMENT == "production")
 
-# Paramètres de sécurité (toujours définis pour satisfaire check —deploy)
+# Paramètres de sécurité (toujours définis pour satisfaire check --deploy)
 SECURE_SSL_REDIRECT = _PROD_SECURITY
 SESSION_COOKIE_SECURE = _PROD_SECURITY
 CSRF_COOKIE_SECURE = _PROD_SECURITY

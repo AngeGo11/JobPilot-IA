@@ -30,13 +30,7 @@ def upload_resume(request):
                 resume.parsed_data = parsed_data
                 resume.save()
 
-                # --- ÉTAPE 2 : ANALYSE IA AVEC GEMINI (consomme 1 crédit) ---
-                if not consume_credit(request.user):
-                    messages.error(
-                        request,
-                        "Crédits insuffisants pour l'analyse IA. Passez Premium ou rechargez vos crédits."
-                    )
-                    return redirect('pricing')
+
                 try:
                     ai_parser = AIParser()
                     job_info = ai_parser.extract_job_info(extracted_text)
@@ -59,7 +53,7 @@ def upload_resume(request):
                         
                 except Exception as e:
                     # En cas d'erreur avec l'IA, on continue quand même (le CV est sauvegardé)
-                    print(f"❌ Erreur lors de l'analyse IA : {e}")
+                    print(f"Erreur lors de l'analyse IA : {e}")
                     messages.warning(
                         request, 
                         f'⚠️ CV sauvegardé mais erreur lors de l\'analyse IA : {str(e)}'
