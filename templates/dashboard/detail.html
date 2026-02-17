@@ -270,19 +270,12 @@
             tinymce.init({
                 selector: '#cover_letter_content',
                 plugins: [
-                    // Core editing features (disponibles sans clé API)
-                    'anchor', 'autolink', 'charmap', 'link', 'lists', 'searchreplace', 'wordcount',
-                    // Note: Les plugins premium nécessitent une clé API valide avec domaine enregistré
-                    // Décommentez après avoir enregistré le domaine dans le portail TinyMCE :
-                    'checklist', 'casechange', 'formatpainter', 'a11ychecker', 'tinymcespellchecker',
-                    'powerpaste', 'typography', 'autocorrect'
+                    'preview', 'importcss', 'searchreplace', 'autolink', 'autosave', 'save',
+                    'directionality', 'code', 'visualblocks', 'visualchars', 'fullscreen', 'image',
+                    'link', 'media', 'codesample', 'table', 'charmap', 'pagebreak', 'nonbreaking',
+                    'anchor', 'insertdatetime', 'advlist', 'lists', 'wordcount', 'help', 'quickbars', 'emoticons'
                 ],
-                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link | align lineheight | numlist bullist indent outdent | charmap | removeformat',
-                // Configuration pour les fonctionnalités premium (décommentez après enregistrement du domaine)
-                a11ychecker_level: 'wcag2aa',
-                spellchecker_language: 'fr_FR',
-                typography_default_lang: 'fr',
-                autocorrect_restrict: false,
+                toolbar: 'undo redo | bold italic underline strikethrough | numlist bullist | alignleft aligncenter alignright alignjustify | link | removeformat',
                 menubar: false,
                 statusbar: false,
                 height: 500,
