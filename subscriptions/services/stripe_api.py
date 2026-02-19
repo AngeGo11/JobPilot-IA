@@ -2,7 +2,7 @@
 Service Stripe pour JobPilot : création de sessions Checkout et traitement des webhooks.
 """
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.conf import settings
 from django.utils import timezone
 
@@ -103,10 +103,19 @@ def handle_checkout_completed(session):
         return
     mode = session.get('mode', 'payment')
     if mode == 'subscription':
-        subscription_id = session.get('subscription')
+        subscription_raw = session.get('subscription')
+        # Stripe peut envoyer l'id (string) ou un objet étendu (dict avec 'id')
+        subscription_id = None
+        if isinstance(subscription_raw, str):
+            subscription_id = subscription_raw
+        elif subscription_raw and isinstance(subscription_raw, dict) and subscription_raw.get('id'):
+            subscription_id = subscription_raw['id']
+        elif subscription_raw and hasattr(subscription_raw, 'id'):
+            subscription_id = getattr(subscription_raw, 'id', None)
         if subscription_id:
             _link_subscription_and_set_end_date(client_reference_id, subscription_id, plan)
         else:
+            # Fallback : appliquer le plan avec duration_days si pas d'id abonnement
             apply_plan_to_user(client_reference_id, plan)
     else:
         apply_plan_to_user(client_reference_id, plan)
@@ -128,12 +137,19 @@ def _link_subscription_and_set_end_date(user_id, stripe_subscription_id, plan_sl
     except Exception as e:
         logger.exception("Erreur récupération abonnement Stripe: %s", e)
         return
-    # Stripe renvoie un objet (attributs) : current_period_end est un timestamp Unix
-    period_end = getattr(sub, 'current_period_end', None)
+    # current_period_end : timestamp Unix (objet Stripe = attribut ou clé)
+    period_end = getattr(sub, 'current_period_end', None) or (sub.get('current_period_end') if hasattr(sub, 'get') else None)
+    tz = timezone.get_current_timezone()
     update_fields = ['subscription_plan']
     if period_end:
-        user.subscription_end_date = timezone.datetime.fromtimestamp(period_end, tz=timezone.get_current_timezone())
+        user.subscription_end_date = datetime.fromtimestamp(period_end, tz=tz)
         update_fields.append('subscription_end_date')
+    else:
+        # Fallback : calculer à partir de duration_days du plan
+        plan_config = PLANS.get(plan_slug, {})
+        if plan_config.get('duration_days'):
+            user.subscription_end_date = timezone.now() + timedelta(days=plan_config['duration_days'])
+            update_fields.append('subscription_end_date')
     user.subscription_plan = plan_slug if plan_slug in ('pass24h', 'sprint', 'pro') else user.subscription_plan
     user.save(update_fields=update_fields)
     StripeSubscription.objects.update_or_create(
@@ -159,7 +175,8 @@ def handle_subscription_updated(subscription):
     except StripeSubscription.DoesNotExist:
         logger.debug("Subscription updated inconnue: %s", sub_id)
         return
-    stripe_sub.user.subscription_end_date = timezone.datetime.fromtimestamp(period_end, tz=timezone.get_current_timezone())
+    tz = timezone.get_current_timezone()
+    stripe_sub.user.subscription_end_date = datetime.fromtimestamp(period_end, tz=tz)
     stripe_sub.user.save(update_fields=['subscription_end_date'])
     logger.info("Abonnement renouvelé: user_id=%s jusqu'à %s", stripe_sub.user_id, stripe_sub.user.subscription_end_date)
 
