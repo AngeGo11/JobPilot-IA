@@ -48,8 +48,26 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = _PROD_SECURITY
 SECURE_HSTS_PRELOAD = _PROD_SECURITY
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if _PROD_SECURITY else None
 
-ALLOWED_HOSTS = ['10.192.66.109', 'localhost', '127.0.0.1', 'autohypnotic-lashay-undecretory.ngrok-free.dev']
-CSRF_TRUSTED_ORIGINS = ['https://autohypnotic-lashay-undecretory.ngrok-free.dev']
+# Configuration du domaine du site
+SITE_URL = os.getenv('SITE_URL', 'https://JobPilot-IA.fr')
+# Extraire le nom de domaine pour ALLOWED_HOSTS (sans https://)
+_site_domain = SITE_URL.replace('https://', '').replace('http://', '').rstrip('/')
+
+ALLOWED_HOSTS = [
+    '10.192.66.109', 
+    'localhost', 
+    '127.0.0.1', 
+    'autohypnotic-lashay-undecretory.ngrok-free.dev',
+    _site_domain,
+    'JobPilot-IA.fr',
+    'www.JobPilot-IA.fr'
+]
+CSRF_TRUSTED_ORIGINS = [
+    'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
+    SITE_URL,
+    'https://JobPilot-IA.fr',
+    'https://www.JobPilot-IA.fr'
+]
 
 
 # Application definition

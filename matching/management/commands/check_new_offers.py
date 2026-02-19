@@ -138,13 +138,13 @@ class Command(BaseCommand):
                 site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
                 dashboard_path = reverse('dashboard')
                 dashboard_url = site_url + dashboard_path
-                subject = f"JobPilot : {len(saved_matches)} nouvelle(s) offre(s) pour vous"
+                subject = f"JobPilot-IA : {len(saved_matches)} nouvelle(s) offre(s) pour vous"
                 message = (
                     f"Bonjour,\n\n"
                     f"Votre alerte basée sur le CV « {resume.title} » a détecté {len(saved_matches)} "
                     f"nouvelle(s) offre(s) correspondant à votre profil (score >= {min_score}%).\n\n"
                     f"Consultez votre tableau de bord pour voir les offres et postuler :\n{dashboard_url}\n\n"
-                    f"Cordialement,\nL'équipe JobPilot"
+                    f"Cordialement,\nL'équipe JobPilot-IA"
                 )
                 try:
                     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@jobpilot.local')

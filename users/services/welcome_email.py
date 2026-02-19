@@ -18,7 +18,7 @@ def get_site_url(request=None):
         site = get_current_site(None)
         return f"https://{site.domain}" if not site.domain.startswith("http") else site.domain.rstrip("/")
     except Exception:
-        return getattr(settings, "SITE_URL", "https://jobpilot.example.com")
+        return getattr(settings, "SITE_URL", "https://JobPilot-IA.fr")
 
 
 def send_welcome_email(user, request=None):
@@ -33,8 +33,8 @@ def send_welcome_email(user, request=None):
     site_url = get_site_url(request)
     context = {"user": user, "site_url": site_url}
     html_content = render_to_string("account/email/welcome_message.html", context)
-    subject = "Bienvenue sur JobPilot"
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "JobPilot <noreply@jobpilot.example.com>")
+    subject = "Bienvenue sur JobPilot-IA"
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "JobPilot-IA <noreply@JobPilot-IA.fr>")
     try:
         msg = EmailMultiAlternatives(subject, strip_html_to_plain(html_content), from_email, [email])
         msg.attach_alternative(html_content, "text/html")
@@ -51,4 +51,4 @@ def strip_html_to_plain(html):
     import re
     text = re.sub(r"<[^>]+>", " ", html)
     text = re.sub(r"\s+", " ", text).strip()
-    return text[:500] if text else "Bienvenue sur JobPilot."
+    return text[:500] if text else "Bienvenue sur JobPilot-IA."
