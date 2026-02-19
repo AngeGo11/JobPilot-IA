@@ -6,8 +6,12 @@ import json
 import os
 import logging
 import re
+from typing import Optional
+
 import google.generativeai as genai
 from django.conf import settings
+
+from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
 
 
 class AIOptimizer:
@@ -28,7 +32,13 @@ class AIOptimizer:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
 
-    def optimize_for_offer(self, cv_text: str, job_description: str, job_title: str = "") -> dict:
+    def optimize_for_offer(
+        self,
+        cv_text: str,
+        job_description: str,
+        job_title: str = "",
+        user_id: Optional[int] = None,
+    ) -> dict:
         """
         Analyse le CV par rapport à l'offre et retourne des suggestions d'adaptation.
 
@@ -92,7 +102,8 @@ RÈGLES :
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            ensure_gemini_rate_limit(user_id)
+            response = call_gemini_with_retry(lambda: self.model.generate_content(prompt))
             response_text = response.text.strip()
 
             # Nettoyage des blocs markdown

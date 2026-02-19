@@ -196,6 +196,10 @@ STRIPE_PRICE_SPRINT = os.getenv('STRIPE_PRICE_SPRINT')      # Abonnement 5,99 �
 STRIPE_PRICE_PRO = os.getenv('STRIPE_PRICE_PRO')           # Abonnement 14,99 € / mois
 STRIPE_PRICE_PACK = os.getenv('STRIPE_PRICE_PACK')         # Paiement unique 4,99 € (10 crédits)
 
+# --- Rate limiting API Gemini (Dev Free Tier vs Prod) ---
+GEMINI_MAX_RPM = int(os.getenv('GEMINI_MAX_RPM'))           # Requêtes/minute globales (défaut 10 pour Free Tier)
+GEMINI_FAIR_USE_LIMIT = int(os.getenv('GEMINI_FAIR_USE_LIMIT'))  # Requêtes/heure par utilisateur
+
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Static files (CSS, JavaScript, Images)

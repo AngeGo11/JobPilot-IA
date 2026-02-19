@@ -15,6 +15,7 @@ from .services.francetravail import FranceTravail
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
 from resumes.services.ai_optimizer import AIOptimizer
+from utils.gemini_safe import FairUseExceeded, GeminiServiceUnavailable
 
 
 class FindJobsLoadingView(LoginRequiredMixin, TemplateView):
@@ -216,7 +217,8 @@ def quick_refine_cover_letter(request, match_id):
             generated_letter = generator.generate_cover_letter(
                 resume=resume,
                 job_match=match,
-                tone="professional"
+                tone="professional",
+                user_id=request.user.id,
             )
             
             # Ne pas sauvegarder automatiquement - l'utilisateur devra cliquer sur "Sauvegarder"
@@ -228,6 +230,16 @@ def quick_refine_cover_letter(request, match_id):
                 'message': '✨ Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.'
             })
             
+        except FairUseExceeded:
+            return JsonResponse({
+                'success': False,
+                'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte)."
+            }, status=429)
+        except GeminiServiceUnavailable:
+            return JsonResponse({
+                'success': False,
+                'error': "Nos serveurs sont momentanément surchargés. Réessayez dans quelques instants."
+            }, status=503)
         except ValueError as e:
             return JsonResponse({
                 'success': False,
@@ -326,7 +338,8 @@ def quick_refine_cover_letter(request, match_id):
         # Appeler le service de raffinement
         refined_letter = generator.refine_cover_letter(
             current_text,
-            final_instructions
+            final_instructions,
+            user_id=request.user.id,
         )
         
         # Sauvegarder la lettre améliorée
@@ -339,6 +352,16 @@ def quick_refine_cover_letter(request, match_id):
             'message': '✨ Votre lettre a été améliorée avec succès !'
         })
         
+    except FairUseExceeded:
+        return JsonResponse({
+            'success': False,
+            'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte)."
+        }, status=429)
+    except GeminiServiceUnavailable:
+        return JsonResponse({
+            'success': False,
+            'error': "Nos serveurs sont momentanément surchargés. Réessayez dans quelques instants."
+        }, status=503)
     except ValueError as e:
         return JsonResponse({
             'success': False,
@@ -440,13 +463,24 @@ def optimize_cv_view(request, match_id):
         result = optimizer.optimize_for_offer(
             cv_text=resume.extracted_text,
             job_description=job_offer.description or '',
-            job_title=job_offer.title or ''
+            job_title=job_offer.title or '',
+            user_id=request.user.id,
         )
         return JsonResponse({
             'success': True,
             'data': result,
             'message': "Suggestions d'adaptation du CV générées avec succès."
         })
+    except FairUseExceeded:
+        return JsonResponse({
+            'success': False,
+            'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte)."
+        }, status=429)
+    except GeminiServiceUnavailable:
+        return JsonResponse({
+            'success': False,
+            'error': "Nos serveurs sont momentanément surchargés. Réessayez dans quelques instants."
+        }, status=503)
     except ValueError as e:
         return JsonResponse({
             'success': False,
@@ -500,7 +534,8 @@ def refine_cover_letter(request, match_id):
                 # Appeler le service de raffinement
                 refined_letter = generator.refine_cover_letter(
                     match.cover_letter_content,
-                    final_instructions
+                    final_instructions,
+                    user_id=request.user.id,
                 )
                 
                 # Sauvegarder la lettre améliorée
@@ -515,6 +550,16 @@ def refine_cover_letter(request, match_id):
                 # Rediriger vers le workspace pour voir le résultat
                 return redirect('application_workspace', match_id=match_id)
                 
+            except FairUseExceeded:
+                messages.warning(
+                    request,
+                    "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte)."
+                )
+            except GeminiServiceUnavailable:
+                messages.warning(
+                    request,
+                    "Nos serveurs sont momentanément surchargés. Réessayez dans quelques instants."
+                )
             except ValueError as e:
                 messages.error(request, f"Erreur de validation : {str(e)}")
             except Exception as e:

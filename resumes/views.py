@@ -8,6 +8,7 @@ from .services.pdf_parser import PDFParser
 from matching.models import JobAlert
 from matching.services import consume_credit
 from .services.ai_parser import AIParser
+from utils.gemini_safe import FairUseExceeded, GeminiServiceUnavailable
 
 User = get_user_model()
 
@@ -33,7 +34,7 @@ def upload_resume(request):
 
                 try:
                     ai_parser = AIParser()
-                    job_info = ai_parser.extract_job_info(extracted_text)
+                    job_info = ai_parser.extract_job_info(extracted_text, user_id=request.user.id)
                     
                     # Sauvegarde des données extraites par l'IA
                     resume.detected_job_title = job_info.get('job_title')
@@ -51,6 +52,16 @@ def upload_resume(request):
                             'CV analysé mais aucun titre de poste détecté. La recherche d\'emploi pourrait être limitée.'
                         )
                         
+                except FairUseExceeded:
+                    messages.warning(
+                        request,
+                        "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte)."
+                    )
+                except GeminiServiceUnavailable:
+                    messages.warning(
+                        request,
+                        "Nos serveurs sont momentanément surchargés. Réessayez dans quelques instants."
+                    )
                 except Exception as e:
                     # En cas d'erreur avec l'IA, on continue quand même (le CV est sauvegardé)
                     print(f"Erreur lors de l'analyse IA : {e}")

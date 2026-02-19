@@ -252,6 +252,36 @@ JobPilot/
 - **Fonctionnalités** : Éditeur WYSIWYG avec plugins premium (trial)
 - **Configuration** : Clé API et domaine enregistré requis
 
+
+### Rating limit
+
+Ce système limite et sécurise les appels à l’API Gemini selon l’environnement (dev ou prod) sans changer le code, uniquement via la configuration.
+
+- **En dev (Free Tier)** : limite stricte du nombre de requêtes par minute pour éviter de dépasser les quotas Google.
+- **En prod (payant)** : limite plus haute côté serveur, mais plafond par utilisateur (Fair Use) pour éviter les abus.
+
+## Composants
+
+| Composant | Rôle |
+|-----------|------|
+| **settings.py** | `GEMINI_MAX_RPM` (requêtes/min globales), `GEMINI_FAIR_USE_LIMIT` (requêtes/heure par user). |
+| **utils/gemini_safe.py** | `call_gemini_with_retry` : wrapper avec retry + backoff sur erreur 429 ; lève `GeminiServiceUnavailable` après échec. |
+| **Décorateur @rate_limit_gemini** | Vérifie avant chaque appel : (1) RPM global, (2) quota horaire par user ; lève `FairUseExceeded` si dépassement user. |
+| **Frontend** | Messages utilisateur pour `FairUseExceeded` et `GeminiServiceUnavailable`. |
+
+## Comportement
+
+1. **RPM global** : clé cache `global_gemini_rpm`, limite `GEMINI_MAX_RPM`. Si dépassé → attente 1–2 s puis réessai (pas de crash).
+2. **Fair Use** : clé cache `user_{id}_hourly_usage`, limite `GEMINI_FAIR_USE_LIMIT`. Si dépassé → `FairUseExceeded`.
+3. **429 (ResourceExhausted)** : backoff 1s, 2s, 4s, jusqu’à 3 tentatives ; puis `GeminiServiceUnavailable`.
+
+## Configuration (.env)
+
+- **Dev (Mac / Free Tier)** : `GEMINI_MAX_RPM=10`, `GEMINI_FAIR_USE_LIMIT=100`.
+- **Prod** : `GEMINI_MAX_RPM=1000`, `GEMINI_FAIR_USE_LIMIT=50`.
+
+Aucune modification de code : seul le `.env` (ou les variables d’environnement du serveur) change entre dev et prod.
+
 ##  Développement
 
 ### Commandes utiles

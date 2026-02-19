@@ -8,8 +8,7 @@ __pycache__/
 .DS_Store
 **/.DS_Store
 
-prompt_logo
-notes_persos
+
 todolist.txt
 
 # Logs
@@ -18,8 +17,5 @@ todolist.txt
 !logs/.gitkeep
 
 
-test.html
-strategie_prix
-prompt_strategie_prix
 prompt_rating_limit
 docs

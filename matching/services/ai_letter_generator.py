@@ -5,7 +5,10 @@ import os
 from typing import Optional
 from io import BytesIO
 from datetime import datetime
+
 import google.generativeai as genai
+
+from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
@@ -42,7 +45,8 @@ class AILetterGenerator:
             resume,
             job_match,
             custom_instructions: Optional[str] = None,
-            tone: str = "professional"
+            tone: str = "professional",
+            user_id: Optional[int] = None,
     ) -> str:
         """
         Génère une lettre de motivation personnalisée.
@@ -120,8 +124,8 @@ class AILetterGenerator:
             prompt += f"\n\nINSTRUCTIONS PERSONNALISÉES :\n{custom_instructions}\n"
 
         try:
-            # Appel à l'API Gemini
-            response = self.client.generate_content(prompt)
+            ensure_gemini_rate_limit(user_id)
+            response = call_gemini_with_retry(lambda: self.client.generate_content(prompt))
 
             # Extraction du texte de la réponse
             if hasattr(response, 'text'):
@@ -139,7 +143,8 @@ class AILetterGenerator:
     def refine_cover_letter(
             self,
             existing_letter: str,
-            instructions: str
+            instructions: str,
+            user_id: Optional[int] = None,
     ) -> str:
         """
         Améliore ou modifie une lettre de motivation existante.
@@ -188,7 +193,8 @@ Retourne maintenant la lettre améliorée :
 """
 
         try:
-            response = self.client.generate_content(prompt)
+            ensure_gemini_rate_limit(user_id)
+            response = call_gemini_with_retry(lambda: self.client.generate_content(prompt))
 
             if hasattr(response, 'text'):
                 refined_letter = response.text.strip()
@@ -253,7 +259,7 @@ De plus, applique ces instructions personnalisées :
         
         return final_instructions
 
-    def validate_api_connection(self) -> bool:
+    def validate_api_connection(self, user_id: Optional[int] = None) -> bool:
         """
         Vérifie que la connexion à l'API Gemini fonctionne.
         
@@ -264,9 +270,9 @@ De plus, applique ces instructions personnalisées :
             Exception: Si la connexion échoue, avec le message d'erreur
         """
         try:
-            # Test simple avec un prompt minimal
+            ensure_gemini_rate_limit(user_id)
             test_prompt = "Réponds simplement 'OK' si tu reçois ce message."
-            response = self.client.generate_content(test_prompt)
+            response = call_gemini_with_retry(lambda: self.client.generate_content(test_prompt))
 
             # Si on arrive ici sans exception, la connexion fonctionne
             return True

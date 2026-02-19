@@ -5,8 +5,12 @@ Utilise Google Gemini pour analyser le texte extrait du PDF.
 import json
 import os
 import logging
+from typing import Optional
+
 import google.generativeai as genai
 from django.conf import settings
+
+from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
 
 
 class AIParser:
@@ -27,12 +31,13 @@ class AIParser:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.5-flash')
     
-    def extract_job_info(self, cv_text):
+    def extract_job_info(self, cv_text, user_id: Optional[int] = None):
         """
         Analyse le texte du CV et extrait le titre du poste visé et les compétences.
         
         Args:
             cv_text (str): Texte brut extrait du CV
+            user_id (int, optional): ID utilisateur pour le rate limiting (Fair Use).
             
         Returns:
             dict: {
@@ -72,8 +77,8 @@ Texte du CV :
 """
         
         try:
-            # Appel à Gemini
-            response = self.model.generate_content(prompt)
+            ensure_gemini_rate_limit(user_id)
+            response = call_gemini_with_retry(lambda: self.model.generate_content(prompt))
             response_text = response.text.strip()
             
             # Nettoyage : enlever les markdown code blocks si présents
