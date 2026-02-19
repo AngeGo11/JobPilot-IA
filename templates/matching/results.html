@@ -44,7 +44,8 @@
                     <i class="fa-solid fa-exclamation-triangle text-yellow-600 mr-3 mt-0.5"></i>
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-yellow-800 mb-1">Aucun titre de poste détecté</p>
-                        <p class="text-sm text-yellow-700">Aucune recherche d'offres n'a pu être effectuée. Veuillez ré-uploader votre CV pour une nouvelle analyse.</p>
+                        <p class="text-sm text-yellow-700">Aucune recherche d'offres n'a pu être effectuée. Veuillez
+                            ré-uploader votre CV pour une nouvelle analyse.</p>
                     </div>
                 </div>
             </div>
@@ -55,14 +56,14 @@
             <!-- Results Info -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-slate-600 mb-4">
                 <p>
-                    Affichage de <span class="font-semibold text-slate-900">{{ page_obj.start_index }}</span> à 
-                    <span class="font-semibold text-slate-900">{{ page_obj.end_index }}</span> sur 
+                    Affichage de <span class="font-semibold text-slate-900">{{ page_obj.start_index }}</span> à
+                    <span class="font-semibold text-slate-900">{{ page_obj.end_index }}</span> sur
                     <span class="font-semibold text-slate-900">{{ page_obj.paginator.count }}</span> offre(s)
                 </p>
                 {% if page_obj.paginator.num_pages > 1 %}
-                <p class="text-slate-500">
-                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
-                </p>
+                    <p class="text-slate-500">
+                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                    </p>
                 {% endif %}
             </div>
 
@@ -174,7 +175,8 @@
                         {% if job_title_used and job_title_used != 'Non détecté' %}
                             Aucune offre correspondant au poste "{{ job_title_used }}" n'a été trouvée pour le moment.
                         {% else %}
-                            Aucun titre de poste détecté dans votre CV. Veuillez ré-uploader votre CV pour une nouvelle analyse.
+                            Aucun titre de poste détecté dans votre CV. Veuillez ré-uploader votre CV pour une nouvelle
+                            analyse.
                         {% endif %}
                     </p>
                     <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:space-x-0 sm:gap-4 justify-center">
@@ -192,80 +194,144 @@
         {% endif %}
     </div>
 
+
+    {% if jobs_found > 0 %}
+        <!-- Modale de confirmation pour la recherche de job -->
+        <div class="modal-container fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in"
+             role="dialog" aria-modal="true" aria-labelledby="confirmation-modal-title">
+            <div class="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/95 shadow-2xl p-6 md:p-8 animate-slide-up">
+                <!-- Icône de confirmation -->
+                <div class="flex justify-center mb-4">
+                    <div class="w-16 h-16 rounded-full bg-[#125484]/10 flex items-center justify-center">
+                        <i class="fa-solid fa-briefcase text-3xl text-[#125484]"></i>
+                    </div>
+                </div>
+
+                <h2 id="confirmation-modal-title" class="text-2xl md:text-3xl font-bold text-slate-900 mb-3 text-center">
+                    {{ jobs_found }} offre{{ jobs_found|pluralize }} disponible{{ jobs_found|pluralize }} pour ce CV
+                </h2>
+                <p class="text-slate-600 text-sm md:text-base mb-2 text-center">
+                    Êtes-vous prêt à découvrir les offres qui vous correspondent ?
+                </p>
+                <p class="text-slate-500 text-sm mb-6 text-center">
+                    Cela vous coûtera <strong class="text-[#125484] font-semibold">1 crédit</strong>
+                </p>
+
+                <form action="{% url 'find_jobs' resume.id %}" method="POST" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden">
+                    <button type="submit"
+                            class="w-full py-3 px-6 bg-[#125484] text-white font-semibold rounded-xl hover:bg-[#0f4470] transition-colors shadow-lg hover:shadow-xl active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        Oui, continuer
+                    </button>
+                </form>
+                <a href="{% url 'resume_list' %}"
+                   class="w-full py-3 px-6 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors active:scale-[0.98] flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-times"></i>
+                    Non, annuler
+                </a>
+            </div>
+        </div>
+
+        <style>
+            @keyframes fade-in {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slide-up {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .animate-fade-in {
+                animation: fade-in 0.2s ease-out;
+            }
+            .animate-slide-up {
+                animation: slide-up 0.3s ease-out;
+            }
+        </style>
+    {% endif %}
+
     <!-- Pagination -->
     {% if page_obj.paginator.num_pages > 1 %}
-    <div class="mt-6 md:mt-8 flex items-center justify-center">
-        <nav class="flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
-            <!-- First Page -->
-            {% if page_obj.has_previous %}
-            <a href="?page=1" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
-                <i class="fa-solid fa-angle-double-left"></i>
-            </a>
-            <!-- Previous Page -->
-            <a href="?page={{ page_obj.previous_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
-                <i class="fa-solid fa-angle-left"></i>
-            </a>
-            {% else %}
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+        <div class="mt-6 md:mt-8 flex items-center justify-center">
+            <nav class="flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
+                <!-- First Page -->
+                {% if page_obj.has_previous %}
+                    <a href="?page=1"
+                       class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
+                        <i class="fa-solid fa-angle-double-left"></i>
+                    </a>
+                    <!-- Previous Page -->
+                    <a href="?page={{ page_obj.previous_page_number }}"
+                       class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
+                        <i class="fa-solid fa-angle-left"></i>
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-left"></i>
             </span>
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-left"></i>
             </span>
-            {% endif %}
+                {% endif %}
 
-            <!-- Page Numbers -->
-            <div class="flex items-center space-x-1">
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <!-- Current Page -->
-                        <span class="px-4 py-2 text-sm font-semibold text-white bg-[#125484] border border-blue-600 rounded-lg">
+                <!-- Page Numbers -->
+                <div class="flex items-center space-x-1">
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <!-- Current Page -->
+                            <span class="px-4 py-2 text-sm font-semibold text-white bg-[#125484] border border-blue-600 rounded-lg">
                             {{ num }}
                         </span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <!-- Nearby Pages -->
-                        <a href="?page={{ num }}" 
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
-                            {{ num }}
-                        </a>
-                    {% elif num == 1 or num == page_obj.paginator.num_pages %}
-                        <!-- First and Last Pages -->
-                        <a href="?page={{ num }}" 
-                           class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
-                            {{ num }}
-                        </a>
-                    {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
-                        <!-- Ellipsis -->
-                        <span class="px-2 py-2 text-sm font-medium text-slate-500">
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <!-- Nearby Pages -->
+                            <a href="?page={{ num }}"
+                               class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
+                                {{ num }}
+                            </a>
+                        {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                            <!-- First and Last Pages -->
+                            <a href="?page={{ num }}"
+                               class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-blue-50 hover:text-[#125484] hover:border-blue-300 transition-colors">
+                                {{ num }}
+                            </a>
+                        {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
+                            <!-- Ellipsis -->
+                            <span class="px-2 py-2 text-sm font-medium text-slate-500">
                             ...
                         </span>
-                    {% endif %}
-                {% endfor %}
-            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
 
-            <!-- Next Page -->
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
-                <i class="fa-solid fa-angle-right"></i>
-            </a>
-            <!-- Last Page -->
-            <a href="?page={{ page_obj.paginator.num_pages }}" 
-               class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
-                <i class="fa-solid fa-angle-double-right"></i>
-            </a>
-            {% else %}
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                <!-- Next Page -->
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}"
+                       class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
+                    <!-- Last Page -->
+                    <a href="?page={{ page_obj.paginator.num_pages }}"
+                       class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-[#125484] transition-colors">
+                        <i class="fa-solid fa-angle-double-right"></i>
+                    </a>
+                {% else %}
+                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-right"></i>
             </span>
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-right"></i>
             </span>
-            {% endif %}
-        </nav>
-    </div>
+                {% endif %}
+            </nav>
+        </div>
     {% endif %}
 {% endblock %}
 

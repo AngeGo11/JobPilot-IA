@@ -1,4 +1,5 @@
-from django.shortcuts import render, get_object_or_404, redirect  # <--- Ajoute redirect ici
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -33,29 +34,38 @@ class FindJobsLoadingView(LoginRequiredMixin, TemplateView):
 
 @login_required
 def find_jobs_for_resume(request, resume_id):
-    page_number = request.GET.get('page', 1)
     resume = get_object_or_404(Resume, id=resume_id)
+    if resume.user_id != request.user.id:
+        messages.error(request, "Ce CV ne vous appartient pas.")
+        return redirect('resume_list')
     user = resume.user
+    page_number = request.GET.get('page', 1)
+    confirmed = request.GET.get('confirmed') == '1'
 
-    # 1. Partie "Mise à jour via API" - Utilise detected_job_title comme source de vérité
+    # --- POST : confirmation "Oui" dans la modale → on consomme le crédit puis on redirige
+    if request.method == 'POST':
+        matches_count = JobMatch.objects.filter(resume=resume, user=request.user).count()
+        if matches_count == 0:
+            messages.warning(request, "Aucune offre à confirmer pour ce CV.")
+            return redirect('find_jobs', resume_id=resume_id)
+        if not consume_credit(request.user):
+            messages.error(
+                request,
+                "Crédits insuffisants. Passez Premium ou rechargez vos crédits.",
+            )
+            return redirect('pricing')
+        redirect_url = reverse('find_jobs', kwargs={'resume_id': resume_id})
+        return redirect(f"{redirect_url}?confirmed=1")
+
+    # --- GET : recherche API (sans consommer le crédit), sauf si déjà confirmé
     jobs_found = 0
-    if resume.detected_job_title:
+    if not confirmed and resume.detected_job_title:
         service = FranceTravail()
-
-        #if not consume_credit(request.user):
-         #   messages.error(
-          #      request,
-           #     "Crédits insuffisants pour l'analyse IA. Passez Premium ou rechargez vos crédits."
-            #)
-            #return redirect('pricing')
-
         try:
-            # Utilise le titre du poste détecté par l'IA comme mots-clés de recherche
             search_query = resume.detected_job_title
             logging.info(f"🔍 Recherche d'offres avec le titre détecté: {search_query}")
             api_results = service.search_jobs(search_query, page=int(page_number))
             logging.info(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
-            
             if api_results:
                 saved_matches = service.save_jobs(api_results, user, resume)
                 jobs_found = len(saved_matches)
@@ -65,23 +75,16 @@ def find_jobs_for_resume(request, resume_id):
         except Exception as e:
             logging.info(f"❌ Erreur API : {e}")
             import traceback
-    else:
+    elif not resume.detected_job_title:
         logging.info("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
-    # 2. Partie "Récupération des données" - Filtrer par CV spécifique
-    # On filtre par resume pour ne montrer QUE les offres liées à ce CV précis
+    # Récupération des matches pour affichage
     matches = JobMatch.objects.filter(
-        resume=resume,  # Filtre par CV spécifique (cloisonnement)
-        user=user  # Sécurité : on vérifie aussi que c'est bien l'utilisateur du CV
-    ).exclude(
-        status='rejected'
-    ).select_related('job_offer').order_by('-score', '-matched_at')
+        resume=resume,
+        user=user,
+    ).exclude(status='rejected').select_related('job_offer').order_by('-score', '-matched_at')
     paginator = Paginator(matches, 9)
-
-    # Obtenir les objets de la page demandée
     page_obj = paginator.get_page(page_number)
-
-    
     logging.info(f"📋 Nombre de matches récupérés de la BDD: {matches.count()}")
 
     return render(request, 'matching/results.html', {
@@ -89,7 +92,7 @@ def find_jobs_for_resume(request, resume_id):
         'matches': matches,
         'jobs_found': jobs_found,
         'job_title_used': resume.detected_job_title or 'Non détecté',
-        'page_obj': page_obj
+        'page_obj': page_obj,
     })
 
 @login_required
