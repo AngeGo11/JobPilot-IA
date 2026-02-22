@@ -1,5 +1,6 @@
 """
 Service Stripe pour JobPilot : création de sessions Checkout et traitement des webhooks.
+On lance avec:  stripe listen --forward-to localhost:8000/subscriptions/webhook/
 """
 import logging
 from datetime import timedelta, datetime
