@@ -2,6 +2,41 @@
 Commande Django : python manage.py check_new_offers
 Pour chaque JobAlert active, interroge l'API France Travail pour les offres publiées après last_checked,
 calcule le score de matching, et envoie un email récapitulatif si des offres pertinentes (score >= 70%) sont trouvées.
+
+--- Comment tester ---
+1) Depuis la racine du projet (où se trouve manage.py) :
+   cd /chemin/vers/JobPilot
+   python manage.py check_new_offers --dry-run
+
+   --dry-run : exécute la logique (API, scoring) sans sauvegarder les offres ni envoyer d'emails.
+   Vous verrez dans le terminal combien d'offres pertinentes auraient été trouvées par alerte.
+
+2) Avec options (exemple) :
+   python manage.py check_new_offers --dry-run --limit 10 --min-score 60
+   (limite à 10 offres par alerte, seuil de pertinence à 60 %)
+
+3) Test « réel » en local (sans production) :
+   - Vérifier la config email : python manage.py check_email_config
+   - Envoyer un email de test : python manage.py check_email_config --send votre@email.com
+   - Pour voir les mails dans le terminal (pas d'envoi SMTP) : dans .env mettre
+     EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+   - Puis lancer : python manage.py check_new_offers
+   Les mails seront affichés dans le terminal ; les offres seront bien enregistrées en base.
+   Prérequis : au moins une JobAlert active, CV avec titre détecté, France Travail configuré.
+   Note : à la première exécution (last_checked vide), aucun email n'est envoyé pour éviter le spam.
+
+4) Vérifier qu'il y a des alertes actives :
+   python manage.py shell
+   >>> from matching.models import JobAlert
+   >>> JobAlert.objects.filter(is_active=True).count()
+
+--- Production : exécution automatique ---
+La commande ne se lance pas toute seule. Pour que les alertes soient vérifiées automatiquement,
+configurez un planificateur (cron, Celery Beat, ou outil de votre hébergeur). Exemple cron (toutes les 6 h) :
+   crontab -e
+   puis ajouter (adapter CHEMIN et PYTHON) :
+   0 */6 * * * cd /chemin/vers/JobPilot && .venv/bin/python manage.py check_new_offers >> /var/log/check_new_offers.log 2>&1
+   Voir aussi : deploy/cron.example (si présent).
 """
 import logging
 from django.core.management.base import BaseCommand
@@ -39,11 +74,17 @@ class Command(BaseCommand):
             default=70,
             help='Score minimum pour considérer une offre comme pertinente (défaut: 70).',
         )
+        parser.add_argument(
+            '--send-on-first-run',
+            action='store_true',
+            help='Envoie l\'email même à la première exécution (pour tester ; sinon pas d\'email au 1er run).',
+        )
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         limit = options['limit']
         min_score = options['min_score']
+        send_on_first_run = options['send_on_first_run']
 
         if dry_run:
             self.stdout.write(self.style.WARNING("Mode dry-run : aucun enregistrement ni email."))
@@ -63,12 +104,12 @@ class Command(BaseCommand):
 
         for alert in alerts:
             try:
-                self._process_alert(alert, ft, dry_run, limit, min_score)
+                self._process_alert(alert, ft, dry_run, limit, min_score, send_on_first_run)
             except Exception as e:
                 logger.exception("check_new_offers: erreur pour alerte %s", alert.pk)
                 self.stderr.write(self.style.ERROR(f"Alerte {alert.pk} : {e}"))
 
-    def _process_alert(self, alert, ft, dry_run, limit, min_score):
+    def _process_alert(self, alert, ft, dry_run, limit, min_score, send_on_first_run=False):
         resume = alert.resume
         user = resume.user
         keywords = (resume.detected_job_title or "").strip()
@@ -133,21 +174,22 @@ class Command(BaseCommand):
             alert.last_checked = timezone.now()
             alert.save(update_fields=['last_checked'])
 
-            # Envoyer l'email récapitulatif uniquement si ce n'est pas la première exécution (éviter spam)
-            if not first_run and user.email:
+            # Envoyer l'email récapitulatif (sauf première exécution, sauf si --send-on-first-run)
+            send_email = user.email and (not first_run or send_on_first_run)
+            if send_email:
                 site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
                 dashboard_path = reverse('dashboard')
                 dashboard_url = site_url + dashboard_path
-                subject = f"JobPilot-IA : {len(saved_matches)} nouvelle(s) offre(s) pour vous"
+                subject = f"jobpilot-ai : {len(saved_matches)} nouvelle(s) offre(s) pour vous"
                 message = (
                     f"Bonjour,\n\n"
                     f"Votre alerte basée sur le CV « {resume.title} » a détecté {len(saved_matches)} "
                     f"nouvelle(s) offre(s) correspondant à votre profil (score >= {min_score}%).\n\n"
                     f"Consultez votre tableau de bord pour voir les offres et postuler :\n{dashboard_url}\n\n"
-                    f"Cordialement,\nL'équipe JobPilot-IA"
+                    f"Cordialement,\nL'équipe jobpilot-ai"
                 )
                 try:
-                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@jobpilot.local')
+                    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'jobpilot-ai <noreply@jobpilot.local>'
                     send_mail(
                         subject=subject,
                         message=message,
@@ -160,6 +202,10 @@ class Command(BaseCommand):
                     logger.exception("check_new_offers: send_mail failed for alert %s", alert.pk)
                     self.stderr.write(self.style.ERROR(f"  Envoi email échoué pour alerte {alert.pk} : {e}"))
             elif first_run:
-                self.stdout.write(f"  Alerte {alert.pk} : {len(saved_matches)} offre(s) (première exécution, pas d'email).")
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"  Alerte {alert.pk} : {len(saved_matches)} offre(s) — première exécution, pas d'email (relancez pour recevoir le prochain)."
+                    )
+                )
         else:
             self.stdout.write(f"  [dry-run] Alerte {alert.pk} : {len(new_offers_data)} offre(s) pertinente(s) auraient été enregistrées.")

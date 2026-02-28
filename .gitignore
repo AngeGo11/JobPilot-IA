@@ -9,7 +9,7 @@ __pycache__/
 **/.DS_Store
 
 
-todolist.txt
+config_azure
 
 # Logs
 /logs/*.log
@@ -17,5 +17,4 @@ todolist.txt
 !logs/.gitkeep
 
 
-prompt_rating_limit
 docs

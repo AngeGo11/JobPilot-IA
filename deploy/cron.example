@@ -1,0 +1,24 @@
+# Crontab pour lancer check_new_offers automatiquement (alerte nouvelles offres).
+#
+# Configuration retenue : toutes les heures.
+# Installation : crontab -e puis coller la ligne ci-dessous (sans le #).
+# Le log est écrit dans le projet (logs/check_new_offers.log).
+#
+# --- Ligne à copier dans crontab -e (toutes les heures, sans le #) ---
+# 0 * * * * cd /Users/axelgomez/PycharmProjects/JobPilot && .venv/bin/python manage.py check_new_offers >> /Users/axelgomez/PycharmProjects/JobPilot/logs/check_new_offers.log 2>&1
+# 
+# Autres options (commentées) :
+# Toutes les 6 heures : 0 */6 * * * cd /chemin/vers/JobPilot && .venv/bin/python manage.py check_new_offers >> /var/log/check_new_offers.log 2>&1
+# Une fois par jour à 8h : 0 8 * * * cd /chemin/vers/JobPilot && .venv/bin/python manage.py check_new_offers >> /var/log/check_new_offers.log 2>&1
+#
+# Important : exécuter le cron avec l'utilisateur qui a accès au projet et au .env (France Travail, email, etc.).
+#
+# --- Test en dev : recevoir de vrais mails ---
+# En dev le backend email est "console" par défaut (les mails ne partent pas). Pour que le cron
+# envoie de vrais emails en dev, ajoute dans .env : USE_SMTP_IN_DEV=true
+# et assure-toi que EMAIL_HOST, EMAIL_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD sont renseignés.
+
+
+
+# Une fois par jour à 8h :
+# 0 8 * * * cd /chemin/vers/JobPilot && .venv/bin/python manage.py check_new_offers >> /var/log/check_new_offers.log 2>&1

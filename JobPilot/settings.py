@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
+
 load_dotenv()
 
 
@@ -49,7 +51,7 @@ SECURE_HSTS_PRELOAD = _PROD_SECURITY
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if _PROD_SECURITY else None
 
 # Configuration du domaine du site
-SITE_URL = os.getenv('SITE_URL', 'https://JobPilot-IA.fr')
+SITE_URL = os.getenv('SITE_URL', 'https://jobpilot-ai.fr')
 # Extraire le nom de domaine pour ALLOWED_HOSTS (sans https://)
 _site_domain = SITE_URL.replace('https://', '').replace('http://', '').rstrip('/')
 
@@ -59,14 +61,14 @@ ALLOWED_HOSTS = [
     '127.0.0.1', 
     'autohypnotic-lashay-undecretory.ngrok-free.dev',
     _site_domain,
-    'JobPilot-IA.fr',
-    'www.JobPilot-IA.fr'
+    'jobpilot-ai.fr',
+    'www.jobpilot-ai.fr'
 ]
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
     SITE_URL,
-    'https://JobPilot-IA.fr',
-    'https://www.JobPilot-IA.fr'
+    'https://jobpilot-ai.fr',
+    'https://www.jobpilot-ai.fr'
 ]
 
 
@@ -95,6 +97,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.linkedin_oauth2',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -133,7 +136,17 @@ WSGI_APPLICATION = 'JobPilot.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'jobpilot_db'),
@@ -217,17 +230,42 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Azure Blob Storage pour les médias en production (si configuré)
+if os.getenv("AZURE_ACCOUNT_NAME"):
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.azure_storage.AzureStorage",
+            "OPTIONS": {
+                "account_name": os.getenv("AZURE_ACCOUNT_NAME"),
+                "account_key": os.getenv("AZURE_ACCOUNT_KEY"),
+                "azure_container": os.getenv("AZURE_CONTAINER", "media"),
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    MEDIA_URL = (
+        f"https://{os.getenv('AZURE_ACCOUNT_NAME')}.blob.core.windows.net/"
+        f"{os.getenv('AZURE_CONTAINER', 'media')}/"
+    )
+
 
 LOGIN_REDIRECT_URL = 'post_login_loading'  # Page de chargement puis dashboard
 LOGIN_URL = 'login'       # L'URL de la page de login (si accès refusé ailleurs)
 # settings.py
 
 # --- Email (dev : console pour voir les mails dans le terminal) ---
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# --- Email (prod : envoie les mails via SMTP, ex. alertes JobAlert) ---
+# En dev : utiliser SMTP si USE_SMTP_IN_DEV=true (pour tester l'envoi réel avec cron).
+# Sinon en dev → console (mails affichés au terminal ; avec cron, le contenu va dans le log).
+_use_smtp_in_dev = os.getenv("USE_SMTP_IN_DEV", "").lower() in ("true", "1", "yes")
+if (DEBUG and ENVIRONMENT != "production") and not _use_smtp_in_dev:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-# --- Email (prod : envoie les mails via SMTP) ---
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#Adresse qui apparaît comme expéditeur (ex. "JobPilot <noreply@votredomaine.com>")
+# Adresse qui apparaît comme expéditeur (ex. "JobPilot <noreply@votredomaine.com>")
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 SERVER_EMAIL = os.getenv('SERVER_EMAIL')  # pour les erreurs envoyées aux admins
 
@@ -344,6 +382,20 @@ LOGGING = {
 }
 
 SITE_ID = 1
+
+# --- Allauth : adaptateur personnalisé (remplit email, first_name, last_name depuis Google/GitHub) ---
+SOCIALACCOUNT_ADAPTER = "users.adapters.CustomSocialAccountAdapter"
+
+# Scopes pour récupérer profil et email auprès des providers
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    },
+    "github": {
+        "SCOPE": ["read:user", "user:email"],
+    },
+}
 
 # Désactive la confirmation pour le login social
 SOCIALACCOUNT_LOGIN_ON_GET = True
