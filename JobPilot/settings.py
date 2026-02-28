@@ -381,6 +381,19 @@ LOGGING = {
     },
 }
 
+# En production (ex. Azure App Service), pas de répertoire logs/ inscriptible → logs vers la console
+if ENVIRONMENT == 'production':
+    LOGGING['handlers']['file'] = {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+        'formatter': 'file',
+    }
+    LOGGING['handlers']['error_file'] = {
+        'level': 'ERROR',
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    }
+
 SITE_ID = 1
 
 # --- Allauth : adaptateur personnalisé (remplit email, first_name, last_name depuis Google/GitHub) ---
