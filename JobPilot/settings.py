@@ -62,7 +62,8 @@ ALLOWED_HOSTS = [
     'autohypnotic-lashay-undecretory.ngrok-free.dev',
     _site_domain,
     'jobpilot-ai.fr',
-    'www.jobpilot-ai.fr'
+    'www.jobpilot-ai.fr',
+    'jobpilot-ai-dpdcabeafpdxc0gc.francecentral-01.azurewebsites.net'
 ]
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
