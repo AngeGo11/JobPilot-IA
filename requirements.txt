@@ -13,3 +13,4 @@ django-allauth
 PyJWT
 stripe
 python-docx
+gunicorn
