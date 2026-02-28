@@ -220,6 +220,15 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 STATIC_URL = 'static/'
 
+
+# Elle dit : "En production, rassemble tout dans le dossier 'staticfiles' à la racine"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Dossiers où Django va chercher tes fichiers CSS/JS personnalisés
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
