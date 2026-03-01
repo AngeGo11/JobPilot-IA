@@ -41,7 +41,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT").lower()
 # Sécurité HTTPS uniquement en production (évite la redirection HTTPS avec runserver en local)
 _PROD_SECURITY = (not DEBUG) and (ENVIRONMENT == "production")
 
-# Paramètres de sécurité (toujours définis pour satisfaire check --deploy)
+# Paramètres de sécurité (toujours définis pour satisfaire check —deploy)
 SECURE_SSL_REDIRECT = _PROD_SECURITY
 SESSION_COOKIE_SECURE = _PROD_SECURITY
 CSRF_COOKIE_SECURE = _PROD_SECURITY
@@ -228,7 +228,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 STATIC_URL = 'static/'
 
 
-# Elle dit : "En production, rassemble tout dans le dossier 'staticfiles' à la racine"
+# Elle dit : "En production, rassemble tout dans le dossier 'staticfiles' à la racine."
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Permet à WhiteNoise de compresser les fichiers pour que le site charge plus vite

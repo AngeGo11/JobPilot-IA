@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}JobPilot-AI{% endblock %}</title>
-    <link rel="shortcut icon" href="/media/logo/Logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -32,7 +33,7 @@
             <div class="flex justify-between items-center h-14 md:h-16">
                 <a href="#" class="flex items-center space-x-2">
                     <div class="w-10 h-8 from-blue-500 to-teal-400 rounded-lg flex items-center justify-center">
-                        <img src="/media/logo/Logo.png" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
+                        <img src="/images/Logo.png" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
                     </div>
                     <span class="text-lg md:text-xl font-bold text-slate-900">JobPilot-AI</span>
                 </a>

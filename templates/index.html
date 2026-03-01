@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JobPilot-AI</title>
-    <link rel="shortcut icon" href="/media/logo/Logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -53,7 +54,7 @@
     <nav class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div class="flex items-center gap-2">
             <div class="w-10 h-8  from-blue-500 to-teal-400 rounded-lg flex items-center justify-center">
-                <img src="/media/logo/Logo.png" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
+                <img src="{% static 'images/Logo.png' %}" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
             </div>
             <span class="text-xl font-bold tracking-tight">JobPilot-AI</span>
         </div>
@@ -352,7 +353,7 @@
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2 mb-4">
                         <div class="w-8 h-8 from-blue-600 to-blue-500 rounded-lg flex items-center justify-center text-white">
-                            <img src="/media/logo/Logo.png" class="w-8 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
+                            <img src="{% static 'images/Logo.png' %}" class="w-8 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
                         </div>
                         <span class="text-xl font-bold text-white">JobPilot-AI</span>
                     </div>
