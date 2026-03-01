@@ -226,6 +226,9 @@ STATIC_URL = 'static/'
 # Elle dit : "En production, rassemble tout dans le dossier 'staticfiles' à la racine"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Permet à WhiteNoise de compresser les fichiers pour que le site charge plus vite
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Dossiers où Django va chercher tes fichiers CSS/JS personnalisés
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
