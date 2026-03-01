@@ -13,3 +13,4 @@ PyJWT
 stripe
 python-docx
 gunicorn
+whitenoise==6.6.0
