@@ -249,7 +249,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Azure Blob Storage pour les médias en production (si configuré)
+# Azure Blob Storage pour les médias en production
 if os.getenv("AZURE_ACCOUNT_NAME"):
     STORAGES = {
         "default": {
@@ -258,16 +258,17 @@ if os.getenv("AZURE_ACCOUNT_NAME"):
                 "account_name": os.getenv("AZURE_ACCOUNT_NAME"),
                 "account_key": os.getenv("AZURE_ACCOUNT_KEY"),
                 "azure_container": os.getenv("AZURE_CONTAINER", "media"),
-                "querystring_auth": True,
+                # On garde juste l'expiration, ça suffit pour activer le SAS Token !
                 "expiration_secs": 3600,
             },
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            # Attention, remets bien whitenoise ici pour tes images de design !
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-    # URL avec token SAS temporaire (pas d'accès public au conteneur)
-    AZURE_QUERYSTRING_AUTH = True
+
+    # Plus besoin de AZURE_QUERYSTRING_AUTH ici non plus
     AZURE_URL_EXPIRATION_SECS = 3600  # 1 heure
     MEDIA_URL = (
         f"https://{os.getenv('AZURE_ACCOUNT_NAME')}.blob.core.windows.net/"
