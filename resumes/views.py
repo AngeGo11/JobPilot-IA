@@ -22,7 +22,9 @@ def upload_resume(request):
             resume.save()
 
             # --- ÉTAPE 1 : EXTRACTION DU TEXTE DU PDF ---
-            parser = PDFParser(resume.file.path)
+            # Lecture en mémoire pour supporter le stockage local ET cloud (ex. Azure Blob)
+            pdf_content = resume.file.read()
+            parser = PDFParser(pdf_content)
             extracted_text = parser.extract_text()  # Extraction du texte brut
             parsed_data = parser.parse_data()  # Parsing basique (email, phone uniquement)
 

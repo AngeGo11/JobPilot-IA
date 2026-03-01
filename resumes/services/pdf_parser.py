@@ -1,4 +1,5 @@
 # resumes/pdf_parser.py
+import io
 import pdfplumber
 import re
 import logging
@@ -8,16 +9,27 @@ class PDFParser:
     """
     Service pour extraire le texte brut d'un PDF et des informations basiques (email, téléphone).
     L'extraction des compétences et du titre de poste est maintenant gérée par AIParser (Gemini).
+    Accepte soit un chemin de fichier local (str/Path), soit des bytes (ex. fichier depuis Azure Blob).
     """
-    
-    def __init__(self, pdf_path):
-        self.pdf_path = pdf_path
+
+    def __init__(self, pdf_source):
+        """
+        pdf_source: chemin local (str/pathlib.Path) ou contenu du PDF en bytes.
+        Utiliser des bytes pour les fichiers en stockage cloud (Azure Blob, S3, etc.).
+        """
+        self.pdf_source = pdf_source
         self.full_text = ""
+
+    def _open_pdf(self):
+        """Ouvre le PDF depuis un chemin ou depuis la mémoire (bytes)."""
+        if isinstance(self.pdf_source, bytes):
+            return pdfplumber.open(io.BytesIO(self.pdf_source))
+        return pdfplumber.open(self.pdf_source)
 
     def extract_text(self):
         """Étape 1 : Récupérer le texte brut du PDF"""
         try:
-            with pdfplumber.open(self.pdf_path) as pdf:
+            with self._open_pdf() as pdf:
                 for page in pdf.pages:
                     text = page.extract_text()
                     if text:
