@@ -51,8 +51,9 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-700 overflow-x-hidden">
 
-    <nav class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-2">
+
+    <nav class="max-w-7xl mx-auto px-5 sm:px-6 h-20 flex items-center justify-between">
+        <div class="flex flex-col items-center md:flex-row md:items-center">
             <div class="w-10 h-8  from-blue-500 to-teal-400 rounded-lg flex items-center justify-center">
                 <img src="{% static 'images/Logo.png' %}" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
             </div>
@@ -68,9 +69,8 @@
     </nav>
 
     <!-- Hero Section -->
-    <main class="max-w-7xl mx-auto px-3 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
-
-        <div class="space-y-8">
+    <main class="max-w-7xl mx-auto px-5 sm:px-6 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
+        <div class="space-y-8 w-full min-w-0">
             <h1 class="text-5xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 fade-in-up">
                 <span class="text-[#125484]">Déposez </span>votre CV,<br>
                 Et <span class="text-[#125484]">Trouvez </span>des offres d'emplois,<br>
@@ -90,6 +90,7 @@
                 </a>
             </div>
         </div>
+
 
         <!-- Illustration -->
         <div class="relative lg:h-[600px] flex items-center justify-center float-animation hidden lg:flex fade-in-up fade-in-up-delay-3">
