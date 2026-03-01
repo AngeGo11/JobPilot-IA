@@ -23,7 +23,8 @@ def dashboard(request):
     logging.info(f"Session - User ID: {user_id}, Email: {user_email}, Resume count: {resume_count}")
     
     matches = JobMatch.objects.filter(
-        user=request.user
+        user=request.user,
+        is_unlocked=True,
     ).exclude(
         status='rejected'
     ).select_related('job_offer').order_by('-matched_at', '-score')
@@ -63,7 +64,7 @@ def application_workspace(request, match_id):
     - Gauche : Description du poste
     - Droite : Éditeur de lettre de motivation
     """
-    match = get_object_or_404(JobMatch, id=match_id, user=request.user)
+    match = get_object_or_404(JobMatch, id=match_id, user=request.user, is_unlocked=True)
     
     if request.method == 'POST':
         # Sauvegarde de la lettre de motivation

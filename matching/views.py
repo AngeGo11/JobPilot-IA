@@ -43,22 +43,7 @@ def find_jobs_for_resume(request, resume_id):
     page_number = request.GET.get('page', 1)
     confirmed = request.GET.get('confirmed') == '1'
 
-    # --- POST : confirmation "Oui" dans la modale → on consomme le crédit puis on redirige
-    if request.method == 'POST':
-        matches_count = JobMatch.objects.filter(resume=resume, user=request.user).count()
-        if matches_count == 0:
-            messages.warning(request, "Aucune offre à confirmer pour ce CV.")
-            return redirect('find_jobs', resume_id=resume_id)
-        if not consume_credit(request.user):
-            messages.error(
-                request,
-                "Crédits insuffisants. Passez Premium ou rechargez vos crédits.",
-            )
-            return redirect('pricing')
-        redirect_url = reverse('find_jobs', kwargs={'resume_id': resume_id})
-        return redirect(f"{redirect_url}?confirmed=1")
-
-    # --- GET : recherche API (sans consommer le crédit), sauf si déjà confirmé
+    # --- GET : Étape 1 (La Découverte) — recherche API, création des matches en is_unlocked=False
     jobs_found = 0
     if not confirmed and resume.detected_job_title:
         service = FranceTravail()
@@ -70,23 +55,28 @@ def find_jobs_for_resume(request, resume_id):
             if api_results:
                 saved_matches = service.save_jobs(api_results, user, resume)
                 jobs_found = len(saved_matches)
+                # Utilisateurs Premium : déblocage immédiat sans consommer de crédit
+                if getattr(user, 'is_premium', False):
+                    JobMatch.objects.filter(
+                        pk__in=[m.pk for m in saved_matches]
+                    ).update(is_unlocked=True)
                 logging.info(f"✅ {jobs_found} offres sauvegardées en base de données")
             else:
                 logging.info("⚠️ Aucune offre trouvée via l'API")
         except Exception as e:
             logging.info(f"❌ Erreur API : {e}")
-            import traceback
     elif not resume.detected_job_title:
         logging.info("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
-    # Récupération des matches pour affichage
+    # Affichage : uniquement les offres débloquées (is_unlocked=True)
     matches = JobMatch.objects.filter(
         resume=resume,
         user=user,
+        is_unlocked=True,
     ).exclude(status='rejected').select_related('job_offer').order_by('-score', '-matched_at')
     paginator = Paginator(matches, 9)
     page_obj = paginator.get_page(page_number)
-    logging.info(f"📋 Nombre de matches récupérés de la BDD: {matches.count()}")
+    logging.info(f"📋 Nombre de matches débloqués: {matches.count()}")
 
     return render(request, 'matching/results.html', {
         'resume': resume,
@@ -95,6 +85,60 @@ def find_jobs_for_resume(request, resume_id):
         'job_title_used': resume.detected_job_title or 'Non détecté',
         'page_obj': page_obj,
     })
+
+
+@login_required
+@require_POST
+def unlock_jobs(request, resume_id):
+    """
+    Étape 2 (Le Déblocage) : consomme 1 crédit et passe toutes les offres "en attente"
+    de ce CV en is_unlocked=True. Appelée quand l'utilisateur clique sur "Oui" dans la modale.
+    """
+    resume = get_object_or_404(Resume, id=resume_id)
+    if resume.user_id != request.user.id:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accepts('application/json'):
+            return JsonResponse({'success': False, 'error': 'Ce CV ne vous appartient pas.'}, status=403)
+        messages.error(request, "Ce CV ne vous appartient pas.")
+        return redirect('resume_list')
+
+    pending = JobMatch.objects.filter(resume=resume, user=request.user, is_unlocked=False)
+    pending_count = pending.count()
+    if pending_count == 0:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accepts('application/json'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Aucune offre en attente à débloquer pour ce CV.',
+                'redirect': reverse('find_jobs', kwargs={'resume_id': resume_id}),
+            }, status=400)
+        messages.warning(request, "Aucune offre à débloquer pour ce CV.")
+        return redirect('find_jobs', resume_id=resume_id)
+
+    if not consume_credit(request.user):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accepts('application/json'):
+            return JsonResponse({
+                'success': False,
+                'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+                'redirect': reverse('pricing'),
+            }, status=402)
+        messages.error(
+            request,
+            "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+        )
+        return redirect('pricing')
+
+    pending.update(is_unlocked=True)
+    request.user.refresh_from_db()
+    redirect_url = reverse('find_jobs', kwargs={'resume_id': resume_id}) + '?confirmed=1'
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accepts('application/json'):
+        return JsonResponse({
+            'success': True,
+            'redirect': redirect_url,
+            'message': f'{pending_count} offre(s) débloquée(s).',
+            'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
+        })
+    messages.success(request, f'{pending_count} offre(s) débloquée(s).')
+    return redirect(redirect_url)
+
 
 @login_required
 @require_POST
@@ -122,7 +166,13 @@ def generate_cover_letter(request, match_id):
     if request.method == 'POST':
         form = CoverLetterGenerationForm(request.POST)
         if form.is_valid():
-            # TODO: Implémenter la génération
+            if not consume_credit(request.user):
+                messages.error(
+                    request,
+                    "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+                )
+                return redirect('pricing')
+            # TODO: Implémenter la génération (crédit déjà vérifié ci-dessus)
             pass
     else:
         form = CoverLetterGenerationForm()
@@ -178,58 +228,83 @@ def quick_refine_cover_letter(request, match_id):
     match = get_object_or_404(JobMatch, id=match_id, user=request.user)
     action = request.POST.get('action', 'improve')
 
-    # Consommer 1 crédit pour les actions IA (sauf export-pdf qui n'utilise pas l'IA générative)
-    if action != 'export-pdf':
+    # --- export-pdf : pas d'IA, pas de crédit
+    if action == 'export-pdf':
+        current_text = request.POST.get('cover_letter_content', match.cover_letter_content)
+        if not current_text:
+            return JsonResponse({
+                'success': False,
+                'error': "Vous devez d'abord rédiger une lettre de motivation."
+            }, status=400)
+        try:
+            generator = AILetterGenerator()
+            user = request.user
+            user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.email
+            user_email = user.email if user.email else None
+            job_offer = match.job_offer
+            job_title = job_offer.title if job_offer else None
+            company_name = job_offer.company_name if job_offer else None
+            pdf_buffer = generator.export_to_pdf(
+                cover_letter_content=current_text,
+                user_name=user_name,
+                user_email=user_email,
+                user_address=None,
+                job_title=job_title,
+                company_name=company_name,
+                recipient_name=None
+            )
+            import base64
+            pdf_base64 = base64.b64encode(pdf_buffer.read()).decode('utf-8')
+            return JsonResponse({
+                'success': True,
+                'pdf_data': pdf_base64,
+                'filename': f"lettre_motivation_{job_title or 'candidature'}_{company_name or 'entreprise'}.pdf".replace(' ', '_'),
+                'message': '📄 PDF généré avec succès !'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f"Erreur lors de l'export PDF : {str(e)}"
+            }, status=500)
+
+    # --- generate : validation puis crédit puis IA
+    if action == 'generate':
+        resume = match.resume
+        if not resume:
+            resume = Resume.objects.filter(user=request.user, is_primary=True).first()
+            if not resume:
+                resume = Resume.objects.filter(user=request.user).first()
+        if not resume:
+            return JsonResponse({
+                'success': False,
+                'error': "Aucun CV trouvé. Veuillez d'abord uploader un CV."
+            }, status=400)
+        if not resume.extracted_text:
+            return JsonResponse({
+                'success': False,
+                'error': "Le CV n'a pas de texte extrait. Veuillez ré-uploader le CV."
+            }, status=400)
         if not consume_credit(request.user):
             return JsonResponse({
                 'success': False,
-                'error': 'Crédits insuffisants. Passez Premium ou rechargez vos crédits.',
-                'redirect': '/subscriptions/pricing/',
+                'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+                'redirect': reverse('pricing'),
             }, status=402)
-    
-    # Si l'action est 'generate', générer une nouvelle lettre de motivation
-    if action == 'generate':
+        request.user.refresh_from_db()
         try:
             generator = AILetterGenerator()
-            
-            # Récupérer le CV associé au match, ou le CV principal de l'utilisateur
-            resume = match.resume
-            if not resume:
-                # Si le match n'a pas de CV associé, récupérer le CV principal de l'utilisateur
-                resume = Resume.objects.filter(user=request.user, is_primary=True).first()
-                if not resume:
-                    # Si pas de CV principal, prendre le premier CV de l'utilisateur
-                    resume = Resume.objects.filter(user=request.user).first()
-            
-            if not resume:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Aucun CV trouvé. Veuillez d'abord uploader un CV."
-                }, status=400)
-            
-            if not resume.extracted_text:
-                return JsonResponse({
-                    'success': False,
-                    'error': "Le CV n'a pas de texte extrait. Veuillez ré-uploader le CV."
-                }, status=400)
-            
-            # Générer la lettre de motivation
             generated_letter = generator.generate_cover_letter(
                 resume=resume,
                 job_match=match,
                 tone="professional",
                 user_id=request.user.id,
             )
-            
-            # Ne pas sauvegarder automatiquement - l'utilisateur devra cliquer sur "Sauvegarder"
-            # La lettre est seulement retournée pour être affichée dans l'éditeur
-            
             return JsonResponse({
                 'success': True,
                 'refined_letter': generated_letter,
-                'message': '✨ Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.'
+                'message': '✨ Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.',
+                'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
             })
-            
         except FairUseExceeded:
             return JsonResponse({
                 'success': False,
@@ -251,60 +326,22 @@ def quick_refine_cover_letter(request, match_id):
                 'success': False,
                 'error': f"Erreur lors de la génération : {str(e)}"
             }, status=500)
-    
-    # Récupérer le texte actuel depuis le POST (au cas où il a été modifié)
-    # Note: Cette vérification se fait après 'generate' car la génération ne nécessite pas de texte existant
+
+    # --- improve / formalize / grammar / length : validation du texte puis crédit puis IA
     current_text = request.POST.get('cover_letter_content', match.cover_letter_content)
-    
     if not current_text:
         return JsonResponse({
             'success': False,
             'error': "Vous devez d'abord rédiger une lettre de motivation."
         }, status=400)
-    
-    # Si l'action est export-pdf, rediriger vers la vue d'export
-    if action == 'export-pdf':
-        # Pour l'export PDF, on doit rediriger vers une nouvelle page ou retourner une réponse différente
-        # Mais comme c'est appelé via AJAX, on va retourner une réponse JSON avec l'URL de téléchargement
-        try:
-            generator = AILetterGenerator()
-            
-            # Récupérer les informations
-            user = request.user
-            user_name = f"{user.first_name} {user.last_name}".strip() if (user.first_name or user.last_name) else user.email
-            user_email = user.email if user.email else None
-            job_offer = match.job_offer
-            job_title = job_offer.title if job_offer else None
-            company_name = job_offer.company_name if job_offer else None
-            
-            # Générer le PDF
-            pdf_buffer = generator.export_to_pdf(
-                cover_letter_content=current_text,
-                user_name=user_name,
-                user_email=user_email,
-                user_address=None,
-                job_title=job_title,
-                company_name=company_name,
-                recipient_name=None
-            )
-            
-            # Retourner le PDF en base64 pour le téléchargement côté client
-            import base64
-            pdf_base64 = base64.b64encode(pdf_buffer.read()).decode('utf-8')
-            
-            return JsonResponse({
-                'success': True,
-                'pdf_data': pdf_base64,
-                'filename': f"lettre_motivation_{job_title or 'candidature'}_{company_name or 'entreprise'}.pdf".replace(' ', '_'),
-                'message': '📄 PDF généré avec succès !'
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': f"Erreur lors de l'export PDF : {str(e)}"
-            }, status=500)
-    
-    # Mapping des actions vers les types d'amélioration
+    if not consume_credit(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+            'redirect': reverse('pricing'),
+        }, status=402)
+
+    request.user.refresh_from_db()
     action_mapping = {
         'improve': {
             'type': 'custom',
@@ -323,35 +360,27 @@ def quick_refine_cover_letter(request, match_id):
             'instructions': 'Optimise la longueur de cette lettre pour qu\'elle soit concise mais complète.'
         }
     }
-    
     action_config = action_mapping.get(action, action_mapping['improve'])
-    
+
     try:
         generator = AILetterGenerator()
-        
-        # Construire les instructions finales
         final_instructions = generator._build_refinement_instructions(
             action_config['instructions'],
             action_config['type']
         )
-        
-        # Appeler le service de raffinement
         refined_letter = generator.refine_cover_letter(
             current_text,
             final_instructions,
             user_id=request.user.id,
         )
-        
-        # Sauvegarder la lettre améliorée
         match.cover_letter_content = refined_letter
         match.save()
-        
         return JsonResponse({
             'success': True,
             'refined_letter': refined_letter,
-            'message': '✨ Votre lettre a été améliorée avec succès !'
+            'message': '✨ Votre lettre a été améliorée avec succès !',
+            'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
         })
-        
     except FairUseExceeded:
         return JsonResponse({
             'success': False,
@@ -431,12 +460,6 @@ def optimize_cv_view(request, match_id):
     Appelée via AJAX depuis le workspace (bouton "Adapter mon CV à cette offre").
     """
     match = get_object_or_404(JobMatch, id=match_id, user=request.user)
-    if not consume_credit(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': 'Crédits insuffisants. Passez Premium ou rechargez vos crédits.',
-            'redirect': '/subscriptions/pricing/',
-        }, status=402)
     resume = match.resume
     if not resume:
         resume = Resume.objects.filter(user=request.user, is_primary=True).first()
@@ -458,6 +481,15 @@ def optimize_cv_view(request, match_id):
             'success': False,
             'error': "Offre d'emploi introuvable."
         }, status=400)
+
+    if not consume_credit(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
+            'redirect': reverse('pricing'),
+        }, status=402)
+
+    request.user.refresh_from_db()
     try:
         optimizer = AIOptimizer()
         result = optimizer.optimize_for_offer(
@@ -469,7 +501,8 @@ def optimize_cv_view(request, match_id):
         return JsonResponse({
             'success': True,
             'data': result,
-            'message': "Suggestions d'adaptation du CV générées avec succès."
+            'message': "Suggestions d'adaptation du CV générées avec succès.",
+            'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
         })
     except FairUseExceeded:
         return JsonResponse({
@@ -516,40 +549,40 @@ def refine_cover_letter(request, match_id):
             if not consume_credit(request.user):
                 messages.error(
                     request,
-                    "Crédits insuffisants pour améliorer la lettre. Passez Premium ou rechargez vos crédits."
+                    "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
                 )
                 return redirect('pricing')
             instructions = form.cleaned_data['instructions']
             improvement_type = form.cleaned_data.get('improvement_type', 'custom')
-            
+
             try:
                 generator = AILetterGenerator()
-                
+
                 # Construire les instructions finales selon le type d'amélioration
                 final_instructions = generator._build_refinement_instructions(
                     instructions,
                     improvement_type
                 )
-                
+
                 # Appeler le service de raffinement
                 refined_letter = generator.refine_cover_letter(
                     match.cover_letter_content,
                     final_instructions,
                     user_id=request.user.id,
                 )
-                
+
                 # Sauvegarder la lettre améliorée
                 match.cover_letter_content = refined_letter
                 match.save()
-                
+
                 messages.success(
-                    request, 
+                    request,
                     '✨ Votre lettre de motivation a été améliorée avec succès !'
                 )
-                
+
                 # Rediriger vers le workspace pour voir le résultat
                 return redirect('application_workspace', match_id=match_id)
-                
+
             except FairUseExceeded:
                 messages.warning(
                     request,
@@ -564,7 +597,7 @@ def refine_cover_letter(request, match_id):
                 messages.error(request, f"Erreur de validation : {str(e)}")
             except Exception as e:
                 messages.error(
-                    request, 
+                    request,
                     f"Erreur lors de l'amélioration de la lettre : {str(e)}"
                 )
     else:

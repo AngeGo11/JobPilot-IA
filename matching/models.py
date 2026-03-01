@@ -51,7 +51,10 @@ class JobMatch(models.Model):
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     matched_at = models.DateTimeField(auto_now_add=True)
-    
+
+    # Verrouillage : False = offre trouvée mais pas encore "achetée" par 1 crédit
+    is_unlocked = models.BooleanField("Déblocage (crédit consommé)", default=False)
+
     # Lettre de motivation (brouillon)
     cover_letter_content = models.TextField("Lettre de motivation", blank=True)
 

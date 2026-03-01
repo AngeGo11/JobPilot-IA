@@ -106,6 +106,16 @@
                     <div class="editor-toolbar px-4 py-3 sm:px-6 border-b border-slate-200">
                         <div class="grid grid-cols-2 sm:grid-cols-2 items-stretch gap-2">
                             <button type="button"
+                                    onclick="handleAIAction('generate', event)"
+                                    {% if not user.can_generate %}disabled{% endif %}
+                                    title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Générer un brouillon{% endif %}"
+                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg border border-blue-200 transition-all min-h-[44px] sm:min-h-0 {% if user.can_generate %}bg-blue-50 text-blue-700 hover:bg-blue-100{% else %}bg-white/80 text-slate-500 border-slate-200 opacity-60 cursor-not-allowed{% endif %}">
+                                {% if not user.can_generate %}
+                                    <i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
+                                <i class="fa-solid fa-file-pen shrink-0"></i>
+                                <span class="truncate break-words whitespace-normal">Générer un brouillon <span class="font-bold">(1 crédit)</span> </span>
+                            </button>
+                            <button type="button"
                                     onclick="handleAIAction('improve', event)"
                                     {% if not user.can_generate %}disabled{% endif %}
                                     title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Améliorer avec l'IA{% endif %}"
@@ -127,16 +137,6 @@
                                     <i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
                                 <i class="fa-solid fa-user-tie shrink-0"></i>
                                 <span class="truncate break-words whitespace-normal">Rendre plus formel <span class="font-bold">(1 crédit)</span></span>
-                            </button>
-                            <button type="button"
-                                    onclick="handleAIAction('generate', event)"
-                                    {% if not user.can_generate %}disabled{% endif %}
-                                    title="{% if not user.can_generate %}Nécessite 1 crédit{% else %}Générer un brouillon{% endif %}"
-                                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-lg border border-blue-200 transition-all min-h-[44px] sm:min-h-0 {% if user.can_generate %}bg-blue-50 text-blue-700 hover:bg-blue-100{% else %}bg-white/80 text-slate-500 border-slate-200 opacity-60 cursor-not-allowed{% endif %}">
-                                {% if not user.can_generate %}
-                                    <i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
-                                <i class="fa-solid fa-file-pen shrink-0"></i>
-                                <span class="truncate break-words whitespace-normal">Générer un brouillon <span class="font-bold">(1 crédit)</span> </span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('export-pdf', event)"
@@ -397,6 +397,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        if (typeof window.updateCreditBalance === 'function' && data.new_credits !== undefined) {
+                            window.updateCreditBalance(data.new_credits);
+                        }
                         // Si c'est un export PDF, télécharger le fichier
                         if (action === 'export-pdf' && data.pdf_data) {
                             // Convertir le base64 en blob et télécharger
@@ -505,6 +508,9 @@
                 .then(data => {
                     loading.classList.add('hidden');
                     if (data.success && data.data) {
+                        if (typeof window.updateCreditBalance === 'function' && data.new_credits !== undefined) {
+                            window.updateCreditBalance(data.new_credits);
+                        }
                         const d = data.data;
                         const keywordsEl = document.getElementById('cvOptimizerKeywords');
                         keywordsEl.innerHTML = '';
