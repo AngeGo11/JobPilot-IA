@@ -258,12 +258,17 @@ if os.getenv("AZURE_ACCOUNT_NAME"):
                 "account_name": os.getenv("AZURE_ACCOUNT_NAME"),
                 "account_key": os.getenv("AZURE_ACCOUNT_KEY"),
                 "azure_container": os.getenv("AZURE_CONTAINER", "media"),
+                "querystring_auth": True,
+                "expiration_secs": 3600,
             },
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+    # URL avec token SAS temporaire (pas d'accès public au conteneur)
+    AZURE_QUERYSTRING_AUTH = True
+    AZURE_URL_EXPIRATION_SECS = 3600  # 1 heure
     MEDIA_URL = (
         f"https://{os.getenv('AZURE_ACCOUNT_NAME')}.blob.core.windows.net/"
         f"{os.getenv('AZURE_CONTAINER', 'media')}/"
