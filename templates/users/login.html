@@ -164,11 +164,11 @@
                 <span class="hidden sm:inline">Google</span>
             </a>
 
-            <button type="button"
+            <a href="{% provider_login_url 'linkedin' %}"
                     class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer">
                 <i class="fa-brands fa-linkedin text-[#125484] text-lg group-hover:scale-110 transition-transform"></i>
                 <span class="hidden sm:inline">LinkedIn</span>
-            </button>
+            </a>
 
             <a href="{% provider_login_url 'github' %}"
                class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer">
