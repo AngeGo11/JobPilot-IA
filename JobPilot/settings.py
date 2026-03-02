@@ -68,7 +68,8 @@ ALLOWED_HOSTS = [
     '169.254.129.4',
     '169.254.130.1',
     '169.254.130.3',
-    '169.254.130.4'
+    '169.254.130.4',
+    '169.254.129.2',
 ]
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
