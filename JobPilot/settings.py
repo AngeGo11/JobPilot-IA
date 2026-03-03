@@ -138,6 +138,15 @@ TEMPLATES = [
     },
 ]
 
+# --- Moteurs d'authentification ---
+AUTHENTICATION_BACKENDS = [
+    # Nécessaire pour se connecter par mot de passe (et accéder à l'admin)
+    'django.contrib.auth.backends.ModelBackend',
+
+    # Nécessaire pour que Allauth gère les connexions Google, LinkedIn, GitHub
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 WSGI_APPLICATION = 'JobPilot.wsgi.application'
 
 
