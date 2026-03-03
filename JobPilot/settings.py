@@ -454,3 +454,7 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
+# 2. Pour Google, LinkedIn, GitHub (La ligne magique ✨)
+# "none" permet de bypasser l'écran que tu viens de voir !
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+
