@@ -63,6 +63,8 @@
             display: block;
         }
 
+
+
         .form-input {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -158,21 +160,24 @@
         <!-- Social Login Buttons -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <a href="{% provider_login_url 'google' %}"
-               class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer decoration-0">
+               class="flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer decoration-0 w-full">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg"
-                     class="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google">
+                     class="w-5 h-5 group-hover:scale-110 transition-transform shrink-0" alt="Google">
+                <span class="sm:hidden">Continuer avec Google</span>
                 <span class="hidden sm:inline">Google</span>
             </a>
 
             <a href="{% provider_login_url 'linkedin_oauth2' %}"
-                    class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer">
-                <i class="fa-brands fa-linkedin text-[#125484] text-lg group-hover:scale-110 transition-transform"></i>
+               class="flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer w-full">
+                <i class="fa-brands fa-linkedin text-[#125484] text-lg group-hover:scale-110 transition-transform shrink-0"></i>
+                <span class="sm:hidden">Continuer avec LinkedIn</span>
                 <span class="hidden sm:inline">LinkedIn</span>
             </a>
 
             <a href="{% provider_login_url 'github' %}"
-               class="flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer">
-                <i class="fa-brands fa-github text-slate-800 text-lg group-hover:scale-110 transition-transform"></i>
+               class="flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-slate-800 hover:bg-slate-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer w-full">
+                <i class="fa-brands fa-github text-slate-800 text-lg group-hover:scale-110 transition-transform shrink-0"></i>
+                <span class="sm:hidden">Continuer avec GitHub</span>
                 <span class="hidden sm:inline">GitHub</span>
             </a>
         </div>
