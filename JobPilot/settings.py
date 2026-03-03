@@ -434,6 +434,16 @@ SOCIALACCOUNT_PROVIDERS = {
     "github": {
         "SCOPE": ["read:user", "user:email"],
     },
+    'linkedin_oauth2': {
+        'SCOPE': ['openid', 'profile', 'email'],
+        'PROFILE_FIELDS': [
+            'id',
+            'first-name',
+            'last-name',
+            'email-address',
+            'picture-url',
+        ],
+    }
 }
 
 # Désactive la confirmation pour le login social
