@@ -449,3 +449,8 @@ SOCIALACCOUNT_PROVIDERS = {
 # Désactive la confirmation pour le login social
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
+# Permet de lier automatiquement un compte social
+# à un compte classique existant s'ils ont la même adresse e-mail pour éviter la collision d'email.
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+
