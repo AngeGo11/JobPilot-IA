@@ -436,13 +436,6 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     'linkedin_oauth2': {
         'SCOPE': ['openid', 'profile', 'email'],
-        'PROFILE_FIELDS': [
-            'id',
-            'first-name',
-            'last-name',
-            'email-address',
-            'picture-url',
-        ],
     }
 }
 
@@ -454,7 +447,6 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 
-# 2. Pour Google, LinkedIn, GitHub (La ligne magique ✨)
-# "none" permet de bypasser l'écran que tu viens de voir !
+#Permet de passer l'écran de vérification
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 
