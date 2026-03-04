@@ -56,20 +56,7 @@ SITE_URL = os.getenv('SITE_URL', 'https://jobpilot-ai.fr')
 _site_domain = SITE_URL.replace('https://', '').replace('http://', '').rstrip('/')
 
 ALLOWED_HOSTS = [
-    '10.192.66.109', 
-    'localhost', 
-    '127.0.0.1', 
-    'autohypnotic-lashay-undecretory.ngrok-free.dev',
-    _site_domain,
-    'jobpilot-ai.fr',
-    'www.jobpilot-ai.fr',
-    'jobpilot-ai-dpdcabeafpdxc0gc.francecentral-01.azurewebsites.net',
-    # --- Les IPs internes d'Azure pour les Health Checks ---
-    '169.254.129.4',
-    '169.254.130.1',
-    '169.254.130.3',
-    '169.254.130.4',
-    '169.254.129.2',
+    '*',
 ]
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
