@@ -31,7 +31,8 @@ def send_welcome_email(user, request=None):
         logger.warning("send_welcome_email skipped: no user or no email")
         return
     site_url = get_site_url(request)
-    context = {"user": user, "site_url": site_url}
+    dashboard_url = f"{site_url}/resumes/upload/"
+    context = {"user": user, "site_url": site_url, "dashboard_url": dashboard_url}
     html_content = render_to_string("account/email/welcome_message.html", context)
     subject = "Bienvenue sur JobPilot-AI"
     from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "jobpilot-ai <noreply@jobpilot-ai.fr>")
