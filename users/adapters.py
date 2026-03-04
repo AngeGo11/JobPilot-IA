@@ -33,4 +33,10 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             if not user.email and extra.get("email"):
                 user.email = extra["email"]
 
+        elif provider == "linkedin_oauth2":
+            if extra.get("given_name"):
+                user.first_name = extra["given_name"]
+            if extra.get("family_name"):
+                user.last_name = extra["family_name"]
+
         return user

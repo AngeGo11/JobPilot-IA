@@ -459,6 +459,6 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 #Permet de passer l'écran de vérification
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 
-# On force Django à utiliser l'E-MAIL pour se connecter (et non le pseudo)
+# On force Django à utiliser l'E-MAIL pour se connecter
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 

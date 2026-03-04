@@ -17,7 +17,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             CandidateProfile.objects.get_or_create(user=user)
-            login(request, user)  # Connexion directe après inscription
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # Connexion directe après inscription
             request.session["user_id"] = user.id
             request.session["show_welcome_modal"] = True  # Modale bienvenue au premier accès dashboard
             send_welcome_email(user, request=request)
