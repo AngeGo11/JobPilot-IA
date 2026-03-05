@@ -416,7 +416,7 @@ if ENVIRONMENT == 'production':
 
 SITE_ID = 1
 
-# --- Allauth : adaptateur personnalisé (remplit email, first_name, last_name depuis Google/GitHub) ---
+# --- Allauth : adaptateur personnalisé (remplit email, first_name, last_name depuis Google) ---
 SOCIALACCOUNT_ADAPTER = "users.adapters.CustomSocialAccountAdapter"
 
 # Scopes pour récupérer profil et email auprès des providers
