@@ -89,8 +89,6 @@ INSTALLED_APPS = [
 
     # --- Allauth Providers (Réseaux sociaux) ---
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.github',
-    'allauth.socialaccount.providers.linkedin_oauth2',
     'storages',
 ]
 
@@ -427,12 +425,6 @@ SOCIALACCOUNT_PROVIDERS = {
         "SCOPE": ["profile", "email"],
         "AUTH_PARAMS": {"access_type": "online"},
     },
-    "github": {
-        "SCOPE": ["read:user", "user:email"],
-    },
-    'linkedin_oauth2': {
-        'SCOPE': ['openid', 'profile', 'email'],
-    }
 }
 
 # Désactive la confirmation pour le login social
