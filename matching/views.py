@@ -43,14 +43,19 @@ def find_jobs_for_resume(request, resume_id):
     page_number = request.GET.get('page', 1)
     confirmed = request.GET.get('confirmed') == '1'
 
-    # --- GET : Étape 1 (La Découverte) — recherche API, création des matches en is_unlocked=False
+    # --- GET : Étape 1 (La Découverte) — recherche API uniquement sur la première page
+    # Pour les pages 2+ ou après confirmation, on ne rappelle jamais l'API : on pagine
+    # uniquement sur les matches déjà en base (évite de consommer un crédit à chaque changement de page).
     jobs_found = 0
-    if not confirmed and resume.detected_job_title:
+    is_first_search_page = not confirmed and (page_number == 1 or str(page_number) == '1')
+    if is_first_search_page and resume.detected_job_title:
         service = FranceTravail()
         try:
             search_query = resume.detected_job_title
             logging.info(f"🔍 Recherche d'offres avec le titre détecté: {search_query}")
-            api_results = service.search_jobs(search_query, page=int(page_number))
+            # Premier appel uniquement : page 1 de l'API, avec une limite plus grande pour avoir
+            # assez de résultats à paginer côté Django sans rappeler l'API.
+            api_results = service.search_jobs(search_query, page=1, limit=30)
             logging.info(f"📊 Nombre d'offres trouvées via API: {len(api_results) if api_results else 0}")
             if api_results:
                 saved_matches = service.save_jobs(api_results, user, resume)
@@ -65,7 +70,7 @@ def find_jobs_for_resume(request, resume_id):
                 logging.info("⚠️ Aucune offre trouvée via l'API")
         except Exception as e:
             logging.info(f"❌ Erreur API : {e}")
-    elif not resume.detected_job_title:
+    elif not resume.detected_job_title and is_first_search_page:
         logging.info("⚠️ Aucun titre de poste détecté dans le CV. Impossible de rechercher des offres.")
 
     # Affichage : uniquement les offres débloquées (is_unlocked=True)
@@ -84,6 +89,7 @@ def find_jobs_for_resume(request, resume_id):
         'jobs_found': jobs_found,
         'job_title_used': resume.detected_job_title or 'Non détecté',
         'page_obj': page_obj,
+        'search_confirmed': confirmed,
     })
 
 
