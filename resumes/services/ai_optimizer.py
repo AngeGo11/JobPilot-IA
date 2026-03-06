@@ -3,21 +3,21 @@ Service IA pour adapter le CV à une offre d'emploi spécifique (CV Optimizer).
 Utilise Google Gemini pour analyser CV + offre et retourner des suggestions.
 """
 import json
-import os
 import logging
+import os
 import re
 from typing import Optional
 
-import google.generativeai as genai
 from django.conf import settings
+from google import genai
 
 from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
 
 
 class AIOptimizer:
     """
-    Service qui utilise Gemini pour comparer un CV à une offre et proposer :
-    - Mots-clés manquants dans le CV mais présents dans l'offre
+    Service qui utilise Gemini pour comparer un CV à une offre et proposer
+    – Mots-clés manquants dans le CV, mais présents dans l'offre
     - Suggestion de profil/résumé introductif réécrit pour coller à l'offre
     - Suggestions de modifications pour les expériences (mettre en avant des compétences)
     """
@@ -29,15 +29,18 @@ class AIOptimizer:
                 "GEMINI_API_KEY manquant. "
                 "Définissez la variable d'environnement GEMINI_API_KEY ou dans settings.py"
             )
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+
+        # Initialisation propre du nouveau client
+        self.client = genai.Client(api_key=api_key)
+        # On définit le modèle par défaut ici pour ne pas le répéter
+        self.model_name = "gemini-2.5-flash"
 
     def optimize_for_offer(
-        self,
-        cv_text: str,
-        job_description: str,
-        job_title: str = "",
-        user_id: Optional[int] = None,
+            self,
+            cv_text: str,
+            job_description: str,
+            job_title: str = "",
+            user_id: Optional[int] = None,
     ) -> dict:
         """
         Analyse le CV par rapport à l'offre et retourne des suggestions d'adaptation.
@@ -103,7 +106,8 @@ RÈGLES :
 
         try:
             ensure_gemini_rate_limit(user_id)
-            response = call_gemini_with_retry(lambda: self.model.generate_content(prompt))
+            response = call_gemini_with_retry(
+                lambda: self.client.models.generate_content(model=self.model_name, contents=prompt))
             response_text = response.text.strip()
 
             # Nettoyage des blocs markdown

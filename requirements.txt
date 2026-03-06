@@ -6,7 +6,7 @@ psycopg2-binary~=2.9.10
 requests~=2.32.5
 django-storages[azure]~=1.14.2
 pdfplumber
-google-generativeai
+google-genai
 reportlab
 django-allauth
 PyJWT

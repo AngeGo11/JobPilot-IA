@@ -8,6 +8,11 @@ class UsersConfig(AppConfig):
 
     def ready(self):
         import users.signals  # noqa: F401
+        from django.db.models.signals import post_migrate
+        post_migrate.connect(self._ensure_site_domain_on_migrate)
+
+    def _ensure_site_domain_on_migrate(self, **kwargs):
+        """Met à jour le Site Django (SITE_ID) avec le domaine de SITE_URL après les migrations."""
         self._ensure_site_domain()
 
     def _ensure_site_domain(self):
