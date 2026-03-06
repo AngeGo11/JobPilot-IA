@@ -4,7 +4,10 @@ On lance avec:  stripe listen --forward-to localhost:8000/subscriptions/webhook/
 """
 import logging
 from datetime import timedelta, datetime
+from decimal import Decimal
+
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -96,30 +99,71 @@ def handle_checkout_completed(session):
     """
     Appelé par le webhook quand checkout.session.completed.
     session est l'objet Stripe (dict ou StripeObject).
+    IDEMPOTENT : si la session a déjà été traitée (stripe_session_id en base),
+    on ne modifie rien et on log un avertissement.
     """
-    client_reference_id = session.get('client_reference_id')
-    plan = (session.get('metadata') or {}).get('plan')
-    if not client_reference_id or not plan:
-        logger.warning("checkout.session.completed sans client_reference_id ou metadata.plan")
+    session_id = session.get('id') if hasattr(session, 'get') else getattr(session, 'id', None)
+    if not session_id:
+        logger.warning("checkout.session.completed sans session.id, événement ignoré")
         return
-    mode = session.get('mode', 'payment')
-    if mode == 'subscription':
-        subscription_raw = session.get('subscription')
-        # Stripe peut envoyer l'id (string) ou un objet étendu (dict avec 'id')
-        subscription_id = None
-        if isinstance(subscription_raw, str):
-            subscription_id = subscription_raw
-        elif subscription_raw and isinstance(subscription_raw, dict) and subscription_raw.get('id'):
-            subscription_id = subscription_raw['id']
-        elif subscription_raw and hasattr(subscription_raw, 'id'):
-            subscription_id = getattr(subscription_raw, 'id', None)
-        if subscription_id:
-            _link_subscription_and_set_end_date(client_reference_id, subscription_id, plan)
-        else:
-            # Fallback : appliquer le plan avec duration_days si pas d'id abonnement
-            apply_plan_to_user(client_reference_id, plan)
+
+    client_reference_id = session.get('client_reference_id') if hasattr(session, 'get') else getattr(session, 'client_reference_id', None)
+    metadata = session.get('metadata') if hasattr(session, 'get') else getattr(session, 'metadata', None) or {}
+    plan = (metadata.get('plan') if isinstance(metadata, dict) else getattr(metadata, 'plan', None))
+    if not client_reference_id or not plan:
+        logger.warning("checkout.session.completed sans client_reference_id ou metadata.plan, session_id=%s", session_id)
+        return
+
+    from subscriptions.models import Transaction
+
+    if Transaction.objects.filter(stripe_session_id=session_id).exists():
+        logger.warning(
+            "Webhook en double bloqué avec succès : session_id=%s déjà traitée (idempotence), aucun crédit ni abonnement ajouté.",
+            session_id,
+        )
+        return
+
+    amount_total_cents = None
+    if hasattr(session, 'get'):
+        amount_total_cents = session.get('amount_total')
     else:
-        apply_plan_to_user(client_reference_id, plan)
+        amount_total_cents = getattr(session, 'amount_total', None)
+    amount_euros = Decimal(str(amount_total_cents)) / 100 if amount_total_cents is not None else None
+
+    mode = session.get('mode', 'payment') if hasattr(session, 'get') else getattr(session, 'mode', 'payment')
+
+    try:
+        with transaction.atomic():
+            Transaction.objects.create(
+                user_id=int(client_reference_id),
+                stripe_session_id=session_id,
+                amount=amount_euros,
+            )
+            if mode == 'subscription':
+                subscription_raw = session.get('subscription') if hasattr(session, 'get') else getattr(session, 'subscription', None)
+                subscription_id = None
+                if isinstance(subscription_raw, str):
+                    subscription_id = subscription_raw
+                elif subscription_raw and isinstance(subscription_raw, dict) and subscription_raw.get('id'):
+                    subscription_id = subscription_raw['id']
+                elif subscription_raw and hasattr(subscription_raw, 'id'):
+                    subscription_id = getattr(subscription_raw, 'id', None)
+                if subscription_id:
+                    _link_subscription_and_set_end_date(client_reference_id, subscription_id, plan)
+                else:
+                    apply_plan_to_user(client_reference_id, plan)
+            else:
+                apply_plan_to_user(client_reference_id, plan)
+        logger.info(
+            "Checkout traité avec succès : session_id=%s user_id=%s plan=%s (premier traitement, idempotence OK).",
+            session_id, client_reference_id, plan,
+        )
+    except Exception as e:
+        logger.exception(
+            "Erreur lors du traitement du checkout session_id=%s : %s. Aucun crédit/abonnement appliqué (transaction annulée).",
+            session_id, e,
+        )
+        raise
 
 
 def _link_subscription_and_set_end_date(user_id, stripe_subscription_id, plan_slug):
