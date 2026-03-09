@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Uploader un CV - JobPilot-AI{% endblock %}
 
@@ -25,6 +26,31 @@
             font-size: 0.875rem;
             color: #64748b;
         }
+
+        /* Overlay de chargement – style SaaS moderne */
+        #upload-loading-overlay {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        #upload-loading-overlay .upload-overlay-card {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+        .upload-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(18, 84, 132, 0.15);
+            border-top-color: #125484;
+            border-radius: 50%;
+            animation: upload-spin 0.9s linear infinite;
+        }
+        @keyframes upload-spin {
+            to { transform: rotate(360deg); }
+        }
+        .upload-status-text {
+            min-height: 2rem;
+            transition: opacity 0.35s ease;
+        }
     </style>
 {% endblock %}
 
@@ -44,7 +70,7 @@
 
             <!-- Form Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <form method="post" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-6">
+                <form method="post" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-6" data-resume-list-url="{% url 'resume_list' %}">
                     {% csrf_token %}
 
                     <!-- Errors Display -->
@@ -174,17 +200,28 @@
                     <!-- Submit Button -->
                     <div class="flex items-center gap-4 pt-4 border-t border-slate-200">
 
-                        <button type="submit"
+                        <button type="submit" id="upload-submit-btn"
                                 class="flex-1 inline-flex bg-[#125484] items-center justify-center px-6 py-3 font-semibold text-white rounded-lg hover:bg-[#0f4470]">
                             <i class="fa-solid fa-upload mr-2"></i>Uploader le CV
                         </button>
                         <a href="{% url 'resume_list' %}"
-                           class="px-6 py-3 bg-[#] text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors">
+                           class="px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors">
                             Annuler
                         </a>
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Overlay de chargement (analyse IA) – caché par défaut -->
+    <div id="upload-loading-overlay" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/70" aria-live="polite" aria-busy="true">
+        <div class="upload-overlay-card rounded-2xl p-8 sm:p-10 flex flex-col items-center justify-center max-w-sm mx-4">
+            <div class="upload-spinner mb-6" aria-hidden="true"></div>
+            <p id="upload-status-text" class="upload-status-text text-center text-slate-700 font-medium text-base sm:text-lg">
+                Lecture de votre CV...
+            </p>
+            <p class="text-slate-500 text-sm mt-2 text-center">Ne fermez pas cette page.</p>
         </div>
     </div>
 {% endblock %}
@@ -252,5 +289,85 @@
                 fileInput.click();
             }
         });
+
+        // Soumission avec overlay de chargement (analyse IA peut prendre du temps)
+        (function() {
+            var form = document.querySelector('form[enctype="multipart/form-data"]');
+            var overlay = document.getElementById('upload-loading-overlay');
+            var submitBtn = document.getElementById('upload-submit-btn');
+            var statusEl = document.getElementById('upload-status-text');
+            var statusMessages = [
+                'Lecture de votre CV...',
+                'Extraction de vos compétences clés...',
+                'Analyse par notre intelligence artificielle...',
+                'Finalisation de votre profil...'
+            ];
+            var statusInterval = null;
+
+            function startStatusRotation() {
+                var i = 0;
+                if (statusEl) statusEl.textContent = statusMessages[0];
+                statusInterval = setInterval(function() {
+                    i = (i + 1) % statusMessages.length;
+                    if (statusEl) statusEl.textContent = statusMessages[i];
+                }, 2500);
+            }
+
+            function stopStatusRotation() {
+                if (statusInterval) {
+                    clearInterval(statusInterval);
+                    statusInterval = null;
+                }
+            }
+
+            if (!form || !overlay) return;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (submitBtn) submitBtn.disabled = true;
+                overlay.classList.remove('hidden');
+                startStatusRotation();
+
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    redirect: 'manual',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(response) {
+                    var isRedirect = response.type === 'opaqueredirect' || (response.status >= 301 && response.status <= 303);
+                    if (isRedirect) {
+                        var redirectUrl = response.headers.get('Location');
+                        if (!redirectUrl) redirectUrl = form.dataset.resumeListUrl;
+                        if (redirectUrl) {
+                            stopStatusRotation();
+                            window.location.href = redirectUrl;
+                            return null;
+                        }
+                    }
+                    if (response.ok) return response.text();
+                    return response.text().then(function(html) { return html || ''; });
+                })
+                .then(function(html) {
+                    if (html && html.length > 0) {
+                        stopStatusRotation();
+                        overlay.classList.add('hidden');
+                        if (submitBtn) submitBtn.disabled = false;
+                        document.open();
+                        document.write(html);
+                        document.close();
+                    }
+                })
+                .catch(function() {
+                    stopStatusRotation();
+                    overlay.classList.add('hidden');
+                    if (submitBtn) submitBtn.disabled = false;
+                    alert('Erreur réseau. Veuillez réessayer.');
+                });
+            });
+        })();
     </script>
 {% endblock %}

@@ -113,7 +113,8 @@
                                 {% if not user.can_generate %}
                                     <i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
                                 <i class="fa-solid fa-file-pen shrink-0"></i>
-                                <span class="truncate break-words whitespace-normal">Générer un brouillon <span class="font-bold">(1 crédit)</span> </span>
+                                <span class="truncate break-words whitespace-normal">Générer un brouillon <span
+                                        class="font-bold">(1 crédit)</span> </span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('improve', event)"
@@ -126,7 +127,8 @@
                                     <path d="m5.008 2.324.45 1.244a4.967 4.967 0 0 0 2.984 2.977l1.252.45c.113.037.113.202 0 .24l-1.252.45a4.967 4.967 0 0 0-2.984 2.976l-.45 1.245c-.037.112-.202.112-.24 0l-.45-1.245a4.967 4.967 0 0 0-2.983-2.976l-1.253-.45c-.112-.038-.112-.203 0-.24l1.252-.45A4.967 4.967 0 0 0 4.32 3.568l.45-1.244c.037-.113.202-.113.24 0ZM9.792.037l.21.577c.232.638.735 1.14 1.38 1.372l.577.21c.052.023.052.09 0 .113l-.578.21a2.311 2.311 0 0 0-1.38 1.372l-.21.577a.06.06 0 0 1-.112 0l-.21-.577a2.292 2.292 0 0 0-1.38-1.372l-.576-.21a.06.06 0 0 1 0-.113l.577-.21A2.311 2.311 0 0 0 9.47.614l.21-.577c.014-.053.09-.053.112 0Z"
                                           fill="currentColor"></path>
                                 </svg>
-                                <span class="truncate break-words whitespace-normal">Améliorer avec l'IA <span class="font-bold">(1 crédit)</span></span>
+                                <span class="truncate break-words whitespace-normal">Améliorer avec l'IA <span
+                                        class="font-bold">(1 crédit)</span></span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('formalize', event)"
@@ -136,7 +138,8 @@
                                 {% if not user.can_generate %}
                                     <i class="fa-solid fa-lock text-[#125484] text-xs shrink-0"></i>{% endif %}
                                 <i class="fa-solid fa-user-tie shrink-0"></i>
-                                <span class="truncate break-words whitespace-normal">Rendre plus formel <span class="font-bold">(1 crédit)</span></span>
+                                <span class="truncate break-words whitespace-normal">Rendre plus formel <span
+                                        class="font-bold">(1 crédit)</span></span>
                             </button>
                             <button type="button"
                                     onclick="handleAIAction('export-pdf', event)"
@@ -178,11 +181,11 @@
                         <button type="submit"
                                 name="save"
                                 class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-[#0f4470] transition-colors">
-                            <i class="fa-solid fa-floppy-disk mr-2"></i>Sauvegarder
+                            <i class="fa-solid fa-floppy-disk mr-2"></i>Sauvegarder brouillon
                         </button>
                         <button type="submit"
                                 name="mark_as_applied"
-                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                class="inline-flex items-center px-4 py-2 bg-[#125484] text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
                             <i class="fa-solid fa-check-circle mr-2"></i>Marquer comme Postulé
                         </button>
                     </div>
@@ -194,54 +197,55 @@
 {% endblock %}
 
 {% block modal_overlay %}
-        <!-- Modale CV Optimizer (hors de main pour overlay pleine page) -->
-        <div id="cvOptimizerModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-500/75" aria-labelledby="modal-title"
-             role="dialog" aria-modal="true" onclick="closeCvOptimizerModal()">
-            <div class="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white shadow-xl rounded-2xl overflow-hidden"
-                 onclick="event.stopPropagation()">
-                <div class="bg-[#125484] from-purple-600 to-indigo-600 px-6 py-4 shrink-0">
-                    <h3 class="text-lg font-semibold text-white" id="modal-title">
-                        <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Suggestions pour adapter votre CV
-                    </h3>
-                    <p class="text-white text-sm mt-1">Recommandations IA pour coller à cette offre</p>
+    <!-- Modale CV Optimizer (hors de main pour overlay pleine page) -->
+    <div id="cvOptimizerModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-500/75"
+         aria-labelledby="modal-title"
+         role="dialog" aria-modal="true" onclick="closeCvOptimizerModal()">
+        <div class="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white shadow-xl rounded-2xl overflow-hidden"
+             onclick="event.stopPropagation()">
+            <div class="bg-[#125484] from-purple-600 to-indigo-600 px-6 py-4 shrink-0">
+                <h3 class="text-lg font-semibold text-white" id="modal-title">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Suggestions pour adapter votre CV
+                </h3>
+                <p class="text-white text-sm mt-1">Recommandations IA pour coller à cette offre</p>
+            </div>
+            <div id="cvOptimizerLoading" class="px-6 py-12 text-center shrink-0">
+                <i class="fa-solid fa-spinner fa-spin text-4xl text-[#125484] mb-4"></i>
+                <p class="text-slate-600">Analyse de votre CV en cours...</p>
+            </div>
+            <div id="cvOptimizerContent" class="hidden px-6 py-6 space-y-6 overflow-y-auto flex-1 min-h-0">
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                        <i class="fa-solid fa-key mr-2 text-[#125484]"></i> Suggestions de mots-clés à ajouter
+                    </h4>
+                    <div id="cvOptimizerKeywords" class="flex flex-wrap gap-2"></div>
                 </div>
-                <div id="cvOptimizerLoading" class="px-6 py-12 text-center shrink-0">
-                    <i class="fa-solid fa-spinner fa-spin text-4xl text-[#125484] mb-4"></i>
-                    <p class="text-slate-600">Analyse de votre CV en cours...</p>
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                        <i class="fa-solid fa-quote-left mr-2 text-[#125484]"></i>Résumé suggéré
+                    </h4>
+                    <p id="cvOptimizerSummary"
+                       class="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-lg border border-slate-200"></p>
                 </div>
-                <div id="cvOptimizerContent" class="hidden px-6 py-6 space-y-6 overflow-y-auto flex-1 min-h-0">
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
-                            <i class="fa-solid fa-key mr-2 text-[#125484]"></i> Suggestions de mots-clés à ajouter
-                        </h4>
-                        <div id="cvOptimizerKeywords" class="flex flex-wrap gap-2"></div>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
-                            <i class="fa-solid fa-quote-left mr-2 text-[#125484]"></i>Résumé suggéré
-                        </h4>
-                        <p id="cvOptimizerSummary"
-                           class="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-lg border border-slate-200"></p>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
-                            <i class="fa-solid fa-briefcase mr-2 text-[#125484]"></i>Suggestions pour vos
-                            expériences
-                        </h4>
-                        <ul id="cvOptimizerExperiences" class="space-y-3"></ul>
-                    </div>
-                </div>
-                <div id="cvOptimizerError" class="hidden px-6 py-6 shrink-0">
-                    <p class="text-red-600 text-sm" id="cvOptimizerErrorText"></p>
-                </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
-                    <button type="button" onclick="closeCvOptimizerModal()"
-                            class="inline-flex items-center px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition-colors">
-                        Fermer
-                    </button>
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-900 mb-2 flex items-center">
+                        <i class="fa-solid fa-briefcase mr-2 text-[#125484]"></i>Suggestions pour vos
+                        expériences
+                    </h4>
+                    <ul id="cvOptimizerExperiences" class="space-y-3"></ul>
                 </div>
             </div>
+            <div id="cvOptimizerError" class="hidden px-6 py-6 shrink-0">
+                <p class="text-red-600 text-sm" id="cvOptimizerErrorText"></p>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button type="button" onclick="closeCvOptimizerModal()"
+                        class="inline-flex items-center px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition-colors">
+                    Fermer
+                </button>
+            </div>
         </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}

@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.contrib import messages
+from django.views.generic import TemplateView
+from django.urls import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 from .forms import ResumeUploadForm
 from .models import Resume
 from .services.pdf_parser import PDFParser
@@ -102,4 +106,3 @@ def delete_resume(request, resume_id):
         resume.delete()
         messages.success(request, 'CV supprimé.')
     return redirect('resume_list')
-

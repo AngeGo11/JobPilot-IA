@@ -72,9 +72,9 @@
                 {% endif %}
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                 {% for match in page_obj %}
-                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-200 overflow-hidden flex flex-col w-full">
+                    <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-200 overflow-hidden flex flex-col w-full min-w-[320px]">
 
                         <!-- Card Header -->
                         <div class="p-4 md:p-6 pb-4">
@@ -129,25 +129,25 @@
                         </div>
 
                         <!-- Card Footer -->
-                        <div class="mt-auto bg-slate-50 px-4 md:px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                        <div class="mt-auto bg-slate-50 px-4 md:px-6 py-3 sm:py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
                             {% if match.job_offer.url %}
-                                <a href="{{ match.job_offer.url }}" target="_blank"
-                                   class="text-[#125484] hover:text-blue-800 text-sm font-medium flex items-center order-2 sm:order-1">
-                                    Voir l'offre <i class="fa-solid fa-external-link-alt ml-1 text-xs"></i>
+                                <a href="{{ match.job_offer.url }}" target="_blank" rel="noopener noreferrer"
+                                   class="order-1 sm:order-1 w-full sm:w-auto inline-flex items-center justify-center min-h-[40px] sm:min-h-0 sm:py-0 bg-[#125484] text-white text-sm font-medium px-3 py-2 sm:bg-transparent sm:text-[#125484] sm:px-0 rounded-lg sm:rounded-none transition-colors shadow-sm sm:shadow-none whitespace-nowrap">
+                                    <i class="fa-solid fa-external-link-alt mr-2 text-xs"></i>Voir l'offre
                                 </a>
                             {% else %}
-                                <span class="text-slate-400 text-sm order-2 sm:order-1">Lien non disponible</span>
+                                <span class="text-slate-400 text-sm order-1 sm:order-1 py-2 sm:py-0">Lien non disponible</span>
                             {% endif %}
 
-                            <div class="flex items-center gap-2 order-1 sm:order-2">
+                            <div class="flex items-center gap-2 order-2 sm:order-2 w-full sm:w-auto">
                                 {% if match.status != 'applied' %}
                                     <form action="{% url 'update_match_status' match.id %}" method="POST"
-                                          class="inline flex-1 sm:flex-initial">
+                                          class="inline w-full sm:w-auto">
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="applied">
                                         <button type="submit"
-                                                class="w-full sm:w-auto min-h-[44px] bg-[#125484] hover:bg-[#0f4470] text-white text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm font-medium">
-                                            Marquer comme postulé
+                                                class="w-full sm:w-auto min-h-[40px] sm:min-h-[44px] border-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm px-3 py-2 sm:border-0 sm:bg-[#125484] sm:hover:bg-[#0f4470] sm:text-white sm:px-4 sm:py-2.5 rounded-lg transition-colors font-medium whitespace-nowrap shadow-sm sm:shadow-sm">
+                                            <i class="fa-solid fa-check-circle mr-2"></i>Marquer comme postulé
                                         </button>
                                     </form>
                                 {% endif %}
