@@ -11,6 +11,20 @@ from .services.welcome_email import send_welcome_email
 import logging
 
 
+def get_connection_success_message(user):
+    """
+    Message de succès après connexion : "Bienvenue Nom + Prénoms !"
+    Utilise le nom (majuscules) et le prénom (première lettre en majuscule).
+    """
+    last = (getattr(user, "last_name", None) or "").strip().upper()
+    first = (getattr(user, "first_name", None) or "").strip()
+    if first:
+        first = first.capitalize()
+    if last or first:
+        return f"Bienvenue {last} {first}".strip() + " !"
+    return "Connexion réussie."
+
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -62,8 +76,8 @@ class CustomLoginView(LoginView):
         resume_count = Resume.objects.filter(user=user).count()
         self.request.session['resume_count'] = resume_count
         
-        # Message de bienvenue
-        messages.success(self.request, f'Bienvenue {user.get_full_name()} !')
+        # Message de succès : nom et prénom (pas l'email)
+        messages.success(self.request, get_connection_success_message(user))
         
         # Sauvegarder la session
         self.request.session.save()

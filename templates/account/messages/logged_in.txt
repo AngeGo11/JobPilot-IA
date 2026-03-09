@@ -1,0 +1,1 @@
+{% if user.first_name or user.last_name %}Bienvenue {% if user.last_name %}{{ user.last_name|upper }}{% if user.first_name %} {% endif %}{% endif %}{% if user.first_name %}{{ user.first_name|capfirst }}{% endif %} !{% else %}Bienvenue cher utilisateur.{% endif %}
