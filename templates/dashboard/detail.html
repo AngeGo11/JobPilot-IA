@@ -11,6 +11,49 @@
             background: white;
             border-bottom: 1px solid #e2e8f0;
         }
+
+        /* Notification toast — style SaaS moderne (lettre de motivation) */
+        .notification-toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            line-height: 1.4;
+            box-shadow: 0 20px 40px -12px rgba(3, 70, 148, 0.18), 0 8px 16px -6px rgba(3, 70, 148, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            opacity: 0;
+            transform: translateY(-16px);
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .notification-toast.notification-toast--visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .notification-toast--success {
+            background: rgba(240, 248, 255, 0.92);
+            color: #034694;
+            border: 1px solid rgba(3, 70, 148, 0.12);
+        }
+        .notification-toast--success .notification-toast__icon {
+            color: #034694;
+        }
+        .notification-toast--error {
+            background: rgba(254, 242, 242, 0.92);
+            color: #991b1b;
+            border: 1px solid rgba(185, 28, 28, 0.15);
+            box-shadow: 0 20px 40px -12px rgba(127, 29, 29, 0.18), 0 8px 16px -6px rgba(127, 29, 29, 0.08);
+        }
+        .notification-toast--error .notification-toast__icon {
+            color: #b91c1c;
+        }
     </style>
 {% endblock %}
 
@@ -561,22 +604,22 @@
         }
 
         function showMessage(message, type) {
-            // Créer un élément de message temporaire
             const messageDiv = document.createElement('div');
-            messageDiv.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
-                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`;
+            messageDiv.setAttribute('role', 'alert');
+            messageDiv.className = `notification-toast notification-toast--${type}`;
             messageDiv.innerHTML = `
-            <div class="flex items-center">
-                <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
-                <span>${message}</span>
-            </div>
-        `;
+                <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} notification-toast__icon text-lg shrink-0" aria-hidden="true"></i>
+                <span class="notification-toast__text">${message}</span>
+            `;
             document.body.appendChild(messageDiv);
 
-            // Supprimer après 3 secondes
+            requestAnimationFrame(function () {
+                messageDiv.classList.add('notification-toast--visible');
+            });
+
             setTimeout(() => {
-                messageDiv.remove();
+                messageDiv.classList.remove('notification-toast--visible');
+                setTimeout(() => messageDiv.remove(), 350);
             }, 3000);
         }
 

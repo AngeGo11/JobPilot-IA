@@ -295,7 +295,7 @@ def quick_refine_cover_letter(request, match_id):
                 'success': True,
                 'pdf_data': pdf_base64,
                 'filename': f"lettre_motivation_{job_title or 'candidature'}_{company_name or 'entreprise'}.pdf".replace(' ', '_'),
-                'message': '📄 PDF généré avec succès !'
+                'message': 'PDF généré avec succès !'
             })
         except Exception as e:
             return JsonResponse({
@@ -338,7 +338,7 @@ def quick_refine_cover_letter(request, match_id):
             return JsonResponse({
                 'success': True,
                 'refined_letter': generated_letter,
-                'message': '✨ Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.',
+                'message': 'Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.',
                 'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
             })
         except (BrokenPipeError, ConnectionError):
@@ -431,7 +431,7 @@ def quick_refine_cover_letter(request, match_id):
         return JsonResponse({
             'success': True,
             'refined_letter': refined_letter,
-            'message': '✨ Votre lettre a été améliorée avec succès !',
+            'message': 'Votre lettre a été améliorée avec succès !',
             'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
         })
     except (BrokenPipeError, ConnectionError):
@@ -665,7 +665,7 @@ def refine_cover_letter(request, match_id):
 
                 messages.success(
                     request,
-                    '✨ Votre lettre de motivation a été améliorée avec succès !'
+                    'Votre lettre de motivation a été améliorée avec succès !'
                 )
 
                 # Rediriger vers le workspace pour voir le résultat
