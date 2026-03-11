@@ -32,6 +32,7 @@ def send_welcome_email(user, request=None):
         return
     site_url = get_site_url(request)
     dashboard_url = f"{site_url}/resumes/upload/"
+    logo_url = f"{site_url}/static/images/Logo.png"
     context = {"user": user, "site_url": site_url, "dashboard_url": dashboard_url}
     html_content = render_to_string("account/email/welcome_message.html", context)
     subject = "Bienvenue sur JobPilot-AI"
