@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de confidentialité – JobPilot AI</title>
+    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        .legal-content { max-width: 70ch; line-height: 1.7; color: #333333; }
+        @media (min-width: 1024px) {
+            .toc-sticky { position: sticky; top: 6rem; align-self: start; }
+        }
+    </style>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] } } } };
+    </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-700 antialiased">
+    <nav class="bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2">
+                <img src="{% static 'images/Logo.png' %}" class="w-9 h-9 object-cover rounded-full" alt="Logo JobPilot">
+                <span class="text-xl font-bold text-slate-900">JobPilot-AI</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'home' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Accueil</a>
+                <a href="{% url 'login' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Connexion</a>
+                <a href="{% url 'register' %}" class="bg-[#125484] hover:bg-[#0f4470] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">S'inscrire</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-[#125484] hover:text-[#0f4470] font-medium mb-8 transition-colors group">
+            <i class="fas fa-arrow-left group-hover:-translate-x-0.5 transition-transform"></i>
+            Retour à l'accueil
+        </a>
+
+        <div class="lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 xl:gap-16">
+            <!-- Sommaire (sticky sur desktop) -->
+            <aside class="toc-sticky mb-10 lg:mb-0">
+                <nav aria-label="Sommaire" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Sommaire</h2>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#section-responsable" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Responsable du traitement</a></li>
+                        <li><a href="#section-donnees" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Données collectées</a></li>
+                        <li><a href="#section-cv-ia" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Traitement des CV et IA</a></li>
+                        <li><a href="#section-sous-traitants" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Sous-traitants</a></li>
+                        <li><a href="#section-finalites" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Finalités et bases légales</a></li>
+                        <li><a href="#section-duree" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Durée de conservation</a></li>
+                        <li><a href="#section-droits" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Vos droits (RGPD)</a></li>
+                        <li><a href="#section-securite" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Sécurité</a></li>
+                        <li><a href="#section-modifications" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Modifications</a></li>
+                        <li><a href="#section-contact" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Contact</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <article class="min-w-0">
+                <header class="mb-10">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-3">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#125484]/10 text-[#125484]">
+                            <i class="fas fa-shield-halved"></i>
+                        </span>
+                        Politique de confidentialité
+                    </h1>
+                    <p class="mt-3 text-sm text-slate-500 font-medium">Dernière mise à jour : {% now "d/m/Y" %}</p>
+                </header>
+
+                <div class="legal-content space-y-10">
+                    <section id="section-responsable" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">1. Responsable du traitement</h2>
+                        <p class="mb-4">Le responsable du traitement des données à caractère personnel est <strong>Ange Axel Gomez</strong>, éditeur du service JobPilot AI (https://jobpilot-ai.fr).</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Contact données personnelles</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                    </section>
+
+                    <section id="section-donnees" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">2. Données collectées</h2>
+                        <p class="mb-4">Nous collectons les données nécessaires au fonctionnement du service :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li><strong>Compte :</strong> adresse email, nom, prénom (ou identifiant), mot de passe (stocké de manière sécurisée).</li>
+                            <li><strong>CV :</strong> les fichiers PDF que vous téléversez, ainsi que le texte extrait et les métadonnées utilisées pour l'analyse et le matching avec les offres.</li>
+                            <li><strong>Usage :</strong> historique d'utilisation des crédits, offres consultées, lettres générées (le cas échéant, pour vous les afficher dans votre espace).</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-cv-ia" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">3. Traitement des CV et utilisation de l'IA</h2>
+                        <p class="mb-4">Vos CV sont analysés par une intelligence artificielle (API <strong>Google Gemini</strong>) pour :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>extraire le texte et les informations utiles (expérience, compétences, etc.) ;</li>
+                            <li>rechercher des offres d'emploi correspondantes via l'API France Travail ;</li>
+                            <li>générer des suggestions de lettres de motivation, sur votre demande.</li>
+                        </ul>
+                        <div class="rounded-xl border border-slate-200 bg-blue-50/50 p-5 not-prose mt-4">
+                            <p class="text-sm font-semibold text-slate-800 mb-1">Point important</p>
+                            <p class="text-sm text-slate-700">Les contenus que vous envoyez (CV, textes saisis) sont traités par l'API Gemini pour fournir le service, mais <strong>ne sont pas utilisés pour entraîner les modèles publics de Google</strong>. Conformément aux conditions d'utilisation de l'API Gemini, vos données ne servent pas à l'amélioration des modèles généraux.</p>
+                        </div>
+                    </section>
+
+                    <section id="section-sous-traitants" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">4. Sous-traitants (hébergement et services tiers)</h2>
+                        <p class="mb-4">Nous nous appuyons sur les prestataires suivants, qui peuvent traiter des données personnelles en notre nom :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li><strong>Microsoft Azure</strong> (France/Europe) : hébergement des serveurs et stockage des données (comptes, CV, logs techniques). Les données restent en Europe.</li>
+                            <li><strong>Stripe</strong> : traitement des paiements et de la facturation. <strong>Aucune donnée bancaire sensible (numéro de carte, cryptogramme) ne transite sur nos serveurs</strong> ; tout passe par Stripe, conforme aux normes PCI-DSS.</li>
+                            <li><strong>Google (Gemini API)</strong> : analyse des CV et génération de textes (lettres de motivation). Les données envoyées à l'API sont traitées selon les conditions Google (pas d'entraînement des modèles publics sur vos contenus).</li>
+                        </ul>
+                        <p class="mb-4">Ces sous-traitants sont choisis pour leur conformité au RGPD et aux bonnes pratiques de sécurité. Des engagements contractuels ou des clauses types sont utilisés lorsque nécessaire.</p>
+                    </section>
+
+                    <section id="section-finalites" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">5. Finalités et bases légales</h2>
+                        <p class="mb-4">Vos données sont traitées pour :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>gérer votre compte et l'accès au service (exécution du contrat) ;</li>
+                            <li>analyser vos CV et proposer des offres et des lettres de motivation (exécution du contrat) ;</li>
+                            <li>traiter les paiements (exécution du contrat, obligation légale) ;</li>
+                            <li>respecter les obligations légales (facturation, preuves) ;</li>
+                            <li>améliorer le service et la sécurité (intérêt légitime, dans le respect de vos droits).</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-duree" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">6. Durée de conservation</h2>
+                        <p class="mb-4">Les données de compte et les CV sont conservés tant que votre compte est actif. En cas de suppression de compte, nous supprimons ou anonymisons vos données personnelles dans les délais prévus par notre politique interne et le RGPD (sauf conservation légale obligatoire, par ex. facturation).</p>
+                    </section>
+
+                    <section id="section-droits" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">7. Vos droits (RGPD)</h2>
+                        <p class="mb-4">Vous disposez des droits suivants :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li><strong>Droit d'accès</strong> : obtenir une copie des données que nous détenons sur vous.</li>
+                            <li><strong>Droit de rectification</strong> : faire corriger des données inexactes ou incomplètes.</li>
+                            <li><strong>Droit à l'effacement</strong> : demander la suppression de vos données et de votre compte (y compris vos CV).</li>
+                            <li><strong>Droit à la limitation du traitement</strong> : dans les cas prévus par le RGPD.</li>
+                            <li><strong>Droit à la portabilité</strong> : recevoir vos données dans un format structuré et couramment utilisé.</li>
+                            <li><strong>Droit d'opposition</strong> : vous opposer à certains traitements (ex. prospection).</li>
+                        </ul>
+                        <p class="mb-4">Pour exercer ces droits (accès, rectification, suppression de votre compte et de vos CV), contactez-nous. Nous répondrons dans le délai légal (généralement un mois).</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Exercer vos droits</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                        <p class="mt-4 text-sm">Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> (www.cnil.fr) si vous estimez que le traitement de vos données n'est pas conforme au règlement.</p>
+                    </section>
+
+                    <section id="section-securite" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">8. Sécurité</h2>
+                        <p class="mb-4">Nous mettons en œuvre des mesures techniques et organisationnelles appropriées (hébergement sécurisé, accès restreint, bonnes pratiques de développement) pour protéger vos données contre l'accès non autorisé, la perte ou l'altération.</p>
+                    </section>
+
+                    <section id="section-modifications" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">9. Modifications</h2>
+                        <p class="mb-4">Cette politique peut être mise à jour pour refléter des changements de service ou de réglementation. La date de dernière mise à jour est indiquée en tête de page. Nous vous invitons à la consulter régulièrement.</p>
+                    </section>
+
+                    <section id="section-contact" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">10. Contact</h2>
+                        <p class="mb-4">Pour toute question sur la confidentialité ou vos données personnelles :</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose inline-block">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Email</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                    </section>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-300 py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center text-sm">
+            <p class="text-slate-400">© {% now "Y" %} JobPilot-AI. Tous droits réservés.</p>
+            <p class="mt-2">
+                <a href="{% url 'mentions_legales' %}" class="hover:text-white transition-colors">Mentions légales</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'politique_confidentialite' %}" class="hover:text-white transition-colors">Politique de confidentialité</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'cgu' %}" class="hover:text-white transition-colors">CGU</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

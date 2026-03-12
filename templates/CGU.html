@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditions générales d'utilisation et de vente – JobPilot AI</title>
+    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        .legal-content { max-width: 70ch; line-height: 1.7; color: #333333; }
+        @media (min-width: 1024px) {
+            .toc-sticky { position: sticky; top: 6rem; align-self: start; }
+        }
+    </style>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] } } } };
+    </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-700 antialiased">
+    <nav class="bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2">
+                <img src="{% static 'images/Logo.png' %}" class="w-9 h-9 object-cover rounded-full" alt="Logo JobPilot">
+                <span class="text-xl font-bold text-slate-900">JobPilot-AI</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'home' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Accueil</a>
+                <a href="{% url 'login' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Connexion</a>
+                <a href="{% url 'register' %}" class="bg-[#125484] hover:bg-[#0f4470] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">S'inscrire</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-[#125484] hover:text-[#0f4470] font-medium mb-8 transition-colors group">
+            <i class="fas fa-arrow-left group-hover:-translate-x-0.5 transition-transform"></i>
+            Retour à l'accueil
+        </a>
+
+        <div class="lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 xl:gap-16">
+            <!-- Sommaire (sticky sur desktop) -->
+            <aside class="toc-sticky mb-10 lg:mb-0">
+                <nav aria-label="Sommaire" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Sommaire</h2>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#section-objet-acceptation" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Objet et acceptation</a></li>
+                        <li><a href="#section-description" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Description du service</a></li>
+                        <li><a href="#section-credits" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Système de crédits</a></li>
+                        <li><a href="#section-ia" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Contenu généré par l'IA</a></li>
+                        <li><a href="#section-offres" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Offres d'emploi</a></li>
+                        <li><a href="#section-compte" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Compte utilisateur</a></li>
+                        <li><a href="#section-paiement" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Paiement et facturation</a></li>
+                        <li><a href="#section-modification" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Modification et résiliation</a></li>
+                        <li><a href="#section-droit" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Droit applicable</a></li>
+                        <li><a href="#section-contact" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Contact</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <article class="min-w-0">
+                <header class="mb-10">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-3">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#125484]/10 text-[#125484]">
+                            <i class="fas fa-file-lines"></i>
+                        </span>
+                        Conditions générales d'utilisation et de vente
+                    </h1>
+                    <p class="mt-3 text-sm text-slate-500 font-medium">Dernière mise à jour : {% now "d/m/Y" %}</p>
+                </header>
+
+                <div class="legal-content space-y-10">
+                    <section id="section-objet-acceptation" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">1. Objet et acceptation</h2>
+                        <p class="mb-4">Les présentes Conditions générales d'utilisation et de vente (CGU/CGV) régissent l'utilisation du site <strong>https://jobpilot-ai.fr</strong> et des services proposés par <strong>JobPilot AI</strong>, édité par Ange Axel Gomez. En créant un compte ou en utilisant le service, vous acceptez sans réserve ces conditions.</p>
+                    </section>
+
+                    <section id="section-description" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">2. Description du service</h2>
+                        <p class="mb-4">JobPilot AI est une plateforme qui permet de :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>téléverser un CV au format PDF ;</li>
+                            <li>bénéficier d'une extraction et d'une analyse du contenu par intelligence artificielle (API Google Gemini) ;</li>
+                            <li>obtenir des offres d'emploi correspondantes via l'API France Travail ;</li>
+                            <li>utiliser des <strong>crédits</strong> pour débloquer des offres ou générer des lettres de motivation à l'aide de l'IA.</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-credits" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">3. Système de crédits</h2>
+                        <p class="mb-4">Les crédits sont des unités d'usage achetées via la plateforme de paiement <strong>Stripe</strong>. Ils permettent de débloquer des offres d'emploi ou de générer des lettres de motivation.</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>Les crédits sont <strong>non remboursables</strong> une fois qu'ils ont été <strong>consommés</strong> (utilisation pour une offre ou une génération de lettre).</li>
+                            <li>Les crédits non utilisés peuvent faire l'objet d'une politique de remboursement ou d'échange selon les conditions affichées au moment de l'achat ; à défaut, tout achat de crédits est réputé définitif dès lors que les crédits ont été utilisés.</li>
+                            <li>Le tarif et le nombre de crédits par pack sont indiqués sur la page Tarifs avant tout paiement.</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-ia" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">4. Contenu généré par l'IA – Limitation de responsabilité</h2>
+                        <p class="mb-4"><strong>Clause importante :</strong> Les lettres de motivation et tout contenu généré par l'intelligence artificielle (via l'API Google Gemini) sont fournis à titre de <strong>suggestion</strong> et d'aide à la rédaction.</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>L'utilisateur s'engage à <strong>relire, adapter et vérifier</strong> tout contenu avant de l'utiliser (envoi à un employeur, candidature, etc.).</li>
+                            <li><strong>JobPilot AI ne garantit en aucun cas l'obtention d'un emploi</strong>, ni l'exactitude, la pertinence ou la conformité juridique des textes générés. L'utilisateur reste seul responsable de l'usage qu'il en fait.</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-offres" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">5. Offres d'emploi – Source et responsabilité</h2>
+                        <p class="mb-4">Les offres d'emploi proposées sur la plateforme proviennent de l'API <strong>France Travail</strong> (ex-Pôle emploi). JobPilot AI agit comme intermédiaire technique : nous ne sommes pas l'éditeur de ces annonces et ne contrôlons pas leur contenu, leur véracité ou leur disponibilité.</p>
+                        <p class="mb-4">En conséquence, <strong>JobPilot AI décline toute responsabilité</strong> quant au contenu des offres, aux pratiques des recruteurs ou aux résultats des candidatures. L'utilisateur doit effectuer ses propres vérifications auprès des employeurs.</p>
+                    </section>
+
+                    <section id="section-compte" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">6. Compte utilisateur et usage</h2>
+                        <p class="mb-4">L'utilisateur s'engage à fournir des informations exactes, à maintenir la confidentialité de son mot de passe et à utiliser le service de manière conforme à la loi. Tout usage frauduleux ou abusif peut entraîner la suspension ou la résiliation du compte.</p>
+                    </section>
+
+                    <section id="section-paiement" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">7. Paiement et facturation</h2>
+                        <p class="mb-4">Les paiements sont traités par <strong>Stripe</strong>. Les données bancaires ne transitent pas sur les serveurs de JobPilot AI. Les règles de remboursement pour les crédits non consommés (le cas échéant) sont précisées sur la page de paiement ou par email sur demande.</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose inline-block mt-2">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Contact facturation</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                    </section>
+
+                    <section id="section-modification" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">8. Modification et résiliation</h2>
+                        <p class="mb-4">JobPilot AI se réserve le droit de modifier les présentes CGU/CGV, les tarifs ou les fonctionnalités du service. Les utilisateurs seront informés des changements importants par email ou via le site. La poursuite de l'utilisation du service après modification vaut acceptation.</p>
+                    </section>
+
+                    <section id="section-droit" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">9. Droit applicable et litiges</h2>
+                        <p class="mb-4">Les présentes conditions sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.</p>
+                    </section>
+
+                    <section id="section-contact" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">10. Contact</h2>
+                        <p class="mb-4">Pour toute question :</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose inline-block">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Email</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                    </section>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-300 py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center text-sm">
+            <p class="text-slate-400">© {% now "Y" %} JobPilot-AI. Tous droits réservés.</p>
+            <p class="mt-2">
+                <a href="{% url 'mentions_legales' %}" class="hover:text-white transition-colors">Mentions légales</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'politique_confidentialite' %}" class="hover:text-white transition-colors">Politique de confidentialité</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'cgu' %}" class="hover:text-white transition-colors">CGU</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

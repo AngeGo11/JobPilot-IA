@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentions légales – JobPilot AI</title>
+    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        .legal-content { max-width: 70ch; line-height: 1.7; color: #333333; }
+        @media (min-width: 1024px) {
+            .toc-sticky { position: sticky; top: 6rem; align-self: start; }
+        }
+    </style>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] } } } };
+    </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-700 antialiased">
+    <nav class="bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2">
+                <img src="{% static 'images/Logo.png' %}" class="w-9 h-9 object-cover rounded-full" alt="Logo JobPilot">
+                <span class="text-xl font-bold text-slate-900">JobPilot-AI</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'home' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Accueil</a>
+                <a href="{% url 'login' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Connexion</a>
+                <a href="{% url 'register' %}" class="bg-[#125484] hover:bg-[#0f4470] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">S'inscrire</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-[#125484] hover:text-[#0f4470] font-medium mb-8 transition-colors group">
+            <i class="fas fa-arrow-left group-hover:-translate-x-0.5 transition-transform"></i>
+            Retour à l'accueil
+        </a>
+
+        <div class="lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 xl:gap-16">
+            <!-- Sommaire (sticky sur desktop) -->
+            <aside class="toc-sticky mb-10 lg:mb-0">
+                <nav aria-label="Sommaire" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Sommaire</h2>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#section-editeur" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Éditeur du site</a></li>
+                        <li><a href="#section-hebergement" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Hébergement</a></li>
+                        <li><a href="#section-objet" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Objet du service</a></li>
+                        <li><a href="#section-propriete" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Propriété intellectuelle</a></li>
+                        <li><a href="#section-liens" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Liens hypertextes</a></li>
+                        <li><a href="#section-contact" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Contact</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <article class="min-w-0">
+                <header class="mb-10">
+                    <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-3">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-[#125484]/10 text-[#125484]">
+                            <i class="fas fa-scale-balanced"></i>
+                        </span>
+                        Mentions légales
+                    </h1>
+                    <p class="mt-3 text-sm text-slate-500 font-medium">Dernière mise à jour : {% now "d/m/Y" %}</p>
+                </header>
+
+                <div class="legal-content space-y-10">
+                    <section id="section-editeur" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">1. Éditeur du site</h2>
+                        <p class="mb-4">Le site <strong>https://jobpilot-ai.fr</strong> est édité par :</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose mb-4">
+                            <p class="font-semibold text-slate-900">Ange Axel Gomez</p>
+                            <p class="text-slate-600 text-sm mt-1">Créateur indépendant</p>
+                            <p class="mt-3 text-slate-700 text-sm"><strong>Adresse :</strong> [Votre adresse postale exacte à Rennes]</p>
+                            <p class="text-slate-700 text-sm"><strong>Téléphone :</strong> [Votre numéro de téléphone]</p>
+                            <p class="text-slate-700 text-sm"><strong>SIRET :</strong> [Votre numéro SIRET – auto-entrepreneur]</p>
+                        </div>
+                    </section>
+
+                    <section id="section-hebergement" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">2. Hébergement</h2>
+                        <p class="mb-4">Le site est hébergé par <strong>Microsoft Azure</strong>, dans des datacenters situés en France/Europe.</p>
+                        <p class="mb-4">Microsoft Corporation. Pour toute question relative à l'hébergement, vous pouvez consulter les informations légales d'Azure sur le site officiel de Microsoft.</p>
+                    </section>
+
+                    <section id="section-objet" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">3. Objet du service</h2>
+                        <p class="mb-4"><strong>JobPilot AI</strong> est un service en ligne (SaaS) qui permet aux utilisateurs de :</p>
+                        <ul class="list-disc pl-6 space-y-2 mb-4">
+                            <li>téléverser leur CV (PDF) ;</li>
+                            <li>bénéficier d'une analyse du CV par intelligence artificielle (API Google Gemini) ;</li>
+                            <li>obtenir des offres d'emploi correspondantes via l'API France Travail ;</li>
+                            <li>utiliser des crédits (achetés via Stripe) pour débloquer des offres ou générer des lettres de motivation avec l'IA.</li>
+                        </ul>
+                    </section>
+
+                    <section id="section-propriete" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">4. Propriété intellectuelle</h2>
+                        <p class="mb-4">L'ensemble du site (textes, visuels, structure, logo) est protégé par le droit d'auteur et les droits de propriété intellectuelle. Toute reproduction ou utilisation non autorisée peut constituer une contrefaçon.</p>
+                    </section>
+
+                    <section id="section-liens" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">5. Liens hypertextes</h2>
+                        <p class="mb-4">Les liens vers des sites tiers n'engagent pas la responsabilité de JobPilot AI quant au contenu de ces sites. La création de liens vers le présent site est soumise à l'accord préalable de l'éditeur.</p>
+                    </section>
+
+                    <section id="section-contact" class="scroll-mt-24">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4 mt-2">6. Contact</h2>
+                        <p class="mb-4">Pour toute question relative aux mentions légales ou au service :</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-5 not-prose inline-block">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Email</p>
+                            <a href="mailto:contact@jobpilot-ai.fr" class="text-[#125484] hover:text-[#0f4470] font-semibold transition-colors">contact@jobpilot-ai.fr</a>
+                        </div>
+                    </section>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-300 py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center text-sm">
+            <p class="text-slate-400">© {% now "Y" %} JobPilot-AI. Tous droits réservés.</p>
+            <p class="mt-2">
+                <a href="{% url 'mentions_legales' %}" class="hover:text-white transition-colors">Mentions légales</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'politique_confidentialite' %}" class="hover:text-white transition-colors">Politique de confidentialité</a>
+                <span class="mx-2">·</span>
+                <a href="{% url 'cgu' %}" class="hover:text-white transition-colors">CGU</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

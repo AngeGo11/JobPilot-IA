@@ -24,6 +24,9 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('mentions-legales/', TemplateView.as_view(template_name='mentions_legales.html'), name='mentions_legales'),
+    path('politique-confidentialite/', TemplateView.as_view(template_name='politiques_et_confidentialites.html'), name='politique_confidentialite'),
+    path('cgu/', TemplateView.as_view(template_name='CGU.html'), name='cgu'),
     path('users/', include('users.urls')),
     path('resumes/', include('resumes.urls')),
     path('matching/', include('matching.urls')),
