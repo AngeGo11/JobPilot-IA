@@ -35,6 +35,20 @@
         .fade-in-up-delay-1 { animation-delay: 0.1s; }
         .fade-in-up-delay-2 { animation-delay: 0.2s; }
         .fade-in-up-delay-3 { animation-delay: 0.3s; }
+        /* Matching Hub */
+        @keyframes hub-glow {
+            0%, 100% { box-shadow: 0 0 30px 5px rgba(18,84,132,0.12), 0 0 60px 15px rgba(18,84,132,0.06); }
+            50% { box-shadow: 0 0 40px 10px rgba(18,84,132,0.2), 0 0 80px 25px rgba(18,84,132,0.08); }
+        }
+        .matching-card-float { animation: matching-float 4s ease-in-out infinite; }
+        .matching-card-float.delay-1 { animation-delay: 0.4s; }
+        .matching-card-float.delay-2 { animation-delay: 0.8s; }
+        .matching-card-float.delay-3 { animation-delay: 0.6s; }
+        .matching-card-float.delay-4 { animation-delay: 1s; }
+        @keyframes matching-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
     </style>
     <script>
         tailwind.config = {
@@ -92,50 +106,159 @@
         </div>
 
 
-        <!-- Illustration -->
-        <div class="relative lg:h-[600px] flex items-center justify-center float-animation hidden lg:flex fade-in-up fade-in-up-delay-3">
-            <div class="absolute inset-0 bg-gradient-to-tr from-blue-200/40 to-blue-300/40 rounded-full blur-3xl transform scale-75"></div>
+        <!-- Matching Hub (network diagram) -->
+        <div id="matching-container" class="relative w-full max-w-[520px] lg:max-w-[580px] aspect-[11/7] min-h-[320px] lg:min-h-[380px] hidden lg:flex items-center justify-center fade-in-up fade-in-up-delay-3">
+            <div class="absolute inset-0 bg-gradient-to-tr from-[#125484]/10 to-[#125484]/5 rounded-full blur-3xl transform scale-90"></div>
 
-            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                <div class="bg-slate-50 border-b border-slate-100 p-4 flex gap-2">
-                    <div class="w-3 h-3 rounded-full bg-red-400"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
-                </div>
+            <svg id="matching-connectors" class="absolute inset-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
+                <!-- Lignes générées par JS -->
+            </svg>
 
-                <div class="p-8 space-y-6">
-                    <div class="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl p-8 text-center">
-                        <div class="w-12 h-12 bg-white rounded-lg shadow-sm text-[#125484] mx-auto flex items-center justify-center mb-3">
-                            <i class="fa-solid fa-file-pdf text-xl"></i>
-                        </div>
-                        <div class="h-2 w-32 bg-slate-200 rounded mx-auto mb-2"></div>
-                        <div class="h-2 w-20 bg-slate-100 rounded mx-auto"></div>
-                    </div>
+            <!-- Hub central -->
+            <div id="matching-hub" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-white rounded-full px-6 py-3.5 flex items-center gap-3 border border-slate-200 shadow-lg whitespace-nowrap" style="animation: hub-glow 3s ease-in-out infinite;">
+                <i class="fa-solid fa-magnifying-glass text-[#125484] flex-shrink-0" style="font-size: 1.1rem;"></i>
+                <span class="text-[#125484] font-semibold text-sm inline-flex items-center gap-2">
+                    Matching propulsé par Gemini
+                    <svg class="w-4 h-4 flex-shrink-0 text-[#125484]" fill="currentColor" viewBox="0 0 12 12" aria-hidden="true">
+                        <path d="m5.008 2.324.45 1.244a4.967 4.967 0 0 0 2.984 2.977l1.252.45c.113.037.113.202 0 .24l-1.252.45a4.967 4.967 0 0 0-2.984 2.976l-.45 1.245c-.037.112-.202.112-.24 0l-.45-1.245a4.967 4.967 0 0 0-2.983-2.976l-1.253-.45c-.112-.038-.112-.203 0-.24l1.252-.45A4.967 4.967 0 0 0 4.32 3.568l.45-1.244c.037-.113.202-.113.24 0ZM9.792.037l.21.577c.232.638.735 1.14 1.38 1.372l.577.21c.052.023.052.09 0 .113l-.578.21a2.311 2.311 0 0 0-1.38 1.372l-.21.577a.06.06 0 0 1-.112 0l-.21-.577a2.292 2.292 0 0 0-1.38-1.372l-.576-.21a.06.06 0 0 1 0-.113l.577-.21A2.311 2.311 0 0 0 9.47.614l.21-.577c.014-.053.09-.053.112 0Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <i class="fa-solid fa-sparkles text-amber-500 flex-shrink-0" style="font-size: 0.95rem;"></i>
+            </div>
 
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                            <div class="w-10 h-10 bg-blue-100 rounded-md flex items-center justify-center text-[#125484] font-bold text-xs">95%</div>
-                            <div class="flex-1 space-y-1">
-                                <div class="h-2 w-24 bg-slate-800 rounded"></div>
-                                <div class="h-2 w-16 bg-slate-200 rounded"></div>
-                            </div>
-                            <div class="h-6 w-16 bg-[#125484] rounded-md"></div>
-                        </div>
-                        <div class="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-lg shadow-sm opacity-70">
-                            <div class="w-10 h-10 bg-blue-100 rounded-md flex items-center justify-center text-[#125484] font-bold text-xs">88%</div>
-                            <div class="flex-1 space-y-1">
-                                <div class="h-2 w-24 bg-slate-800 rounded"></div>
-                                <div class="h-2 w-16 bg-slate-200 rounded"></div>
-                            </div>
+            <!-- Cartes profil-->
+            <div id="card-lucas" class="matching-card-float absolute z-10" style="top: 4%; left: 2%;">
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 w-[200px] transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-[#125484]/10 text-[#125484]">LB</div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">Lucas B.</p>
+                            <p class="text-xs text-slate-500 leading-tight">Développeur Full-Stack</p>
                         </div>
                     </div>
+                    <div class="bg-[#125484]/5 rounded-xl px-3 py-2 flex items-center justify-between border border-[#125484]/10">
+                        <span class="text-xs text-[#125484] font-medium">Meilleur matching</span>
+                        <span class="text-base font-bold text-[#125484]">98%</span>
+                    </div>
                 </div>
+            </div>
 
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-[#125484]/10 rounded-full blur-xl"></div>
+            <div id="card-sophie" class="matching-card-float delay-2 absolute z-10" style="bottom: 6%; left: 2%;">
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 w-[200px] transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-[#125484]/10 text-[#125484]">SR</div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">Sophie R.</p>
+                            <p class="text-xs text-slate-500 leading-tight">Data Scientist</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Python</span>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">ML</span>
+                        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">SQL</span>
+
+                    </div>
+                </div>
+            </div>
+
+            <div id="card-dupont" class="matching-card-float delay-3 absolute z-10" style="top: 4%; right: 2%;">
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 w-[200px] transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-[#125484]/10 text-[#125484]">AK</div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">Dupont J.</p>
+                            <p class="text-xs text-slate-500 leading-tight">Consultant Senior</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
+                            <p class="text-sm font-bold text-slate-700">23</p>
+                            <p class="text-[10px] text-slate-500">CVs analysé</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
+                            <p class="text-sm font-bold text-slate-700">53</p>
+                            <p class="text-[10px] text-slate-500">Postulés</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="card-jeanmarc" class="matching-card-float delay-4 absolute z-10" style="bottom: 6%; right: 2%;">
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 w-[200px] transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+                    <div class="flex items-center gap-2.5 mb-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold bg-slate-100 text-slate-600">JMT</div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm leading-tight">Jean-Marc T.</p>
+                            <p class="text-xs text-slate-500 leading-tight">Chef de Projet Digital</p>
+                        </div>
+                    </div>
+                    <div class="bg-[#125484]/5 rounded-xl px-3 py-2 flex items-center justify-between border border-[#125484]/10">
+                        <span class="text-xs text-[#125484] font-medium">Lettres générées</span>
+                        <span class="text-base font-bold text-[#125484]">23</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Fin Illustration -->
+        <!-- Fin Matching Hub -->
+
+        <script>
+        (function() {
+            var profileIds = ['lucas', 'sophie', 'dupont', 'jeanmarc'];
+            var lineColors = { lucas: '#125484', sophie: '#125484', dupont: '#125484', jeanmarc: '#125484' };
+            var delays = { lucas: 0, sophie: 0.6, dupont: 0.3, jeanmarc: 0.9 };
+
+            function bezierPath(from, to) {
+                var midX = (from.x + to.x) / 2, midY = (from.y + to.y) / 2;
+                var dx = to.x - from.x, dy = to.y - from.y;
+                var c = 0.25;
+                var cx1 = from.x + dx * 0.3 + dy * c, cy1 = from.y + dy * 0.3 - dx * c;
+                var cx2 = to.x - dx * 0.3 + dy * c, cy2 = to.y - dy * 0.3 - dx * c;
+                return 'M ' + from.x + ' ' + from.y + ' C ' + cx1 + ' ' + cy1 + ', ' + cx2 + ' ' + cy2 + ', ' + to.x + ' ' + to.y;
+            }
+
+            function drawConnectors() {
+                var container = document.getElementById('matching-container');
+                var hub = document.getElementById('matching-hub');
+                var svg = document.getElementById('matching-connectors');
+                if (!container || !hub || !svg) return;
+
+                var cr = container.getBoundingClientRect();
+                var hr = hub.getBoundingClientRect();
+                var hubCenter = { x: hr.left - cr.left + hr.width / 2, y: hr.top - cr.top + hr.height / 2 };
+
+                var html = '';
+                profileIds.forEach(function(id) {
+                    var card = document.getElementById('card-' + id);
+                    if (!card) return;
+                    var cardR = card.getBoundingClientRect();
+                    var cardCenter = { x: cardR.left - cr.left + cardR.width / 2, y: cardR.top - cr.top + cardR.height / 2 };
+                    var angle = Math.atan2(hubCenter.y - cardCenter.y, hubCenter.x - cardCenter.x);
+                    var r = Math.min(cardR.width, cardR.height) / 2;
+                    var edgeX = cardCenter.x + r * Math.cos(angle);
+                    var edgeY = cardCenter.y + r * Math.sin(angle);
+                    var from = { x: edgeX, y: edgeY };
+                    var to = hubCenter;
+                    var d = bezierPath(from, to);
+                    var color = lineColors[id] || '#125484';
+                    var delay = delays[id] || 0;
+                    html += '<g><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-dasharray="8 6" opacity="0.5"/>';
+                    html += '<circle r="4" fill="' + color + '" opacity="0.9"><animateMotion dur="3s" repeatCount="indefinite" begin="' + delay + 's" path="' + d + '"/></circle>';
+                    html += '<circle cx="' + from.x + '" cy="' + from.y + '" r="4" fill="' + color + '"/>';
+                    html += '<circle cx="' + to.x + '" cy="' + to.y + '" r="4" fill="' + color + '"/></g>';
+                });
+                svg.innerHTML = html;
+            }
+
+            function onReady() {
+                drawConnectors();
+                setTimeout(drawConnectors, 350);
+                window.addEventListener('resize', function() { requestAnimationFrame(drawConnectors); });
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+            else onReady();
+        })();
+        </script>
 
     </main>
 
