@@ -89,9 +89,25 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("Mode dry-run : aucun enregistrement ni email."))
 
-        alerts = JobAlert.objects.filter(is_active=True).select_related('resume', 'resume__user')
+        # 1. Nettoyage : Désactiver les alertes des utilisateurs ayant un abonnement expiré
+        # Cela garantit que la base de données reflète l'état réel (tâche planifiée/DB)
+        expired_alerts_count = JobAlert.objects.filter(
+            is_active=True,
+            resume__user__subscription_end_date__lte=timezone.now()
+        ).update(is_active=False)
+
+        if expired_alerts_count > 0:
+            self.stdout.write(self.style.SUCCESS(f"Maintenance : {expired_alerts_count} alerte(s) désactivée(s) car l'abonnement a expiré."))
+
+        # 2. Récupération des alertes actives pour les utilisateurs éligibles
+        # On renforce la sécurité en vérifiant à la fois is_active ET la date d'abonnement
+        alerts = JobAlert.objects.filter(
+            is_active=True,
+            resume__user__subscription_end_date__gt=timezone.now()
+        ).select_related('resume', 'resume__user')
+
         if not alerts.exists():
-            self.stdout.write("Aucune alerte active.")
+            self.stdout.write("Aucune alerte active éligible (abonnement valide requis).")
             return
 
         ft = None

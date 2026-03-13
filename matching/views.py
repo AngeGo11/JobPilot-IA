@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
 import logging
 from resumes.models import Resume
 from .models import JobMatch, JobAlert
@@ -487,6 +488,15 @@ def toggle_job_alert(request, resume_id):
             'error': "Les alertes email sont réservées aux abonnés Premium.",
             'redirect': '/subscriptions/pricing/',
         }, status=403)
+    
+    # Vérification stricte de la date de fin d'abonnement
+    if request.user.subscription_end_date and request.user.subscription_end_date <= timezone.now():
+         return JsonResponse({
+            'success': False,
+            'error': "Votre abonnement a expiré. Veuillez le renouveler pour activer les alertes.",
+            'redirect': '/subscriptions/pricing/',
+        }, status=403)
+
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
     alert, created = JobAlert.objects.get_or_create(
         resume=resume,
@@ -507,14 +517,28 @@ def job_alert_status(request, resume_id):
     """
     Retourne le statut de l'alerte pour un CV (pour afficher le toggle correctement).
     Les non-premium reçoivent is_active=False et can_use_alerts=False.
+    Si l'abonnement est expiré, le toggle est forcé à False et désactivé.
     """
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
-    if not getattr(request.user, 'is_premium', False):
+    
+    # Vérifie si l'utilisateur est premium
+    is_premium = getattr(request.user, 'is_premium', False)
+    
+    # Vérifie si l'abonnement est encore valide (date future)
+    subscription_valid = False
+    if request.user.subscription_end_date:
+        subscription_valid = request.user.subscription_end_date > timezone.now()
+
+    # L'utilisateur peut utiliser les alertes s'il est premium ET que son abonnement est valide
+    can_use_alerts = is_premium and subscription_valid
+
+    if not can_use_alerts:
         return JsonResponse({
             'success': True,
             'is_active': False,
             'can_use_alerts': False,
         })
+
     alert = JobAlert.objects.filter(resume=resume).first()
     return JsonResponse({
         'success': True,
