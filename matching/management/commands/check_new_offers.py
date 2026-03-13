@@ -199,10 +199,13 @@ class Command(BaseCommand):
                 subject = f"jobpilot-ai : {len(saved_matches)} nouvelle(s) offre(s) pour vous"
                 message = (
                     f"Bonjour,\n\n"
-                    f"Votre alerte basée sur le CV « {resume.title} » a détecté {len(saved_matches)} "
-                    f"nouvelle(s) offre(s) correspondant à votre profil (score >= {min_score}%).\n\n"
-                    f"Consultez votre tableau de bord pour voir les offres et postuler :\n{dashboard_url}\n\n"
-                    f"Cordialement,\nL'équipe jobpilot-ai"
+                    f"Bonne nouvelle ! Notre IA a déniché {len(saved_matches)} nouvelle(s) opportunité(s) "
+                    f"qui matchent parfaitement avec votre CV « {resume.title} » "
+                    f"(score de pertinence : {min_score}% et plus).\n\n"
+                    f"Ne laissez pas passer votre chance. Découvrez ces offres en détail et postulez "
+                    f"directement depuis votre espace personnel :\n{dashboard_url}\n\n"
+                    f"À très vite,\n"
+                    f"L'équipe JobPilot AI"
                 )
                 try:
                     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'jobpilot-ai <noreply@jobpilot.local>'
