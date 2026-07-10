@@ -34,7 +34,7 @@ class UserRegisterForm(UserCreationForm):
             # Personnaliser les messages d'erreur en français
             self.fields['password1'].error_messages = {
                 'required': 'Ce champ est obligatoire.',
-                'password_too_short': 'Ce mot de passe est trop court. Il doit contenir au moins 8 caractères.',
+                'password_too_short': 'Ce mot de passe est trop court. Il doit contenir au moins 12 caractères.',
                 'password_too_common': 'Ce mot de passe est trop commun.',
                 'password_entirely_numeric': 'Ce mot de passe ne peut pas être entièrement numérique.',
             }
@@ -77,7 +77,7 @@ class UserLoginForm(AuthenticationForm):
     on envoie l'email. On expose un champ 'email' dans le formulaire et on mappe vers
     l'authentification dans clean().
     """
-    email = forms.CharField(
+    email = forms.EmailField(
         label='Email',
         widget=forms.EmailInput(attrs={
             'class': 'w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all',

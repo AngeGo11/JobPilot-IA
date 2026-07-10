@@ -11,6 +11,7 @@ from django.conf import settings
 from google import genai
 
 from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
+from .pseudonymizer import Pseudonymizer
 
 
 class AIParser:
@@ -55,6 +56,11 @@ class AIParser:
                 'skills': []
             }
 
+        # Pseudonymisation avant envoi à Gemini (service tiers) : le job_title/skills
+        # n'ont pas besoin de l'identité brute du candidat pour être extraits.
+        pseudonymizer = Pseudonymizer()
+        safe_cv_text = pseudonymizer.pseudonymize(cv_text)
+
         # Prompt pour Gemini - demande un JSON strict
         prompt = f"""Analyse ce CV et extrais les informations suivantes au format JSON strict :
 
@@ -73,7 +79,7 @@ class AIParser:
         - Le job_title est la priorité absolue pour la recherche d'emploi.
         
         Texte du CV :
-        {cv_text[:4000]}  # Limite à 4000 caractères pour éviter les tokens excessifs
+        {safe_cv_text[:4000]}  # Limite à 4000 caractères pour éviter les tokens excessifs
         """
 
         try:

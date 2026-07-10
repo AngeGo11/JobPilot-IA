@@ -607,10 +607,17 @@
             const messageDiv = document.createElement('div');
             messageDiv.setAttribute('role', 'alert');
             messageDiv.className = `notification-toast notification-toast--${type}`;
-            messageDiv.innerHTML = `
-                <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} notification-toast__icon text-lg shrink-0" aria-hidden="true"></i>
-                <span class="notification-toast__text">${message}</span>
-            `;
+
+            const icon = document.createElement('i');
+            icon.className = `fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} notification-toast__icon text-lg shrink-0`;
+            icon.setAttribute('aria-hidden', 'true');
+
+            const text = document.createElement('span');
+            text.className = 'notification-toast__text';
+            text.textContent = message;
+
+            messageDiv.appendChild(icon);
+            messageDiv.appendChild(text);
             document.body.appendChild(messageDiv);
 
             requestAnimationFrame(function () {

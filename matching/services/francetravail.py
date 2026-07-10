@@ -1,12 +1,15 @@
 import os
 import requests
 from django.conf import settings
+from django.core.cache import cache
 import logging
 from django.db import IntegrityError
 from ..models import JobOffer, JobMatch
 import re
 from django.utils.dateparse import parse_datetime
 
+HTTP_TIMEOUT = 30  # secondes
+TOKEN_CACHE_KEY = "francetravail_access_token"
 
 
 class FranceTravail:
@@ -21,7 +24,13 @@ class FranceTravail:
     def get_access_token(self, client_id, client_secret):
         """
         Récupère le token OAuth2 nécessaire pour interroger l'API.
+        Le token est mis en cache jusqu'à son expiration pour éviter
+        une requête d'authentification à chaque appel.
         """
+        cached_token = cache.get(TOKEN_CACHE_KEY)
+        if cached_token:
+            return cached_token
+
         url = "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire"
 
         # Le scope est crucial pour définir à quelle API on veut accéder
@@ -34,11 +43,19 @@ class FranceTravail:
             "realm": "/partenaire"
         }
 
-        response = requests.post(url, data=payload, headers=headers)
+        response = requests.post(url, data=payload, headers=headers, timeout=HTTP_TIMEOUT)
 
         if response.status_code == 200:
             logging.info("✅ Authentification réussie !")
-            return response.json()['access_token']
+            token_data = response.json()
+            access_token = token_data['access_token']
+            try:
+                expires_in = int(token_data.get('expires_in', 1500))
+            except (TypeError, ValueError):
+                expires_in = 1500
+            # On garde une marge de sécurité de 60s avant l'expiration réelle
+            cache.set(TOKEN_CACHE_KEY, access_token, timeout=max(expires_in - 60, 60))
+            return access_token
         else:
             logging.info(f"❌ Erreur Auth : {response.status_code}")
             logging.info(response.text)
@@ -73,7 +90,7 @@ class FranceTravail:
 
         logging.info(f"🔍 Recherche France Travail avec : {q}")
 
-        response = requests.get(self.api_url, headers=headers, params=params)
+        response = requests.get(self.api_url, headers=headers, params=params, timeout=HTTP_TIMEOUT)
 
         if response.status_code == 200 or response.status_code == 206:
             return response.json().get('resultats', [])

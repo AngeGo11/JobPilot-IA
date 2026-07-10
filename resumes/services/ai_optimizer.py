@@ -12,6 +12,7 @@ from django.conf import settings
 from google import genai
 
 from utils.gemini_safe import ensure_gemini_rate_limit, call_gemini_with_retry
+from .pseudonymizer import Pseudonymizer
 
 
 class AIOptimizer:
@@ -72,11 +73,17 @@ class AIOptimizer:
 
         title_context = f" pour le poste : {job_title}" if job_title else ""
 
+        # Pseudonymisation avant envoi à Gemini (service tiers) : les mots-clés manquants,
+        # le résumé et les suggestions d'expériences n'ont pas besoin de l'identité brute
+        # (nom/email/téléphone) du candidat pour être générés (RGPD art. 5.1.c - minimisation).
+        pseudonymizer = Pseudonymizer()
+        safe_cv_text = pseudonymizer.pseudonymize(cv_text)
+
         prompt = f"""Tu es un expert en recrutement et en optimisation de CV. Ta mission est d'aider un candidat à adapter son CV à une offre d'emploi précise.
 
 DOCUMENT 1 : CV ACTUEL DU CANDIDAT
 ---
-{cv_text[:6000]}
+{safe_cv_text[:6000]}
 ---
 
 DOCUMENT 2 : OFFRE D'EMPLOI
@@ -152,6 +159,18 @@ RÈGLES :
                         'experience': str(item['experience']).strip(),
                         'suggestion': str(item['suggestion']).strip()
                     })
+
+            # Dé-pseudonymisation des sorties destinées au propriétaire du CV : si le modèle
+            # a réutilisé un token ([NOM_1], etc.), on le restaure vers la valeur réelle
+            # (donnée de l'utilisateur lui-même) pour ne pas afficher de token technique.
+            suggested_summary = pseudonymizer.depseudonymize(suggested_summary)
+            cleaned_suggestions = [
+                {
+                    'experience': pseudonymizer.depseudonymize(s['experience']),
+                    'suggestion': pseudonymizer.depseudonymize(s['suggestion']),
+                }
+                for s in cleaned_suggestions
+            ]
 
             return {
                 'missing_keywords': missing_keywords,

@@ -55,9 +55,10 @@ SITE_URL = os.getenv('SITE_URL', 'https://jobpilot-ai.fr')
 # Extraire le nom de domaine pour ALLOWED_HOSTS (sans https://)
 _site_domain = SITE_URL.replace('https://', '').replace('http://', '').rstrip('/')
 
-ALLOWED_HOSTS = [
-    '*',
-]
+if _PROD_SECURITY:
+    ALLOWED_HOSTS = [_site_domain, f'www.{_site_domain}']
+else:
+    ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
     SITE_URL,
@@ -173,7 +174,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 12,
         }
     },
     {
@@ -243,6 +244,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Configuration des fichiers médias (Uploads utilisateurs)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Limite la taille des requêtes/uploads pour éviter l'épuisement des ressources (DoS)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 Mo
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 Mo
 
 # Azure Blob Storage pour les médias en production
 if os.getenv("AZURE_ACCOUNT_NAME"):
