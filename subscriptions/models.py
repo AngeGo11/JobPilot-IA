@@ -51,6 +51,17 @@ class Transaction(models.Model):
         verbose_name_plural = "Transactions Stripe"
         ordering = ['-created_at']
 
+    # Préfixe des sessions Stripe créées en mode bac à sable. Les paiements de
+    # mise au point cohabitent avec les vrais dans cette table : additionner
+    # les deux gonfle artificiellement le chiffre d'affaires — d'un facteur
+    # trois sur les premières semaines d'un produit.
+    TEST_SESSION_PREFIX = "cs_test"
+
+    @property
+    def is_test_mode(self):
+        """True pour un paiement effectué en mode test : argent inexistant."""
+        return (self.stripe_session_id or "").startswith(self.TEST_SESSION_PREFIX)
+
     def __str__(self):
         return f"{self.user_id} – {self.stripe_session_id}"
 

@@ -315,6 +315,9 @@ def export_users(request):
 @staff_required
 def revenue(request):
     """Suivi financier : encaissements Stripe, MRR estimé, abonnés."""
+    # La liste montre TOUT, y compris le mode test : masquer des lignes
+    # existantes ferait douter de l'intégrité des données. Le mode est
+    # signalé sur chaque ligne, et seuls les totaux excluent les tests.
     page_obj = Paginator(
         Transaction.objects.select_related("user").order_by("-created_at"), PAGE_SIZE
     ).get_page(request.GET.get("page"))
@@ -331,12 +334,13 @@ def revenue(request):
 
 
 def monthly_revenue(months=6):
-    """Encaissements par mois, du plus ancien au plus récent."""
+    """Encaissements par mois, du plus ancien au plus récent. Hors mode test."""
     from django.db.models.functions import TruncMonth
 
     since = timezone.now() - timedelta(days=31 * months)
     rows = (
         Transaction.objects.filter(amount__isnull=False, created_at__gte=since)
+        .exclude(stripe_session_id__startswith=Transaction.TEST_SESSION_PREFIX)
         .annotate(month=TruncMonth("created_at"))
         .values("month")
         .annotate(total=Sum("amount"), count=Count("id"))

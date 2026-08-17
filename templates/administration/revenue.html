@@ -3,19 +3,38 @@
 
 {% block admin_title %}Revenus{% endblock %}
 {% block page_title %}Revenus{% endblock %}
-{% block page_subtitle %}Encaissements Stripe et abonnements en cours{% endblock %}
+{% block page_subtitle %}Encaissements Stripe réels — les paiements de test sont exclus des totaux{% endblock %}
 
 {% block admin_content %}
 
+{% if revenue.test_count %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+    <i class="fa-solid fa-flask text-amber-500 mt-0.5"></i>
+    <div class="text-sm text-amber-900">
+        <p class="font-semibold">
+            {{ revenue.test_count }} paiement{{ revenue.test_count|pluralize }} en mode test
+            ({{ revenue.test_total|floatformat:2 }} €) — exclu{{ revenue.test_count|pluralize }} des totaux.
+        </p>
+        <p class="mt-1">
+            Ces sessions <code class="text-xs bg-amber-100 px-1 py-0.5 rounded">cs_test_…</code>
+            proviennent du bac à sable Stripe : cet argent n'existe pas.
+            Les compter afficherait {{ revenue.test_total|add:revenue.total|floatformat:2 }} €
+            au lieu de {{ revenue.total|floatformat:2 }} €.
+            Ils restent visibles dans la liste ci-dessous, marqués comme tels.
+        </p>
+    </div>
+</div>
+{% endif %}
+
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-    {% include 'administration/_stat_card.html' with label="Encaissé (total)" value=revenue.total suffix="€" icon="fa-sack-dollar" color="text-emerald-600" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Encaissé réel (total)" value=revenue.total suffix="€" icon="fa-sack-dollar" color="text-emerald-600" hint=None delta=None url=None %}
     {% include 'administration/_stat_card.html' with label="Encaissé (30 j)" value=revenue.total_30d suffix="€" icon="fa-euro-sign" color="text-emerald-600" delta=revenue.growth_30d url=None %}
     {% include 'administration/_stat_card.html' with label="MRR estimé" value=revenue.mrr|floatformat:2 suffix="€" icon="fa-arrows-rotate" color="text-blue-500" hint="D'après les abonnements actifs" delta=None url=None %}
     {% include 'administration/_stat_card.html' with label="Panier moyen" value=revenue.avg_basket|floatformat:2 suffix="€" icon="fa-basket-shopping" hint=None delta=None url=None %}
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-    {% include 'administration/_stat_card.html' with label="Clients payants" value=revenue.payers icon="fa-user-check" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Clients payants réels" value=revenue.payers icon="fa-user-check" hint=None delta=None url=None %}
     {% include 'administration/_stat_card.html' with label="Revenu par client" value=revenue.arpu suffix="€" icon="fa-chart-pie" hint=None delta=None url=None %}
     {% include 'administration/_stat_card.html' with label="Transactions" value=revenue.count icon="fa-receipt" hint=None delta=None url=None %}
     {% include 'administration/_stat_card.html' with label="Abonnés actifs" value=users.premium icon="fa-crown" color="text-amber-500" hint=None delta=None url=None %}
@@ -120,13 +139,17 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for tx in page_obj %}
-                <tr class="hover:bg-slate-50 transition-colors">
+                <tr class="hover:bg-slate-50 transition-colors {% if tx.is_test_mode %}bg-amber-50/40{% endif %}">
                     <td class="px-4 md:px-6 py-3 text-slate-600 whitespace-nowrap">{{ tx.created_at|date:"d/m/Y H:i" }}</td>
                     <td class="px-4 py-3">
                         <a href="{% url 'administration:user_detail' tx.user_id %}" class="text-[#125484] hover:underline font-medium">{{ tx.user.email }}</a>
                     </td>
-                    <td class="px-4 py-3 font-mono text-xs text-slate-500 max-w-xs truncate">{{ tx.stripe_session_id }}</td>
-                    <td class="px-4 md:px-6 py-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500 max-w-xs truncate">
+                        {% if tx.is_test_mode %}
+                        <span class="inline-block mr-1.5 px-1.5 py-0.5 text-xs font-sans font-semibold rounded bg-amber-200 text-amber-900">TEST</span>
+                        {% endif %}{{ tx.stripe_session_id }}
+                    </td>
+                    <td class="px-4 md:px-6 py-3 text-right font-bold whitespace-nowrap {% if tx.is_test_mode %}text-amber-700 line-through decoration-1{% else %}text-slate-900{% endif %}">
                         {% if tx.amount %}{{ tx.amount|floatformat:2 }} €{% else %}<span class="text-slate-500 font-normal">non renseigné</span>{% endif %}
                     </td>
                 </tr>

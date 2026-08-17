@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from subscriptions.models import CreditEntry
+from subscriptions.models import CreditEntry, Transaction
 from subscriptions.services.credits import (
     InsufficientCredits,
     debit,
@@ -135,3 +135,57 @@ class LedgerConsistencyTests(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.ai_credits, 14)
         self.assertEqual(ledger_balance(user), 14)
+
+
+class TestModeExclusionTests(TestCase):
+    """
+    Les paiements du bac à sable Stripe ne doivent jamais entrer dans le
+    chiffre d'affaires. Constaté en production : sur cinq transactions, trois
+    étaient des tests — le total affiché valait 21,96 € pour 5,99 € réels.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        from decimal import Decimal as D
+
+        cls.user = User.objects.create_user(email="c@example.com", password="MotDePasse!2024")
+        # Trois paiements de mise au point, deux vrais.
+        for suffixe, montant in (("a", D("4.99")), ("b", D("4.99")), ("c", D("5.99"))):
+            Transaction.objects.create(
+                user=cls.user, stripe_session_id=f"cs_test_{suffixe}", amount=montant
+            )
+        for suffixe, montant in (("x", D("1.00")), ("y", D("4.99"))):
+            Transaction.objects.create(
+                user=cls.user, stripe_session_id=f"cs_live_{suffixe}", amount=montant
+            )
+
+    def test_is_test_mode_detects_sandbox_sessions(self):
+        self.assertTrue(Transaction.objects.get(stripe_session_id="cs_test_a").is_test_mode)
+        self.assertFalse(Transaction.objects.get(stripe_session_id="cs_live_x").is_test_mode)
+
+    def test_revenue_counts_only_real_payments(self):
+        from decimal import Decimal as D
+
+        from administration.services.metrics import revenue_metrics
+
+        stats = revenue_metrics()
+        self.assertEqual(stats["total"], D("5.99"), "1,00 + 4,99 seulement")
+        self.assertEqual(stats["count"], 2)
+        # Le volume de test est rapporté à part, pas effacé : le voir évite de
+        # croire à une perte de données.
+        self.assertEqual(stats["test_count"], 3)
+        self.assertEqual(stats["test_total"], D("15.97"))
+
+    def test_average_basket_ignores_test_payments(self):
+        from decimal import Decimal as D
+
+        from administration.services.metrics import revenue_metrics
+
+        # Moyenne sur les deux vrais paiements : (1,00 + 4,99) / 2 = 2,995
+        self.assertAlmostEqual(float(revenue_metrics()["avg_basket"]), 2.995, places=2)
+
+    def test_monthly_chart_excludes_test_payments(self):
+        from administration.views import monthly_revenue
+
+        total = sum(row["total"] for row in monthly_revenue())
+        self.assertEqual(float(total), 5.99)

@@ -73,11 +73,17 @@ class AdminPagesWithDataTests(TestCase):
         JobMatch.objects.create(
             resume=resume, user=cls.user, job_offer=offer, score=88, is_unlocked=True, status="applied"
         )
+        # Préfixe « cs_live_ » : une session « cs_test_ » serait écartée du
+        # chiffre d'affaires, puisque le mode bac à sable ne compte pas.
         Transaction.objects.create(
-            user=cls.user, stripe_session_id="cs_test_1", amount=Decimal("14.99")
+            user=cls.user, stripe_session_id="cs_live_1", amount=Decimal("14.99")
         )
         # Transaction sans montant : ne doit pas casser les agrégations.
-        Transaction.objects.create(user=cls.user, stripe_session_id="cs_test_2")
+        Transaction.objects.create(user=cls.user, stripe_session_id="cs_live_2")
+        # Paiement de mise au point : présent en base, absent des totaux.
+        Transaction.objects.create(
+            user=cls.user, stripe_session_id="cs_test_ancien", amount=Decimal("99.00")
+        )
         TaskRun.objects.create(
             name="check_new_offers",
             status=TaskRun.Status.SUCCESS,
@@ -100,6 +106,10 @@ class AdminPagesWithDataTests(TestCase):
         self.assertEqual(response.context["users"]["premium"], 1)
         self.assertEqual(response.context["revenue"]["total"], Decimal("14.99"))
         self.assertEqual(response.context["revenue"]["untracked_count"], 1)
+        # Les 99 € du paiement de test ne doivent pas apparaître dans le total,
+        # mais rester comptés à part.
+        self.assertEqual(response.context["revenue"]["test_count"], 1)
+        self.assertEqual(response.context["revenue"]["test_total"], Decimal("99.00"))
 
     def test_user_detail_is_logged(self):
         response = self.client.get(reverse("administration:user_detail", args=[self.user.pk]))

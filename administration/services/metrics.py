@@ -126,18 +126,28 @@ def signups_series(days=30):
 
 def revenue_metrics():
     """
-    Chiffre d'affaires encaissé, à partir des transactions Stripe enregistrées.
+    Chiffre d'affaires réellement encaissé.
 
-    Ne compte que les transactions dont le montant est renseigné : les anciennes
-    entrées créées avant l'ajout du champ `amount` sont à NULL et fausseraient
-    une moyenne si on les comptait comme des paiements à 0 €.
+    Deux filtres, pour deux raisons distinctes :
+
+    - `amount__isnull=False` : les entrées créées avant l'ajout du champ
+      `amount` sont à NULL et fausseraient une moyenne si on les comptait
+      comme des paiements à 0 €.
+    - exclusion du mode test : les paiements de mise au point (`cs_test_…`)
+      partagent la table avec les vrais. Les additionner gonfle le chiffre
+      d'affaires — d'un facteur trois sur les premières semaines d'un produit,
+      ce qui rend l'indicateur trompeur au moment où il compte le plus.
+
+    Le volume de test est retourné à part, sous `test_*`, plutôt que caché :
+    voir qu'il existe évite de croire à une perte de données.
     """
     now = timezone.now()
     d7, d30, d60 = (now - timedelta(days=n) for n in (7, 30, 60))
     money = DecimalField(max_digits=12, decimal_places=2)
     zero = Value(Decimal("0.00"), output_field=money)
 
-    paid = Transaction.objects.filter(amount__isnull=False)
+    est_test = Q(stripe_session_id__startswith=Transaction.TEST_SESSION_PREFIX)
+    paid = Transaction.objects.filter(amount__isnull=False).exclude(est_test)
     stats = paid.aggregate(
         total=Coalesce(Sum("amount"), zero),
         total_7d=Coalesce(Sum("amount", filter=Q(created_at__gte=d7)), zero),
@@ -150,6 +160,15 @@ def revenue_metrics():
         payers=Count("user", distinct=True),
     )
     stats["untracked_count"] = Transaction.objects.filter(amount__isnull=True).count()
+
+    # Volume écarté, affiché séparément.
+    test = Transaction.objects.filter(est_test).aggregate(
+        count=Count("id"),
+        total=Coalesce(Sum("amount"), zero),
+    )
+    stats["test_count"] = test["count"]
+    stats["test_total"] = test["total"]
+
     stats["growth_30d"] = _delta_pct(stats["total_30d"], stats["prev_30d"])
     stats["mrr"] = sum((row["mrr"] for row in plan_breakdown()), Decimal("0"))
     stats["arpu"] = (
