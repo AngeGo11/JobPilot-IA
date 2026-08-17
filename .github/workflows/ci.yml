@@ -66,6 +66,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/dev.txt
 
+      - name: Cohérence des dépendances
+        # `pip check` détecte les incompatibilités entre versions épinglées.
+        # Un environnement local où les paquets ont été installés un par un
+        # peut masquer un conflit que la résolution propre de la CI rejette :
+        # c'est arrivé avec redis épinglé en 7.x alors que celery 5.4 exige
+        # une version inférieure à 6.
+        run: pip check
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

@@ -23,7 +23,10 @@ python-dotenv==1.2.1
 # `redis` est requis par django.core.cache.backends.redis.RedisCache : sans
 # cache partagé, le rate limit Gemini et le token France Travail sont locaux à
 # chaque worker. `celery` sort les appels IA du cycle requête/réponse.
-redis==7.1.0
+# redis 5.3.1 et non 7.x : celery 5.4 exige redis<6.0.0. Le conflit est
+# invisible si l'on installe redis avant celery — pip ne réarbitre pas — mais
+# une installation propre le rejette. Version obtenue par résolution.
+redis==5.3.1
 celery[redis]==5.4.0
 
 # --- Authentification ---
