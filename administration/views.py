@@ -460,8 +460,9 @@ def _environment_summary():
 def supervision(request):
     """Santé des dépendances, tâches planifiées et erreurs récentes."""
     checks, overall = health.run_all()
-    entries, log_note = logs.tail_entries("error_file", limit=40)
-    hot_modules, error_count, _ = logs.error_summary()
+    entries, log_note = logs.recent_errors(limit=40)
+    hot_modules = logs.error_hotspots()
+    error_count = sum(nombre for _, nombre in hot_modules)
 
     runs = TaskRun.objects.all()[:30]
     last_by_task = {}

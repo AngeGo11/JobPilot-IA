@@ -262,3 +262,59 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return f"{self.author_name} – {'publié' if self.is_published else 'brouillon'}"
+
+
+class ErrorLog(models.Model):
+    """
+    Erreurs applicatives, enregistrées en base.
+
+    Pourquoi pas un fichier : en production, `LOGGING` bascule sur la sortie
+    standard car App Service n'offre pas de répertoire inscriptible fiable. Le
+    panneau de supervision n'avait donc rien à lire et affichait un message
+    d'excuse renvoyant vers les journaux de l'hébergeur.
+
+    Pourquoi pas Application Insights : l'application ne lui envoie rien
+    aujourd'hui, et l'y brancher supposerait d'instrumenter le code puis de
+    l'interroger avec des identifiants dédiés. La base est déjà là, disponible
+    partout de la même façon, et suffit à répondre à « qu'est-ce qui casse en ce
+    moment ».
+
+    La table est bornée par `purge_error_logs`, sinon elle grossit sans fin.
+    """
+
+    level = models.CharField("Niveau", max_length=20, db_index=True)
+    logger_name = models.CharField("Logger", max_length=120, blank=True)
+    module = models.CharField("Module", max_length=120, blank=True)
+    line_number = models.PositiveIntegerField("Ligne", null=True, blank=True)
+    message = models.TextField("Message")
+    traceback = models.TextField("Trace", blank=True)
+    path = models.CharField("URL", max_length=255, blank=True)
+    method = models.CharField("Méthode", max_length=10, blank=True)
+    user_id_ref = models.PositiveIntegerField(
+        "Utilisateur concerné",
+        null=True,
+        blank=True,
+        help_text="Identifiant seul, sans clé étrangère : purger un compte ne doit pas effacer la trace de l'incident.",
+    )
+    # Empreinte du couple (module, ligne, type de message) : permet de regrouper
+    # les répétitions d'une même erreur au lieu d'afficher mille fois la même.
+    fingerprint = models.CharField("Empreinte", max_length=64, db_index=True, blank=True)
+    occurrences = models.PositiveIntegerField("Occurrences", default=1)
+    created_at = models.DateTimeField("Première occurrence", auto_now_add=True)
+    last_seen_at = models.DateTimeField("Dernière occurrence", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Erreur applicative"
+        verbose_name_plural = "Erreurs applicatives"
+        ordering = ["-last_seen_at"]
+        indexes = [
+            models.Index(fields=["-last_seen_at"], name="errorlog_seen_idx"),
+            models.Index(fields=["fingerprint", "-last_seen_at"], name="errorlog_fp_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.level} {self.module}:{self.line_number} – {self.message[:60]}"
+
+    @property
+    def is_recurring(self):
+        return self.occurrences > 1

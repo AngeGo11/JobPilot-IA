@@ -352,3 +352,21 @@ def embed_pending_task():
             offers, len(pending_resumes),
             JobOffer.objects.filter(embedding__isnull=True).count(),
         )
+
+
+@shared_task(name="matching.tasks.purge_error_logs_task")
+def purge_error_logs_task(days=30):
+    """
+    Supprime les erreurs applicatives de plus de `days` jours.
+
+    Sans purge, la table grossit indéfiniment alors que l'intérêt d'une erreur
+    décroît vite : on veut savoir ce qui casse maintenant, pas en février.
+    """
+    from datetime import timedelta
+
+    from administration.models import ErrorLog
+
+    with track_run("purge_error_logs") as run:
+        cutoff = timezone.now() - timedelta(days=days)
+        deleted, _ = ErrorLog.objects.filter(last_seen_at__lt=cutoff).delete()
+        run.items_processed = deleted

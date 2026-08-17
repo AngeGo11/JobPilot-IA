@@ -1,5 +1,5 @@
 """Garde-fous SEO : balises head, sitemap, robots.txt et analytics."""
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 
@@ -87,3 +87,47 @@ class PricingDiscoverabilityTests(TestCase):
         self.assertIn('tarifs-titre', html)
         for price in ('2,99', '5,99', '14,99'):
             self.assertIn(price, html)
+
+
+class CspAnalyticsTests(SimpleTestCase):
+    """
+    La CSP doit autoriser les points de collecte de GA4.
+
+    Constaté en production : le script se chargeait mais chaque envoi était
+    bloqué — « Refused to connect to https://region1.google-analytics.com/…
+    because it does not appear in the connect-src directive ». La mesure était
+    donc entièrement inopérante, alors que tout paraissait installé.
+    """
+
+    def _connect_src(self):
+        from JobPilot.middleware import _policy
+
+        for directive in _policy().split(";"):
+            directive = directive.strip()
+            if directive.startswith("connect-src"):
+                return directive
+        return ""
+
+    def test_regional_collect_endpoints_are_allowed(self):
+        connect = self._connect_src()
+        self.assertIn(
+            "https://*.google-analytics.com", connect,
+            "sans le motif génerique, region1/region2… sont bloqués",
+        )
+        self.assertIn("https://*.analytics.google.com", connect)
+
+    def test_tag_script_origin_is_allowed(self):
+        from JobPilot.middleware import _policy
+
+        script = next(
+            d.strip() for d in _policy().split(";") if d.strip().startswith("script-src")
+        )
+        self.assertIn("googletagmanager.com", script)
+
+    def test_policy_still_locks_the_dangerous_directives(self):
+        """Élargir connect-src ne doit pas relâcher le reste."""
+        from JobPilot.middleware import _policy
+
+        politique = _policy()
+        for attendu in ("frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'"):
+            self.assertIn(attendu, politique)

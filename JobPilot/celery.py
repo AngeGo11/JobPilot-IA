@@ -29,6 +29,10 @@ app.conf.beat_schedule = {
         "task": "matching.tasks.check_new_offers_task",
         "schedule": crontab(minute=0, hour="*/6"),  # toutes les 6 heures
     },
+    "purger-erreurs": {
+        "task": "matching.tasks.purge_error_logs_task",
+        "schedule": crontab(minute=15, hour=4),  # chaque nuit à 4 h 15
+    },
     "nettoyer-alertes-expirees": {
         "task": "matching.tasks.cleanup_expired_alerts_task",
         "schedule": crontab(minute=30, hour=3),  # chaque nuit à 3 h 30

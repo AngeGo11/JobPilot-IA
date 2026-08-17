@@ -16,20 +16,35 @@ des `addEventListener` — c'est documenté dans docs/performance-securite.md.
 from django.conf import settings
 
 #: Origines tierces encore nécessaires, avec la raison de leur présence.
-_GA = ("https://www.googletagmanager.com", "https://www.google-analytics.com")
+#
+# Google Analytics 4 : le script vient de googletagmanager, mais les mesures
+# partent vers un point de collecte RÉGIONAL — region1.google-analytics.com,
+# region2, etc. selon la localisation du visiteur. Lister le seul domaine
+# `www.google-analytics.com` laissait donc le script se charger sans qu'aucune
+# donnée ne soit transmise : le navigateur bloquait chaque envoi avec
+# « Refused to connect … does not appear in the connect-src directive ».
+# D'où les motifs génériques, conformes à la documentation Google.
+_GA_SCRIPT = ("https://*.googletagmanager.com",)
+_GA_CONNECT = (
+    "https://*.google-analytics.com",
+    "https://*.analytics.google.com",
+    "https://*.googletagmanager.com",
+)
 _TINYMCE = ("https://cdn.tiny.cloud", "https://sp.tinymce.com")  # éditeur de lettres
 _CONFETTI = ("https://cdn.jsdelivr.net",)  # animation de succès du tableau de bord
 
 
 def _policy() -> str:
-    script = ["'self'", "'unsafe-inline'", *_GA, *_TINYMCE, *_CONFETTI]
+    script = ["'self'", "'unsafe-inline'", *_GA_SCRIPT, *_TINYMCE, *_CONFETTI]
     style = ["'self'", "'unsafe-inline'", *_TINYMCE]
-    connect = ["'self'", *_GA, *_TINYMCE]
+    connect = ["'self'", *_GA_CONNECT, *_TINYMCE]
 
     directives = [
         "default-src 'self'",
         "script-src " + " ".join(script),
         "style-src " + " ".join(style),
+        # GA4 utilise aussi des pixels en repli quand `fetch` est indisponible ;
+        # `https:` les couvre déjà.
         "img-src 'self' data: https:",
         "font-src 'self' data:",
         "connect-src " + " ".join(connect),

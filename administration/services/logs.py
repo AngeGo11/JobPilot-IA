@@ -77,3 +77,39 @@ def error_summary(limit=200):
     entries, note = tail_entries("error_file", limit=limit)
     counter = Counter(entry["module"] for entry in entries)
     return counter.most_common(5), len(entries), note
+
+
+def recent_errors(limit=40):
+    """
+    Erreurs récentes lues en base.
+
+    Remplace la lecture de fichier, inopérante en production où les logs
+    partent sur la sortie standard. Retourne (entrées, note) comme
+    `tail_entries`, pour que la vue n'ait qu'un seul format à traiter.
+    """
+    from administration.models import ErrorLog
+
+    entrees = list(ErrorLog.objects.all()[:limit])
+    if entrees:
+        return entrees, ""
+
+    # Aucune erreur enregistrée : le dire, plutôt que de laisser un vide qu'on
+    # pourrait prendre pour une panne du panneau lui-même.
+    return [], (
+        "Aucune erreur enregistrée depuis la mise en service du suivi. "
+        "Les erreurs applicatives apparaîtront ici automatiquement."
+    )
+
+
+def error_hotspots(limit=5):
+    """Modules les plus touchés, par nombre d'occurrences cumulées."""
+    from django.db.models import Sum
+
+    from administration.models import ErrorLog
+
+    lignes = (
+        ErrorLog.objects.values("module")
+        .annotate(total=Sum("occurrences"))
+        .order_by("-total")[:limit]
+    )
+    return [(ligne["module"] or "?", ligne["total"]) for ligne in lignes]

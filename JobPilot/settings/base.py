@@ -415,6 +415,13 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'formatter': 'verbose',
         },
+        # Erreurs en base : en production les fichiers de logs n'existent pas
+        # (sortie standard), le back-office n'avait donc rien à afficher.
+        'db_errors': {
+            'level': 'ERROR',
+            'class': 'administration.services.log_handler.DatabaseErrorHandler',
+            'formatter': 'verbose',
+        },
     },
     'root': {
         'handlers': ['console', 'file'],
@@ -427,7 +434,7 @@ LOGGING = {
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['error_file', 'mail_admins'],
+            'handlers': ['error_file', 'mail_admins', 'db_errors'],
             'level': 'ERROR',
             'propagate': False,
         },
@@ -442,22 +449,22 @@ LOGGING = {
             'propagate': False,
         },
         'resumes': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console', 'file', 'error_file', 'db_errors'],
             'level': 'INFO',
             'propagate': False,
         },
         'matching': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console', 'file', 'error_file', 'db_errors'],
             'level': 'INFO',
             'propagate': False,
         },
         'dashboard': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console', 'file', 'error_file', 'db_errors'],
             'level': 'INFO',
             'propagate': False,
         },
         'administration': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console', 'file', 'error_file', 'db_errors'],
             'level': 'INFO',
             'propagate': False,
         },
