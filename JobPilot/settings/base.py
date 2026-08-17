@@ -19,7 +19,9 @@ load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Ce fichier vit dans JobPilot/settings/, soit trois niveaux sous la racine
+# du dépôt (settings → JobPilot → racine).
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -35,9 +37,30 @@ if not SECRET_KEY:
         "Définissez la variable d’environnement SECRET_KEY (ou DJANGO_SECRET_KEY)."
     )
 
+def env_bool(name, default=False):
+    """Lit un booléen depuis l'environnement sans planter si la variable manque."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("true", "1", "yes", "on")
+
+
+def env_int(name, default):
+    """Lit un entier depuis l'environnement ; retombe sur `default` si absent ou invalide."""
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "yes")
-ENVIRONMENT = os.getenv("ENVIRONMENT").lower()
+# Défaut à False : une variable oubliée doit produire un site sûr, pas un site
+# en mode debug exposant les tracebacks.
+DEBUG = env_bool("DEBUG", default=False)
+ENVIRONMENT = (os.getenv("ENVIRONMENT") or "development").strip().lower()
 # Sécurité HTTPS uniquement en production (évite la redirection HTTPS avec runserver en local)
 _PROD_SECURITY = (not DEBUG) and (ENVIRONMENT == "production")
 
@@ -59,6 +82,15 @@ if _PROD_SECURITY:
     ALLOWED_HOSTS = [_site_domain, f'www.{_site_domain}']
 else:
     ALLOWED_HOSTS = ['*']
+# --- En-têtes de sécurité ---
+# Bascule la CSP en observation (violations signalées, rien de bloqué) le temps
+# de valider une modification de gabarit introduisant une origine tierce.
+CSP_REPORT_ONLY = env_bool('CSP_REPORT_ONLY', default=False)
+
+# --- Analytics ---
+# Identifiant de mesure GA4 (format G-XXXXXXXXXX). Vide => aucun script chargé.
+GA_MEASUREMENT_ID = os.getenv('GA_MEASUREMENT_ID', '').strip()
+
 CSRF_TRUSTED_ORIGINS = [
     'https://autohypnotic-lashay-undecretory.ngrok-free.dev',
     SITE_URL,
@@ -77,11 +109,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.sitemaps',
     'users.apps.UsersConfig',
     'resumes',
     'matching',
     'dashboard',
     'subscriptions',
+    'administration',
 
 # --- Allauth Core (Authentification) ---
     'allauth',
@@ -95,14 +129,25 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise doit venir juste après SecurityMiddleware : un fichier statique
+    # est alors servi sans traverser sessions, CSRF ni authentification.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Compression texte des réponses HTML/JSON produites par Django (les
+    # statiques, eux, sont précompressés à la volée par WhiteNoise).
+    # BREACH : Django masque le jeton CSRF différemment à chaque réponse depuis
+    # la 4.1, ce qui neutralise l'attaque classique sur formulaire compressé.
+    'django.middleware.gzip.GZipMiddleware',
+    'JobPilot.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',
+    # Doit rester après AuthenticationMiddleware : le mode maintenance laisse
+    # passer l'équipe, ce qui suppose que request.user est déjà résolu.
+    'administration.middleware.MaintenanceModeMiddleware',
 ]
 
 ROOT_URLCONF = 'JobPilot.urls'
@@ -119,6 +164,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'administration.context_processors.site_settings',
+                'JobPilot.context_processors.seo',
             ],
         },
     },
@@ -213,8 +260,8 @@ STRIPE_PRICE_PRO = os.getenv('STRIPE_PRICE_PRO')           # Abonnement 14,99 �
 STRIPE_PRICE_PACK = os.getenv('STRIPE_PRICE_PACK')         # Paiement unique 4,99 € (10 crédits)
 
 # --- Rate limiting API Gemini (Dev Free Tier vs Prod) ---
-GEMINI_MAX_RPM = int(os.getenv('GEMINI_MAX_RPM'))           # Requêtes/minute globales (défaut 10 pour Free Tier)
-GEMINI_FAIR_USE_LIMIT = int(os.getenv('GEMINI_FAIR_USE_LIMIT'))  # Requêtes/heure par utilisateur
+GEMINI_MAX_RPM = env_int('GEMINI_MAX_RPM', 10)              # Requêtes/minute globales (10 pour le Free Tier)
+GEMINI_FAIR_USE_LIMIT = env_int('GEMINI_FAIR_USE_LIMIT', 50)  # Requêtes/heure par utilisateur
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -228,7 +275,13 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Permet à WhiteNoise de compresser les fichiers pour que le site charge plus vite
+# (gzip *et* brotli grâce à l'extra `whitenoise[brotli]` : le .br est ~20 % plus
+# petit que le .gz sur du CSS, et tous les navigateurs visés l'acceptent).
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Les fichiers statiques portent une empreinte dans leur nom (stockage manifeste) :
+# ils sont donc immuables et peuvent être mis en cache un an.
+WHITENOISE_MAX_AGE = 31536000
 
 # Dossiers où Django va chercher tes fichiers CSS/JS personnalisés
 STATICFILES_DIRS = [
@@ -403,6 +456,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'administration': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
@@ -446,3 +504,62 @@ SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 # On force Django à utiliser l'E-MAIL pour se connecter
 ACCOUNT_LOGIN_METHODS = {'email'}
 
+
+
+# ---------------------------------------------------------------------------
+# CACHE
+# ---------------------------------------------------------------------------
+# Trois mécanismes critiques s'appuient sur le cache : le compteur RPM global
+# de Gemini, le quota horaire par utilisateur et le token OAuth France Travail.
+# Avec LocMemCache (le défaut Django), chaque worker gunicorn a son propre
+# compteur : la limite « 10 req/min » devient 10 × nombre de workers, et le
+# garde-fou anti-dépassement de quota ne protège plus rien.
+#
+# REDIS_URL doit donc être défini dès qu'il y a plus d'un worker. Les modules
+# prod.py / dev.py décident quoi faire en son absence.
+REDIS_URL = os.getenv("REDIS_URL")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+    }
+} if REDIS_URL else {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "jobpilot-locmem",
+    }
+}
+
+
+# ---------------------------------------------------------------------------
+# TÂCHES DE FOND (Celery)
+# ---------------------------------------------------------------------------
+# Les appels IA et les recherches d'offres ne doivent pas s'exécuter dans le
+# cycle requête/réponse : ils durent plusieurs secondes et bloquent un worker
+# web pendant tout ce temps.
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL or "")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL or "")
+
+# Sans broker configuré, les tâches s'exécutent en direct (comportement actuel).
+# Cela garantit qu'un environnement sans Redis reste fonctionnel plutôt que de
+# tomber en erreur au premier appel.
+CELERY_TASK_ALWAYS_EAGER = not CELERY_BROKER_URL
+CELERY_TASK_EAGER_PROPAGATES = True
+
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Garde-fous : une tâche qui dépasse ces durées est tuée plutôt que de
+# monopoliser un worker indéfiniment.
+CELERY_TASK_SOFT_TIME_LIMIT = env_int("CELERY_TASK_SOFT_TIME_LIMIT", 120)
+CELERY_TASK_TIME_LIMIT = env_int("CELERY_TASK_TIME_LIMIT", 180)
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# Résultats conservés 24 h : assez pour qu'un navigateur récupère l'état d'une
+# génération, sans faire grossir Redis indéfiniment.
+CELERY_RESULT_EXPIRES = 86400

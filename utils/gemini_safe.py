@@ -26,6 +26,15 @@ class FairUseExceeded(Exception):
     pass
 
 
+class GeminiConfigurationError(Exception):
+    """
+    Erreur permanente côté configuration : modèle inconnu, requête invalide,
+    clé refusée. Réessayer n'y changera rien, et la présenter comme une
+    « surcharge momentanée » envoie le diagnostic dans la mauvaise direction.
+    """
+    pass
+
+
 # --- Rate limiting (cache Django) ---
 
 def _rpm_cache_key() -> str:
@@ -97,6 +106,18 @@ def ensure_gemini_rate_limit(user_id: Optional[int] = None) -> None:
         _cache_incr(key_user, timeout=7200)
 
 
+def _is_permanent_error(exc: BaseException) -> bool:
+    """
+    Détecte une erreur qui ne se résoudra pas d'elle-même : 400, 401, 403, 404.
+
+    Sans cette distinction, un nom de modèle erroné consommait trois tentatives
+    avec backoff avant d'être signalé comme une surcharge des serveurs.
+    """
+    msg = str(exc).lower()
+    return any(code in msg for code in ("404", "not_found", "400", "invalid_argument",
+                                        "401", "unauthenticated", "403", "permission_denied"))
+
+
 def _is_429_or_resource_exhausted(exc: BaseException) -> bool:
     """Détecte erreur 429 / ResourceExhausted de l'API Gemini."""
     msg = str(exc).lower()
@@ -124,6 +145,9 @@ def call_gemini_with_retry(
             return generate_fn()
         except Exception as e:
             last_exc = e
+            if _is_permanent_error(e):
+                logger.error("Erreur Gemini permanente, pas de réessai : %s", e)
+                raise GeminiConfigurationError(str(e)) from e
             if _is_429_or_resource_exhausted(e) and attempt < max_retries - 1:
                 delay = delays[min(attempt, len(delays) - 1)]
                 logger.warning("Gemini 429/ResourceExhausted, retry in %ss (attempt %s/%s)", delay, attempt + 1, max_retries)

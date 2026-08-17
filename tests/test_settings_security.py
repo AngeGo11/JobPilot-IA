@@ -1,5 +1,5 @@
 """
-Tests de non-régression pour des correctifs de sécurité au niveau de JobPilot/settings.py.
+Tests de non-régression pour des correctifs de sécurité au niveau de JobPilot/settings/base.py.
 
 Couvre :
 - AUTH_PASSWORD_VALIDATORS : longueur minimale de mot de passe portée à 12 caractères.
@@ -10,7 +10,7 @@ est figée au démarrage du process de test à partir des variables d'environnem
 présentes à ce moment-là (DEBUG/ENVIRONMENT du .env, généralement dev). On ne peut
 donc pas changer cette valeur "en live" sans redémarrer Django. Pour verrouiller la
 LOGIQUE de calcul (et pas seulement la valeur figée au démarrage), on recharge le
-module JobPilot.settings (un simple module Python, indépendant de l'objet
+module JobPilot.settings.base (un simple module Python, indépendant de l'objet
 django.conf.settings déjà initialisé) avec des variables d'environnement modifiées,
 puis on restaure l'état original. Cela ne perturbe pas le reste de la suite de tests
 car django.conf.settings a déjà capturé ses propres attributs une fois pour toutes
@@ -24,7 +24,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
-import JobPilot.settings as settings_module
+# On vise `base` : c'est là que vit la logique de calcul. Le paquet
+# `JobPilot.settings` ne réexporte pas les noms préfixés d'un underscore.
+import JobPilot.settings.base as settings_module
 
 
 class PasswordMinimumLengthSettingTests(SimpleTestCase):
