@@ -1,0 +1,189 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Vue d'ensemble{% endblock %}
+{% block page_title %}Vue d'ensemble{% endblock %}
+{% block page_subtitle %}Inscriptions, revenus et activité de la plateforme{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'administration:supervision' %}"
+   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors {{ health_overall|status_badge }}">
+    <span class="w-2 h-2 rounded-full {{ health_overall|status_dot }}"></span>
+    Système : {{ health_overall|status_label }}
+</a>
+{% endblock %}
+
+{% block admin_content %}
+
+{% if health_issues %}
+<!-- Alertes de supervision remontées ici pour ne pas passer inaperçues -->
+<div class="bg-white rounded-xl shadow-sm border border-amber-200 p-4 md:p-5">
+    <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+        {{ health_issues|length }} point{{ health_issues|pluralize }} d'attention
+    </h2>
+    <ul class="space-y-2">
+        {% for issue in health_issues %}
+        <li class="flex items-start gap-3 text-sm">
+            <span class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 {{ issue.status|status_dot }}"></span>
+            <span><span class="font-semibold text-slate-800">{{ issue.label }}</span>
+                <span class="text-slate-500">— {{ issue.detail }}</span></span>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'administration:supervision' %}" class="inline-block mt-3 text-sm font-semibold text-[#125484] hover:underline">
+        Ouvrir la supervision <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+    </a>
+</div>
+{% endif %}
+
+<!-- Compteurs principaux -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="Inscrits" value=users.total icon="fa-users" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Nouveaux (30 j)" value=users.new_30d icon="fa-user-plus" color="text-emerald-600" delta=users.growth_30d url=None %}
+    {% include 'administration/_stat_card.html' with label="Abonnés actifs" value=users.premium icon="fa-crown" color="text-amber-500" hint=users.premium_rate|stringformat:"s"|add:" % des inscrits" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Encaissé (30 j)" value=revenue.total_30d suffix="€" icon="fa-euro-sign" color="text-emerald-600" delta=revenue.growth_30d url=None %}
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="Nouveaux (24 h)" value=users.new_24h icon="fa-bolt" color="text-blue-500" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Actifs (7 j)" value=users.active_7d icon="fa-signal" color="text-blue-500" hint=users.active_rate_7d|stringformat:"s"|add:" % des inscrits" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="CV déposés" value=content.resumes.total icon="fa-file-pdf" hint=content.resumes.new_7d|stringformat:"s"|add:" cette semaine" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Alertes actives" value=content.alerts.active icon="fa-bell" color="text-amber-500" hint=content.alerts.total|stringformat:"s"|add:" au total" delta=None url=None %}
+</div>
+
+<!-- Courbe des inscriptions -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Inscriptions sur 30 jours</h2>
+            <p class="text-sm text-slate-500 mt-0.5">{{ users.new_30d }} nouveau{{ users.new_30d|pluralize:"x,x" }} inscrit{{ users.new_30d|pluralize }} · pic à {{ series_peak }} / jour</p>
+        </div>
+    </div>
+    <div class="flex items-end gap-[2px] md:gap-1 h-40">
+        {% for point in series %}
+        <div class="flex-1 h-full flex items-end group relative">
+            <div class="w-full rounded-t transition-all duration-200 {% if point.count %}bg-[#125484] group-hover:bg-blue-600{% else %}bg-slate-100{% endif %}"
+                 style="height: {% if point.count %}{{ point.height }}%{% else %}4px{% endif %}"></div>
+            <!-- Infobulle : évite d'afficher 30 étiquettes en permanence -->
+            <div class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 rounded bg-slate-900 text-white text-xs whitespace-nowrap z-20">
+                {{ point.label }} : {{ point.count }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="flex justify-between mt-2 text-xs text-slate-500">
+        <span>{{ series.0.label }}</span>
+        {% with last_point=series|last %}<span>{{ last_point.label }}</span>{% endwith %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+
+    <!-- Entonnoir d'activation -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Entonnoir d'activation</h2>
+        <p class="text-sm text-slate-500 mb-5">Où les utilisateurs s'arrêtent après l'inscription</p>
+        <div class="space-y-4">
+            {% for step in funnel %}
+            <div>
+                <div class="flex items-center justify-between text-sm mb-1.5">
+                    <span class="font-medium text-slate-700">{{ step.label }}</span>
+                    <span class="text-slate-500"><span class="font-bold text-slate-900">{{ step.count }}</span> · {{ step.rate }} %</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div class="bg-[#125484] h-full rounded-full transition-all duration-500" style="width: {{ step.rate }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Répartition des abonnements -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Abonnements actifs</h2>
+        <p class="text-sm text-slate-500 mb-5">MRR estimé : <span class="font-bold text-slate-900">{{ revenue.mrr|floatformat:2 }} €</span></p>
+        {% if plans %}
+        <div class="space-y-3">
+            {% for plan in plans %}
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-crown text-amber-500"></i>
+                    <span class="font-medium text-slate-800">{{ plan.label }}</span>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-slate-900">{{ plan.count }} abonné{{ plan.count|pluralize }}</p>
+                    {% if plan.mrr %}<p class="text-xs text-slate-500">{{ plan.mrr|floatformat:2 }} € / mois</p>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 py-8 text-center">Aucun abonnement actif pour le moment.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+
+    <!-- Derniers inscrits -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 md:p-6 pb-3">
+            <h2 class="text-lg font-bold text-slate-900">Derniers inscrits</h2>
+            <a href="{% url 'administration:users' %}" class="text-sm font-semibold text-[#125484] hover:underline">Tout voir</a>
+        </div>
+        <div class="divide-y divide-slate-100">
+            {% for u in recent_signups %}
+            <a href="{% url 'administration:user_detail' u.pk %}" class="flex items-center justify-between px-4 md:px-6 py-3 hover:bg-slate-50 transition-colors">
+                <div class="min-w-0">
+                    <p class="font-medium text-slate-900 truncate">{{ u.get_full_name|default:u.email }}</p>
+                    <p class="text-xs text-slate-500 truncate">{{ u.email }}</p>
+                </div>
+                <div class="text-right flex-shrink-0 ml-3">
+                    <p class="text-xs text-slate-500">{{ u.date_joined|date:"d/m/Y H:i" }}</p>
+                    {% if u.is_premium %}
+                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Abonné</span>
+                    {% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <p class="px-6 py-8 text-sm text-slate-500 text-center">Aucune inscription pour l'instant.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Abonnements arrivant à échéance -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between p-4 md:p-6 pb-3">
+            <h2 class="text-lg font-bold text-slate-900">Échéances sous 7 jours</h2>
+            <a href="{% url 'administration:revenue' %}" class="text-sm font-semibold text-[#125484] hover:underline">Revenus</a>
+        </div>
+        <div class="divide-y divide-slate-100">
+            {% for u in expiring %}
+            <a href="{% url 'administration:user_detail' u.pk %}" class="flex items-center justify-between px-4 md:px-6 py-3 hover:bg-slate-50 transition-colors">
+                <div class="min-w-0">
+                    <p class="font-medium text-slate-900 truncate">{{ u.get_full_name|default:u.email }}</p>
+                    <p class="text-xs text-slate-500">{{ u.get_subscription_plan_display|default:"Formule inconnue" }}</p>
+                </div>
+                <span class="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full flex-shrink-0 ml-3">
+                    {{ u.subscription_end_date|date:"d/m à H:i" }}
+                </span>
+            </a>
+            {% empty %}
+            <p class="px-6 py-8 text-sm text-slate-500 text-center">Aucune échéance imminente.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Activité matching -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="Offres en base" value=content.offers.total icon="fa-briefcase" hint=content.offers.new_7d|stringformat:"s"|add:" cette semaine" delta=None url=None %}
+    {% with avg=content.matches.avg_score|stringformat:"s" %}
+    {% include 'administration/_stat_card.html' with label="Matchs générés" value=content.matches.total icon="fa-wand-magic-sparkles" hint="Score moyen : "|add:avg|add:" %" delta=None url=None %}
+    {% endwith %}
+    {% include 'administration/_stat_card.html' with label="Offres débloquées" value=content.matches.unlocked icon="fa-lock-open" color="text-emerald-600" hint=content.matches.unlock_rate|stringformat:"s"|add:" % des matchs" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Candidatures envoyées" value=content.matches.applied icon="fa-paper-plane" color="text-emerald-600" hint=content.matches.apply_rate|stringformat:"s"|add:" % des déblocages" delta=None url=None %}
+</div>
+
+{% endblock %}

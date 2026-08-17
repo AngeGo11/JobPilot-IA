@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance – JobPilot-AI</title>
+    {% include "partials/_head_assets.html" %}
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-lg w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 text-center">
+        <img src="{% static 'images/logo-96.webp' %}" alt="JobPilot-AI" class="w-16 h-16 object-cover mx-auto mb-6" style="border-radius:50%">
+        <div class="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-5">
+            <i class="fa-solid fa-screwdriver-wrench text-amber-600 text-xl"></i>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-3">Maintenance en cours</h1>
+        <p class="text-slate-600 leading-relaxed">{{ message }}</p>
+        <p class="text-sm text-slate-500 mt-8">Merci de votre patience — l'équipe JobPilot-AI</p>
+    </div>
+</body>
+</html>

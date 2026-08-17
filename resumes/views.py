@@ -13,11 +13,24 @@ from matching.models import JobAlert
 from matching.services import consume_credit
 from .services.ai_parser import AIParser
 from utils.gemini_safe import FairUseExceeded, GeminiServiceUnavailable
+from administration.models import SiteSettings
+from matching.tasks import embed_resume_task
 
 User = get_user_model()
 
 @login_required  # Requiert l'authentification
 def upload_resume(request):
+    # Quota défini dans le back-office : chaque CV consomme du stockage et un
+    # appel d'analyse IA, on plafonne donc le nombre de fichiers par compte.
+    max_resumes = SiteSettings.load().max_resumes_per_user
+    if Resume.objects.filter(user=request.user).count() >= max_resumes:
+        messages.error(
+            request,
+            f"Vous avez atteint la limite de {max_resumes} CV. "
+            f"Supprimez-en un avant d'en déposer un nouveau.",
+        )
+        return redirect('resume_list')
+
     if request.method == 'POST':
         form = ResumeUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -46,6 +59,11 @@ def upload_resume(request):
                     resume.detected_job_title = job_info.get('job_title')
                     resume.detected_skills = job_info.get('skills', [])
                     resume.save()
+
+                    # Vectorisation en tâche de fond : le candidat n'attend pas,
+                    # et le score sémantique sera disponible à la prochaine
+                    # recherche d'offres.
+                    embed_resume_task.delay(resume.pk)
                     
                     if resume.detected_job_title:
                         messages.success(

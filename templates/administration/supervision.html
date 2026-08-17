@@ -1,0 +1,283 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Supervision{% endblock %}
+{% block page_title %}Supervision{% endblock %}
+{% block page_subtitle %}Santé des services, tâches planifiées et erreurs récentes{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center gap-3">
+    <span id="health-timestamp" class="text-xs text-slate-500"></span>
+    <button type="button" id="refresh-health"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors {{ overall|status_badge }}">
+        <span class="w-2 h-2 rounded-full {{ overall|status_dot }}"></span>
+        <span id="health-overall-label">{{ overall|status_label }}</span>
+        <i class="fa-solid fa-rotate-right text-xs"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- Contrôles de santé -->
+<div id="health-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% for check in checks %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
+        <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-slate-800">{{ check.label }}</p>
+            <span class="w-2.5 h-2.5 rounded-full {{ check.status|status_dot }} flex-shrink-0"></span>
+        </div>
+        <p class="text-xs text-slate-500 leading-relaxed">{{ check.detail }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Tâches planifiées -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 md:p-6 pb-3">
+        <h2 class="text-lg font-bold text-slate-900">Tâches planifiées</h2>
+        <p class="text-sm text-slate-500 mt-0.5">
+            Les commandes <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">manage.py</code> lancées par le cron.
+            Une tâche jamais exécutée signale généralement un cron non configuré sur l'hébergeur.
+        </p>
+    </div>
+    <div class="px-4 md:px-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for name, gap in expected_tasks.items %}
+        {% with last=last_by_task|get_item:name %}
+        <div class="p-4 rounded-lg border {% if last and last.status == 'success' %}border-emerald-200 bg-emerald-50{% elif last and last.status == 'error' %}border-red-200 bg-red-50{% else %}border-amber-200 bg-amber-50{% endif %}">
+            <div class="flex items-center justify-between mb-1">
+                <p class="font-mono text-sm font-semibold text-slate-900">{{ name }}</p>
+                {% if last %}
+                <span class="px-2 py-0.5 text-xs font-semibold rounded-full border {{ last.status|status_badge }}">{{ last.get_status_display }}</span>
+                {% else %}
+                <span class="px-2 py-0.5 text-xs font-semibold rounded-full border bg-amber-100 text-amber-800 border-amber-200">Jamais lancée</span>
+                {% endif %}
+            </div>
+            {% if last %}
+            <p class="text-xs text-slate-600">
+                Dernière exécution : {{ last.started_at|date:"d/m/Y à H:i" }}
+                · {{ last.duration_seconds|duration }}
+                · {{ last.items_processed }} élément{{ last.items_processed|pluralize }}
+            </p>
+            {% if last.message %}<p class="text-xs text-red-700 mt-1 font-mono break-all">{{ last.message|truncatechars:180 }}</p>{% endif %}
+            {% else %}
+            <p class="text-xs text-slate-600">Aucune trace d'exécution enregistrée.</p>
+            {% endif %}
+            <p class="text-xs text-slate-500 mt-1">Fréquence attendue : au moins toutes les {{ gap }}</p>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    {% if runs %}
+    <div class="border-t border-slate-100 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Commande</th>
+                    <th class="px-4 py-3">Début</th>
+                    <th class="px-4 py-3">Durée</th>
+                    <th class="px-4 py-3 text-right">Traités</th>
+                    <th class="px-4 md:px-6 py-3">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for run in runs %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 md:px-6 py-2.5 font-mono text-xs text-slate-800">{{ run.name }}</td>
+                    <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap">{{ run.started_at|date:"d/m H:i" }}</td>
+                    <td class="px-4 py-2.5 text-slate-600">{{ run.duration_seconds|duration }}</td>
+                    <td class="px-4 py-2.5 text-right text-slate-600">{{ run.items_processed }}</td>
+                    <td class="px-4 md:px-6 py-2.5">
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full border {{ run.status|status_badge }}">{{ run.get_status_display }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Traitements IA en file -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 md:p-6 pb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Traitements IA</h2>
+            <p class="text-sm text-slate-500 mt-0.5">
+                Générations et optimisations confiées aux workers, sur les dernières 24 h.
+            </p>
+        </div>
+        {% if ai_stuck %}
+        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i>{{ ai_stuck }} bloqué{{ ai_stuck|pluralize }} depuis plus de 15 min
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="px-4 md:px-6 pb-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <p class="text-xs uppercase tracking-wide text-slate-500">Total</p>
+            <p class="text-2xl font-bold text-slate-900">{{ ai_stats.total }}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-blue-50 border border-blue-100">
+            <p class="text-xs uppercase tracking-wide text-blue-700">En cours</p>
+            <p class="text-2xl font-bold text-blue-900">{{ ai_stats.running }}</p>
+        </div>
+        <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+            <p class="text-xs uppercase tracking-wide text-emerald-700">Réussis</p>
+            <p class="text-2xl font-bold text-emerald-900">{{ ai_stats.success }}</p>
+        </div>
+        <div class="p-3 rounded-lg {% if ai_stats.failure %}bg-red-50 border-red-100{% else %}bg-slate-50 border-slate-100{% endif %} border">
+            <p class="text-xs uppercase tracking-wide {% if ai_stats.failure %}text-red-700{% else %}text-slate-500{% endif %}">Échecs</p>
+            <p class="text-2xl font-bold {% if ai_stats.failure %}text-red-900{% else %}text-slate-900{% endif %}">{{ ai_stats.failure }}</p>
+        </div>
+    </div>
+
+    {% if ai_recent %}
+    <div class="border-t border-slate-100 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Opération</th>
+                    <th class="px-4 py-3">Candidat</th>
+                    <th class="px-4 py-3">Lancé</th>
+                    <th class="px-4 py-3">Durée</th>
+                    <th class="px-4 md:px-6 py-3">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for job in ai_recent %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 md:px-6 py-2.5 font-mono text-xs text-slate-800">{{ job.operation }}</td>
+                    <td class="px-4 py-2.5">
+                        <a href="{% url 'administration:user_detail' job.user_id %}" class="text-[#125484] hover:underline">{{ job.user.email }}</a>
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap">{{ job.created_at|date:"d/m H:i:s" }}</td>
+                    <td class="px-4 py-2.5 text-slate-600">{{ job.duration_seconds|duration }}</td>
+                    <td class="px-4 md:px-6 py-2.5">
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full border {{ job.status|status_badge }}">{{ job.get_status_display }}</span>
+                        {% if job.error %}
+                        <p class="text-xs text-red-600 mt-1">{{ job.error|truncatechars:70 }}</p>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="px-6 py-8 text-sm text-slate-500 text-center border-t border-slate-100">
+        Aucun traitement IA enregistré.
+    </p>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+
+    <!-- Points chauds -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Modules en erreur</h2>
+        <p class="text-sm text-slate-500 mb-4">{{ error_count }} erreur{{ error_count|pluralize }} dans les logs récents</p>
+        {% if hot_modules %}
+        <div class="space-y-2">
+            {% for module, count in hot_modules %}
+            <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50">
+                <span class="font-mono text-xs text-slate-700">{{ module }}</span>
+                <span class="font-bold text-slate-900 text-sm">{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 py-6 text-center">Aucune erreur relevée.</p>
+        {% endif %}
+
+        <div class="mt-5 pt-5 border-t border-slate-100 space-y-2">
+            <h3 class="text-sm font-bold text-slate-900 mb-2">Alertes emails</h3>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Actives</span>
+                <span class="font-bold text-slate-900">{{ content.alerts.active }}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Jamais vérifiées</span>
+                <span class="font-bold {% if content.alerts.never_checked %}text-amber-600{% else %}text-slate-900{% endif %}">{{ content.alerts.never_checked }}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Non vérifiées depuis 48 h</span>
+                <span class="font-bold {% if content.alerts.stale %}text-red-600{% else %}text-slate-900{% endif %}">{{ content.alerts.stale }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Journal d'erreurs -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 md:p-6 pb-3">
+            <h2 class="text-lg font-bold text-slate-900">Dernières erreurs applicatives</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Extrait de <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">logs/errors.log</code></p>
+        </div>
+        {% if log_note %}
+        <p class="mx-4 md:mx-6 mb-4 p-3 rounded-lg bg-blue-50 text-blue-800 text-sm border border-blue-200">
+            <i class="fa-solid fa-circle-info mr-1.5"></i>{{ log_note }}
+        </p>
+        {% endif %}
+        <div class="divide-y divide-slate-100 max-h-[32rem] overflow-y-auto">
+            {% for entry in log_entries %}
+            <div class="px-4 md:px-6 py-3">
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <span class="px-2 py-0.5 text-xs font-bold rounded {{ entry.level|log_level_style }}">{{ entry.level }}</span>
+                    <span class="text-xs text-slate-500">{{ entry.timestamp }}</span>
+                    <span class="text-xs font-mono text-slate-500">{{ entry.module }}:{{ entry.line }}</span>
+                </div>
+                <p class="text-sm text-slate-800 break-words">{{ entry.message }}</p>
+                {% if entry.traceback %}
+                <details class="mt-1.5">
+                    <summary class="text-xs text-[#125484] cursor-pointer hover:underline">Voir la trace</summary>
+                    <pre class="mt-2 p-3 rounded-lg bg-slate-900 text-slate-100 text-xs overflow-x-auto">{{ entry.traceback }}</pre>
+                </details>
+                {% endif %}
+            </div>
+            {% empty %}
+            {% if not log_note %}
+            <p class="px-6 py-12 text-sm text-slate-500 text-center">Aucune erreur récente. 🎉</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    // Rafraîchissement des contrôles de santé sans recharger toute la page :
+    // certains contrôles ouvrent des connexions réseau, on évite de les relancer
+    // à chaque navigation.
+    var button = document.getElementById('refresh-health');
+    var stamp = document.getElementById('health-timestamp');
+    if (!button) return;
+
+    button.addEventListener('click', function () {
+        button.disabled = true;
+        fetch('{% url "administration:health_json" %}', {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                stamp.textContent = 'Vérifié à ' + data.checked_at;
+                document.getElementById('health-overall-label').textContent =
+                    {ok: 'Opérationnel', warn: 'À surveiller', error: 'Incident'}[data.overall] || data.overall;
+                var dots = {ok: 'bg-emerald-500', warn: 'bg-amber-500', error: 'bg-red-500'};
+                var cards = document.querySelectorAll('#health-grid > div');
+                data.checks.forEach(function (check, index) {
+                    var card = cards[index];
+                    if (!card) return;
+                    var dot = card.querySelector('span');
+                    dot.className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 ' + (dots[check.status] || 'bg-slate-400');
+                    card.querySelector('p.text-xs').textContent = check.detail;
+                });
+            })
+            .catch(function () { stamp.textContent = 'Rafraîchissement impossible'; })
+            .finally(function () { button.disabled = false; });
+    });
+})();
+</script>
+{% endblock %}
