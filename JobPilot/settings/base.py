@@ -560,6 +560,27 @@ CELERY_TASK_TIME_LIMIT = env_int("CELERY_TASK_TIME_LIMIT", 180)
 CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
-# Résultats conservés 24 h : assez pour qu'un navigateur récupère l'état d'une
-# génération, sans faire grossir Redis indéfiniment.
-CELERY_RESULT_EXPIRES = 86400
+# --- Économie de commandes (brokers Redis serverless) ---------------------
+# Upstash et consorts facturent à la commande, avec une offre gratuite
+# plafonnée. Or un worker Celery au repos bavarde beaucoup : sondage de la
+# file, battements de cœur, découverte des autres workers. Sans réglage, un
+# worker inactif peut épuiser un quota quotidien sans avoir traité une seule
+# tâche.
+#
+# On espace le sondage à 2 s : une génération de lettre dure plusieurs
+# secondes, 2 s d'attente supplémentaire ne se remarquent pas, et le nombre
+# de commandes est divisé par quatre par rapport au défaut de 0,5 s.
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "polling_interval": 2.0,
+    # Au-delà, une tâche non acquittée est rendue à la file. Doit rester
+    # supérieur à CELERY_TASK_TIME_LIMIT, sinon une tâche lente serait
+    # réexécutée alors qu'elle tourne encore.
+    "visibility_timeout": 600,
+    "socket_keepalive": True,
+}
+
+# Les résultats sont lus une fois par le navigateur, puis inutiles. Une heure
+# suffit largement et réduit d'autant le stockage sollicité.
+CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
+
+

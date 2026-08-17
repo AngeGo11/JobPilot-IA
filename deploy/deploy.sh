@@ -25,11 +25,16 @@ python3 manage.py migrate --noinput
 # double. Dans ce cas, sortir beat dans son propre conteneur.
 if [ -n "${CELERY_BROKER_URL:-}" ]; then
     echo "Démarrage du worker Celery (avec planificateur intégré)…"
+    # --without-gossip/--without-mingle/--without-heartbeat : ces trois
+    # mécanismes servent à coordonner plusieurs workers entre eux. Avec un
+    # worker unique ils n'apportent rien et génèrent un trafic constant vers
+    # le broker — coûteux sur un Redis facturé à la commande.
     celery -A JobPilot worker \
         --beat \
         --loglevel=info \
         --concurrency="${CELERY_CONCURRENCY:-2}" \
-        --max-tasks-per-child=50 &
+        --max-tasks-per-child=50 \
+        --without-gossip --without-mingle --without-heartbeat &
 else
     echo "CELERY_BROKER_URL absente : traitements exécutés dans la requête web."
 fi
