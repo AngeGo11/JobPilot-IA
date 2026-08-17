@@ -1,0 +1,5 @@
+# Environnement de développement local.
+-r base.txt
+
+# Qualité de code
+ruff==0.14.5

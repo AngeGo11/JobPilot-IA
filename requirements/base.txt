@@ -1,0 +1,50 @@
+# Dépendances communes à tous les environnements.
+#
+# Versions figées sur ce qui est réellement installé et testé : sans épinglage,
+# un déploiement peut installer une version majeure différente de celle validée
+# en local, et casser sans le moindre changement de code.
+
+# --- Cœur ---
+Django==5.2.10
+gunicorn==25.1.0
+whitenoise[brotli]==6.6.0
+
+# --- Base de données ---
+psycopg2-binary==2.9.11
+dj-database-url==2.2.0
+
+# --- Configuration ---
+# NOTE : `python-dotenv` est le paquet utilisé (`from dotenv import load_dotenv`).
+# L'ancien requirements.txt listait aussi `dotenv==0.9.9`, qui est un paquet
+# distinct et sans rapport — retiré.
+python-dotenv==1.2.1
+
+# --- Cache partagé et file de tâches ---
+# `redis` est requis par django.core.cache.backends.redis.RedisCache : sans
+# cache partagé, le rate limit Gemini et le token France Travail sont locaux à
+# chaque worker. `celery` sort les appels IA du cycle requête/réponse.
+redis==7.1.0
+celery[redis]==5.4.0
+
+# --- Authentification ---
+django-allauth==65.14.0
+PyJWT==2.11.0
+
+# --- Stockage ---
+django-storages[azure]==1.14.6
+
+# --- Matching sémantique ---
+# `pgvector` fournit VectorField et l'index HNSW. Côté base, l'extension
+# « vector » doit être disponible : image pgvector/pgvector en local, et
+# extension autorisée dans azure.extensions en production.
+pgvector==0.3.6
+
+# --- Intégrations métier ---
+requests==2.32.5
+stripe==14.3.0
+google-genai==1.66.0
+
+# --- Traitement de documents ---
+pdfplumber==0.11.9
+reportlab==4.4.9
+python-docx==1.2.0

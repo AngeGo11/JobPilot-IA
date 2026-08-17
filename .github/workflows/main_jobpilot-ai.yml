@@ -11,8 +11,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Barrière de qualité : tests, migrations et contrôles Django.
+  # Sans ce job, un test cassé partait directement en production.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build:
     runs-on: ubuntu-latest
+    needs: ci
     permissions:
       contents: read #This is required for actions/checkout
 

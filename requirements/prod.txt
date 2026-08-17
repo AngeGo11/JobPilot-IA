@@ -1,0 +1,3 @@
+# Production. Volontairement identique à base.txt : aucun outil de
+# développement ne doit être installé sur le serveur.
+-r base.txt
