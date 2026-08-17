@@ -127,13 +127,16 @@ bleu "4. Commande de démarrage"
 
 CMD_ACTUELLE=$(az webapp config show --name "$APP_NAME" --resource-group "$RG" \
     --query appCommandLine -o tsv 2>/dev/null || echo "")
-if [ "$CMD_ACTUELLE" = "bash deploy/deploy.sh" ]; then
-    vert "déjà « bash deploy/deploy.sh »"
-else
-    jaune "actuelle : ${CMD_ACTUELLE:-<vide>}  ->  bash deploy/deploy.sh"
-    lancer az webapp config set --name "$APP_NAME" --resource-group "$RG" \
-        --startup-file "bash deploy/deploy.sh" --output none
-fi
+# Un relais deploy.sh est conservé à la racine du dépôt : la commande de
+# démarrage existante reste donc valide, et il n'y a pas d'ordre à respecter
+# entre ce réglage et le déploiement du nouvel artefact.
+case "$CMD_ACTUELLE" in
+    *deploy.sh*) vert "« $CMD_ACTUELLE » — relais en place, rien à changer" ;;
+    "")          jaune "aucune commande définie -> bash deploy.sh"
+                 lancer az webapp config set --name "$APP_NAME" --resource-group "$RG" \
+                     --startup-file "bash deploy.sh" --output none ;;
+    *)           jaune "commande inattendue : $CMD_ACTUELLE — à vérifier à la main" ;;
+esac
 
 # --------------------------------------------------------------------------- #
 bleu "5. Contrôles"
