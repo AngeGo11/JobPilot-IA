@@ -53,3 +53,84 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.user_id} – {self.stripe_session_id}"
+
+
+class CreditEntry(models.Model):
+    """
+    Registre des mouvements de crédits IA, en écriture seule.
+
+    Pourquoi : `CustomUser.ai_credits` est un simple entier que quatre endroits
+    modifient. Quand un utilisateur signale « j'ai perdu un crédit », rien ne
+    permet de vérifier. Pire : le motif « débiter → appeler l'IA → rembourser en
+    cas d'échec » perd définitivement le crédit si le processus meurt entre les
+    deux étapes, sans laisser de trace.
+
+    Chaque mouvement est donc écrit ici, dans la même transaction que la mise à
+    jour du solde. `ai_credits` reste le solde rapide utilisé par l'application ;
+    ce registre en est l'historique vérifiable. La commande
+    `reconcile_credits` compare les deux et signale toute dérive.
+    """
+
+    class Reason(models.TextChoices):
+        SIGNUP = "signup", "Crédits offerts à l'inscription"
+        PURCHASE = "purchase", "Achat"
+        ADMIN_GRANT = "admin_grant", "Ajustement par l'équipe"
+        CONSUMPTION = "consumption", "Consommation"
+        REFUND = "refund", "Remboursement après échec"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="credit_entries",
+        verbose_name="Utilisateur",
+    )
+    delta = models.IntegerField(
+        "Mouvement",
+        help_text="Négatif pour une consommation, positif pour un ajout.",
+    )
+    reason = models.CharField("Motif", max_length=20, choices=Reason.choices)
+    operation = models.CharField(
+        "Opération",
+        max_length=50,
+        blank=True,
+        help_text="Action à l'origine du mouvement (ex. « generate_letter »).",
+    )
+    reverses = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reversals",
+        verbose_name="Annule l'écriture",
+        help_text="Renseigné sur un remboursement : pointe la consommation annulée.",
+    )
+    note = models.CharField("Précision", max_length=255, blank=True)
+    balance_after = models.IntegerField(
+        "Solde après écriture",
+        null=True,
+        blank=True,
+        help_text="Photographie du solde, pour repérer une dérive sans rejouer tout l'historique.",
+    )
+    created_at = models.DateTimeField("Date", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mouvement de crédit"
+        verbose_name_plural = "Registre des crédits"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"], name="creditentry_user_idx"),
+            models.Index(fields=["reason", "-created_at"], name="creditentry_reason_idx"),
+        ]
+        constraints = [
+            # Une écriture à zéro n'a aucun sens et masquerait un bug d'appelant.
+            models.CheckConstraint(condition=~models.Q(delta=0), name="creditentry_delta_non_nul"),
+        ]
+
+    def __str__(self):
+        sign = "+" if self.delta > 0 else ""
+        return f"{self.user_id} : {sign}{self.delta} ({self.get_reason_display()})"
+
+    @property
+    def is_reversed(self):
+        """True si cette consommation a déjà été remboursée."""
+        return self.reversals.exists()
