@@ -22,13 +22,28 @@ if [ -z "$URL" ]; then
 fi
 
 case "$URL" in
-    rediss://*) ;;
+    rediss://*)
+        # kombu (Celery) refuse une URL rediss:// dépourvue de ssl_cert_reqs,
+        # alors que le cache Django l'accepte sans broncher. Sans ce
+        # paramètre, le cache fonctionne et le worker échoue : une panne
+        # partielle qui ne se voit qu'au démarrage, en production.
+        #
+        # « required » plutôt que « none » : Upstash présente un certificat
+        # d'une autorité publique, vérifié comme valide. Désactiver le
+        # contrôle exposerait la connexion à une interception.
+        case "$URL" in
+            *ssl_cert_reqs=*) ;;
+            *\?*) URL="${URL}&ssl_cert_reqs=required" ;;
+            *)    URL="${URL}?ssl_cert_reqs=required" ;;
+        esac
+        ;;
     redis://*)  jaune "URL en redis:// (sans TLS). Upstash fournit du rediss://." ;;
     *)          rouge "URL inattendue : doit commencer par rediss:// ou redis://"; exit 1 ;;
 esac
 
 # --------------------------------------------------------------------------- #
 echo "1. Test de connexion"
+echo "    URL : $(echo "$URL" | sed 's|://[^@]*@|://***@|')"
 
 # Bases distinctes pour le cache et la file : un `cache.clear()` ne doit pas
 # vider la file de tâches. Upstash n'expose qu'une base (0) — dans ce cas on
@@ -42,14 +57,21 @@ try:
     client = redis.from_url(url, socket_connect_timeout=10, socket_timeout=10)
     client.set("jobpilot:probe", "ok", ex=30)
     assert client.get("jobpilot:probe") == b"ok"
-    info = client.info("server")
-    print(f"    connexion OK — Redis {info.get('redis_version', '?')}")
-    bases = client.config_get("databases") if hasattr(client, "config_get") else {}
-    print(f"    bases disponibles : {bases.get('databases', 'inconnu (serverless)')}")
 except Exception as exc:
     print(f"    ECHEC : {type(exc).__name__} : {exc}")
     sys.exit(1)
+
+# Les offres serverless restreignent les commandes d'administration : INFO et
+# CONFIG GET peuvent être refusés alors que la connexion est parfaitement
+# fonctionnelle. On les tente sans en faire un critère d'échec.
+try:
+    version = client.info("server").get("redis_version", "?")
+except Exception:
+    version = "non communiquée (offre serverless)"
+print(f"    connexion OK — Redis {version}")
 PY
+
+CELERY_BROKER_URL="$URL" python "$(dirname "$0")/check_broker.py"
 
 # --------------------------------------------------------------------------- #
 echo "2. Écriture des variables d'application"
