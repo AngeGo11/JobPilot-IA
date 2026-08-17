@@ -89,7 +89,7 @@
                 <div class="flex-1 min-w-0">
                     <div class="flex items-start gap-4 mb-3">
                         <div class="flex-1">
-                            <h3 class="text-base md:text-lg font-bold text-slate-900 mb-1">{{ match.job_offer.title }}</h3>
+                            <h2 class="text-base md:text-lg font-bold text-slate-900 mb-1">{{ match.job_offer.title }}</h2>
                             <p class="text-sm md:text-base font-semibold text-[#125484]">{{ match.job_offer.company_name|default:"Non spécifié" }}</p>
                         </div>
                     </div>
@@ -106,9 +106,9 @@
                         <div class="flex items-center gap-2">
                             <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
                                 <div class="bg-[#125484] h-full rounded-full transition-all duration-500"
-                                     style="width: {{ match.score }}%"></div>
+                                     style="width: {{ match.display_score }}%"></div>
                             </div>
-                            <span class="text-sm font-bold text-slate-700 min-w-[2.5rem]">{{ match.score }}%</span>
+                            <span class="text-sm font-bold text-slate-700 min-w-[2.5rem]">{{ match.display_score }}%</span>
                         </div>
                         
                         <!-- Status Badge -->
@@ -129,7 +129,7 @@
                         </div>
                         
                         <!-- Date (discrete) -->
-                        <div class="text-xs text-slate-400">
+                        <div class="text-xs text-slate-500">
                             {{ match.matched_at|date:"d/m/Y" }}
                         </div>
                     </div>
@@ -150,7 +150,7 @@
         <div class="bg-white rounded-xl shadow-sm border-2 border-dashed border-slate-300 p-16 text-center">
             <div class="max-w-md mx-auto">
                 <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fa-solid fa-inbox text-3xl text-slate-400"></i>
+                    <i class="fa-solid fa-inbox text-3xl text-slate-500"></i>
                 </div>
                 <p class="text-lg font-semibold text-slate-700 mb-2">Aucune candidature pour le moment</p>
                 <p class="text-sm text-slate-500">Commencez par uploader un CV et rechercher des offres d'emploi correspondantes</p>
@@ -162,7 +162,7 @@
         <div class="bg-white rounded-xl shadow-sm border-2 border-dashed border-slate-300 p-16 text-center">
             <div class="max-w-md mx-auto">
                 <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fa-solid fa-inbox text-3xl text-slate-400"></i>
+                    <i class="fa-solid fa-inbox text-3xl text-slate-500"></i>
                 </div>
                 <p class="text-lg font-semibold text-slate-700 mb-2">Aucune candidature pour le moment</p>
                 <p class="text-sm text-slate-500">Commencez par uploader un CV et rechercher des offres d'emploi correspondantes</p>
@@ -189,10 +189,10 @@
                 <i class="fa-solid fa-angle-left"></i>
             </a>
             {% else %}
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+            <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-left"></i>
             </span>
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+            <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-left"></i>
             </span>
             {% endif %}
@@ -238,10 +238,10 @@
                 <i class="fa-solid fa-angle-double-right"></i>
             </a>
             {% else %}
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+            <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-right"></i>
             </span>
-            <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+            <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-right"></i>
             </span>
             {% endif %}

@@ -4,64 +4,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobPilot-AI</title>
-    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-        /* Animation subtile pour l'illustration */
-        .float-animation { animation: float 6s ease-in-out infinite; }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        /* Animation fade-in-up */
-        .fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-            opacity: 0;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
+    <title>JobPilot-AI – Matching emploi IA | Trouvez votre job automatiquement</title>
+    <meta name="description" content="JobPilot-AI analyse votre CV par IA et vous connecte aux offres d'emploi les plus pertinentes. Matching emploi automatique, alertes et suivi en un clic.">
+    <link rel="canonical" href="{{ SITE_URL }}/">
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="JobPilot-AI">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="{{ SITE_URL }}/">
+    <meta property="og:title" content="JobPilot-AI – Matching emploi IA | Trouvez votre job automatiquement">
+    <meta property="og:description" content="Déposez votre CV : l'IA trouve automatiquement les offres d'emploi qui vous correspondent. Matching intelligent, alertes ciblées et suivi des candidatures.">
+    <meta property="og:image" content="{{ SITE_URL }}{% static 'images/og-image.png' %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="JobPilot-AI, le matching emploi par intelligence artificielle">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JobPilot-AI – Matching emploi IA">
+    <meta name="twitter:description" content="Déposez votre CV, l'IA trouve les offres d'emploi qui vous correspondent.">
+    <meta name="twitter:image" content="{{ SITE_URL }}{% static 'images/og-image.png' %}">
+
+    {% include "partials/_analytics.html" %}
+
+    {% comment %}
+    Données structurées : un seul @graph plutôt que trois blocs indépendants,
+    pour que WebSite et SoftwareApplication renvoient tous deux vers la même
+    entité Organization via son @id. C'est ce que Google attend pour relier
+    l'application à son éditeur.
+
+    Volontairement absent : aggregateRating. Une note globale n'est éligible aux
+    étoiles dans les résultats que si elle s'appuie sur des avis réellement
+    collectés et affichés sur la page ; la déclarer sans cela est une infraction
+    aux règles Google sur les extraits enrichis, sanctionnée par une action
+    manuelle. À ajouter le jour où les témoignages clients seront en base.
+    {% endcomment %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "{{ SITE_URL }}/#organization",
+          "name": "JobPilot-AI",
+          "url": "{{ SITE_URL }}/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "{{ SITE_URL }}{% static 'images/logo-448.png' %}",
+            "width": 448,
+            "height": 413
+          },
+          "description": "Éditeur de JobPilot-AI, plateforme française de mise en relation entre CV et offres d'emploi par intelligence artificielle.",
+          "email": "contact@jobpilot-ai.fr",
+          "areaServed": "FR",
+          "sameAs": ["https://www.linkedin.com/company/jobpilot-ia/"]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ SITE_URL }}/#website",
+          "name": "JobPilot-AI",
+          "url": "{{ SITE_URL }}/",
+          "inLanguage": "fr-FR",
+          "description": "Plateforme de matching emploi par intelligence artificielle : déposez votre CV et recevez les offres d'emploi les plus pertinentes.",
+          "publisher": {"@id": "{{ SITE_URL }}/#organization"}
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "{{ SITE_URL }}/#application",
+          "name": "JobPilot-AI",
+          "url": "{{ SITE_URL }}/",
+          "applicationCategory": "BusinessApplication",
+          "applicationSubCategory": "Recherche d'emploi",
+          "operatingSystem": "Web (tout navigateur)",
+          "inLanguage": "fr-FR",
+          "description": "JobPilot-AI analyse votre CV, le compare aux offres d'emploi France Travail et génère des lettres de motivation personnalisées.",
+          "screenshot": "{{ SITE_URL }}{% static 'images/og-image.png' %}",
+          "publisher": {"@id": "{{ SITE_URL }}/#organization"},
+          "featureList": [
+            "Analyse automatique du CV",
+            "Score de correspondance avec les offres d'emploi",
+            "Génération de lettres de motivation par IA",
+            "Alertes email sur les nouvelles offres",
+            "Tableau de bord de suivi des candidatures"
+          ],
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Gratuit",
+              "price": "0",
+              "priceCurrency": "EUR",
+              "description": "5 crédits IA offerts à l'inscription, sans carte bancaire."
+            },
+            {
+              "@type": "Offer",
+              "name": "Pass 24h",
+              "price": "2.99",
+              "priceCurrency": "EUR",
+              "description": "Accès illimité pendant 24 heures, paiement unique."
+            },
+            {
+              "@type": "Offer",
+              "name": "Sprint",
+              "price": "5.99",
+              "priceCurrency": "EUR",
+              "description": "Abonnement hebdomadaire, accès illimité."
+            },
+            {
+              "@type": "Offer",
+              "name": "Pro",
+              "price": "14.99",
+              "priceCurrency": "EUR",
+              "description": "Abonnement mensuel, accès illimité et alertes email."
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+          ]
         }
-        .fade-in-up-delay-1 { animation-delay: 0.1s; }
-        .fade-in-up-delay-2 { animation-delay: 0.2s; }
-        .fade-in-up-delay-3 { animation-delay: 0.3s; }
-        /* Matching Hub */
-        @keyframes hub-glow {
-            0%, 100% { box-shadow: 0 0 30px 5px rgba(18,84,132,0.12), 0 0 60px 15px rgba(18,84,132,0.06); }
-            50% { box-shadow: 0 0 40px 10px rgba(18,84,132,0.2), 0 0 80px 25px rgba(18,84,132,0.08); }
-        }
-        .matching-card-float { animation: matching-float 4s ease-in-out infinite; }
-        .matching-card-float.delay-1 { animation-delay: 0.4s; }
-        .matching-card-float.delay-2 { animation-delay: 0.8s; }
-        .matching-card-float.delay-3 { animation-delay: 0.6s; }
-        .matching-card-float.delay-4 { animation-delay: 1s; }
-        @keyframes matching-float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                        display: ['Space Grotesk', 'sans-serif'],
-                    },
-                }
-            }
-        }
+      ]
+    }
     </script>
+    {% include "partials/_head_assets.html" %}
 </head>
 <body class="bg-slate-50 font-sans text-slate-700 overflow-x-hidden">
 
@@ -69,14 +130,15 @@
     <nav class="max-w-7xl mx-auto px-5 sm:px-6 h-20 flex items-center justify-between">
         <div class="flex flex-col items-center md:flex-row md:items-center">
             <div class="w-10 h-8  from-blue-500 to-teal-400 rounded-lg flex items-center justify-center">
-                <img src="{% static 'images/Logo.png' %}" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
+                <img src="{% static 'images/logo-96.webp' %}" class="w-10 h-8 object-cover object-center" style="border-radius:50%" alt="Logo">
             </div>
             <span class="text-xl font-bold tracking-tight">JobPilot-AI</span>
         </div>
 
-        <div class="flex items-center gap-4">
-            <a href="/users/login/" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Se connecter</a>
-            <a href="/users/register/" class="bg-[#125484] hover:bg-[#0f4470] text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg">
+        <div class="flex items-center gap-3 sm:gap-4">
+            <a href="{% url 'pricing' %}" class="text-sm sm:text-base text-slate-600 hover:text-[#125484] font-medium transition-colors">Tarifs</a>
+            <a href="/users/login/" class="hidden sm:inline text-slate-600 hover:text-[#125484] font-medium transition-colors">Se connecter</a>
+            <a href="/users/register/" class="bg-[#125484] hover:bg-[#0f4470] text-white text-sm sm:text-base px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all shadow-md hover:shadow-lg whitespace-nowrap">
                 S'inscrire
             </a>
         </div>
@@ -85,9 +147,9 @@
     <!-- Hero Section -->
     <main class="max-w-7xl mx-auto px-5 sm:px-6 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
         <div class="space-y-8 w-full min-w-0">
-            <h1 class="text-5xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 fade-in-up">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 fade-in-up">
                 <span class="text-[#125484]">Déposez </span>votre CV,<br>
-                Et <span class="text-[#125484]">Trouvez </span>des offres d'emplois,<br>
+                Et <span class="text-[#125484]">Trouvez </span>des offres d'emploi,<br>
                 <span class="text-[#125484]">Automatiquement.</span>
             </h1>
 
@@ -115,7 +177,7 @@
             </svg>
 
             <!-- Hub central -->
-            <div id="matching-hub" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-white rounded-full px-6 py-3.5 flex items-center gap-3 border border-slate-200 shadow-lg whitespace-nowrap" style="animation: hub-glow 3s ease-in-out infinite;">
+            <div id="matching-hub" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-white rounded-full px-6 py-3.5 flex items-center gap-3 border border-slate-200 shadow-lg whitespace-nowrap hub-glow">
                 <i class="fa-solid fa-magnifying-glass text-[#125484] flex-shrink-0" style="font-size: 1.1rem;"></i>
                 <span class="text-[#125484] font-semibold text-sm inline-flex items-center gap-2">
                     Matching propulsé par Gemini
@@ -123,7 +185,7 @@
                         <path d="m5.008 2.324.45 1.244a4.967 4.967 0 0 0 2.984 2.977l1.252.45c.113.037.113.202 0 .24l-1.252.45a4.967 4.967 0 0 0-2.984 2.976l-.45 1.245c-.037.112-.202.112-.24 0l-.45-1.245a4.967 4.967 0 0 0-2.983-2.976l-1.253-.45c-.112-.038-.112-.203 0-.24l1.252-.45A4.967 4.967 0 0 0 4.32 3.568l.45-1.244c.037-.113.202-.113.24 0ZM9.792.037l.21.577c.232.638.735 1.14 1.38 1.372l.577.21c.052.023.052.09 0 .113l-.578.21a2.311 2.311 0 0 0-1.38 1.372l-.21.577a.06.06 0 0 1-.112 0l-.21-.577a2.292 2.292 0 0 0-1.38-1.372l-.576-.21a.06.06 0 0 1 0-.113l.577-.21A2.311 2.311 0 0 0 9.47.614l.21-.577c.014-.053.09-.053.112 0Z" fill="currentColor"/>
                     </svg>
                 </span>
-                <i class="fa-solid fa-sparkles text-amber-500 flex-shrink-0" style="font-size: 0.95rem;"></i>
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500 flex-shrink-0" style="font-size: 0.95rem;"></i>
             </div>
 
             <!-- Cartes profil-->
@@ -271,9 +333,9 @@
                     <div class="px-4 py-2 bg-slate-100 rounded-lg font-bold text-slate-800">
                         France Travail
                     </div>
-                    <span class="text-slate-400">•</span>
+                    <span class="text-slate-500">•</span>
                     <div class="flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-sparkles text-blue-500"></i>
+                        <i class="fa-solid fa-wand-magic-sparkles text-blue-500"></i>
                         <span class="font-medium">Propulsé par Google Gemini</span>
                     </div>
                 </div>
@@ -402,7 +464,7 @@
                     </p>
                     <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4">
                         <div class="flex items-center gap-2 text-sm">
-                            <i class="fa-solid fa-sparkles"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span class="font-semibold">Powered by Gemini AI</span>
                         </div>
                     </div>
@@ -450,9 +512,119 @@
         </div>
     </section>
 
+    {% comment %}
+    Aperçu tarifaire. Volontairement condensé : le tableau comparatif détaillé
+    vit sur /subscriptions/pricing/, qui est la page indexée pour les requêtes
+    « prix / tarif ». Le dupliquer ici créerait deux pages en concurrence sur le
+    même contenu et diluerait celle qui doit ressortir. L'accueil répond à la
+    seule question qui bloque la décision — « combien ça coûte après l'essai ? » —
+    et renvoie vers le détail.
+    {% endcomment %}
+    <section class="bg-white py-20 lg:py-28 border-t border-slate-100" aria-labelledby="tarifs-titre">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 id="tarifs-titre" class="text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+                    Combien ça coûte <span class="text-[#125484]">après l'essai ?</span>
+                </h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    Vous commencez gratuitement, sans carte bancaire. Vous ne payez que si vous décidez d'aller plus loin.
+                </p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 p-6 flex flex-col">
+                    <span class="text-sm font-semibold text-emerald-700">Gratuit</span>
+                    <p class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-bold text-slate-900">0 €</span>
+                    </p>
+                    <p class="mt-3 text-sm text-slate-600 flex-grow">
+                        {{ site_settings.signup_free_credits|default:5 }} crédits offerts à l'inscription. Sans carte bancaire.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col">
+                    <span class="text-sm font-semibold text-slate-700">Pass 24h</span>
+                    <p class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-bold text-slate-900">2,99 €</span>
+                        <span class="text-sm text-slate-500">une fois</span>
+                    </p>
+                    <p class="mt-3 text-sm text-slate-600 flex-grow">Accès illimité pendant 24 heures, sans abonnement.</p>
+                </div>
+
+                <div class="rounded-2xl border-2 border-[#125484] bg-white p-6 flex flex-col relative">
+                    <span class="absolute -top-3 left-6 bg-[#125484] text-white text-xs font-semibold px-3 py-1 rounded-full">Populaire</span>
+                    <span class="text-sm font-semibold text-[#125484]">Sprint</span>
+                    <p class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-bold text-slate-900">5,99 €</span>
+                        <span class="text-sm text-slate-500">/ semaine</span>
+                    </p>
+                    <p class="mt-3 text-sm text-slate-600 flex-grow">Accès illimité et alertes email sur les nouvelles offres.</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col">
+                    <span class="text-sm font-semibold text-slate-700">Pro</span>
+                    <p class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-bold text-slate-900">14,99 €</span>
+                        <span class="text-sm text-slate-500">/ mois</span>
+                    </p>
+                    <p class="mt-3 text-sm text-slate-600 flex-grow">Pour une recherche longue durée ou une veille active.</p>
+                </div>
+            </div>
+
+            <div class="mt-10 text-center">
+                <a href="{% url 'pricing' %}" class="inline-flex items-center gap-2 bg-[#125484] hover:bg-[#0f4470] text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg">
+                    Voir le comparatif détaillé
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <p class="mt-4 text-sm text-slate-500">
+                    Aucun engagement sur le Pass 24h et le Pack Recharge. Abonnements interrompables à tout moment.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    {% comment %}
+    Témoignages clients. La section n'est rendue que s'il existe des entrées
+    publiées en base (back-office → Témoignages clients) : aucun avis n'est écrit
+    en dur dans le gabarit, car un témoignage inventé est une pratique
+    commerciale trompeuse et la personne citée doit avoir donné son accord.
+    {% endcomment %}
+    {% if testimonials %}
+    <section class="bg-slate-50 py-20 lg:py-28" aria-labelledby="temoignages-titre">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-14">
+                <h2 id="temoignages-titre" class="text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+                    Ils ont retrouvé un emploi <span class="text-[#125484]">avec JobPilot-AI</span>
+                </h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    Des retours de candidats, avec leurs résultats.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for testimonial in testimonials %}
+                <figure class="bg-white rounded-2xl p-8 shadow-lg border border-slate-100 flex flex-col">
+                    <i class="fa-solid fa-quote-left text-2xl text-[#125484]/30 mb-4" aria-hidden="true"></i>
+                    <blockquote class="text-slate-700 leading-relaxed flex-grow">{{ testimonial.quote }}</blockquote>
+                    {% if testimonial.result_metric %}
+                    <p class="mt-5 inline-flex items-center gap-2 self-start rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+                        <i class="fa-solid fa-chart-line" aria-hidden="true"></i>{{ testimonial.result_metric }}
+                    </p>
+                    {% endif %}
+                    <figcaption class="mt-6 pt-5 border-t border-slate-100">
+                        <span class="block font-semibold text-slate-900">{{ testimonial.author_name }}</span>
+                        <span class="block text-sm text-slate-500">{{ testimonial.author_role }}</span>
+                    </figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- CTA Final Section -->
     <section class="bg-[#125484] from-blue-600 via-blue-700 to-blue-800 py-20 lg:py-28 relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill="%23ffffff" fill-opacity='0.05'%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+        <div class="absolute inset-0 cta-pattern opacity-20" aria-hidden="true"></div>
         <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
             <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6">
                 Prêt à faire décoller votre carrière ?
@@ -477,14 +649,14 @@
                 <div class="col-span-2 order-1">
                     <div class="flex items-center gap-2 mb-3 sm:mb-4">
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                            <img src="{% static 'images/Logo.png' %}" class="w-8 h-8 object-cover object-center rounded-full" alt="Logo JobPilot">
+                            <img src="{% static 'images/logo-96.webp' %}" class="w-8 h-8 object-cover object-center rounded-full" alt="Logo JobPilot">
                         </div>
                         <span class="text-lg sm:text-xl font-bold text-white">JobPilot-AI</span>
                     </div>
                     <p class="text-slate-400 text-sm max-w-md mb-4 sm:mb-5 leading-relaxed">
                         La plateforme intelligente qui transforme votre recherche d'emploi. Trouvez votre job idéal grâce à un système de matching intelligent.
                     </p>
-                    <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-2 sm:mb-3">Suivez-nous/Contactez-nous</p>
+                    <p class="text-slate-300 text-xs font-medium uppercase tracking-wider mb-2 sm:mb-3">Suivez-nous/Contactez-nous</p>
                     <div class="flex items-center gap-2 flex-wrap">
                         <a href="mailto:contact@jobpilot-ai.fr"
                            class="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:opacity-100 opacity-80 transition-all duration-200"
@@ -510,9 +682,10 @@
 
                 <!-- Liens rapides -->
                 <div class="order-2">
-                    <h4 class="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Navigation</h4>
+                    <h3 class="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Navigation</h3>
                     <ul class="space-y-1.5 sm:space-y-2 text-sm">
                         <li><a href="/" class="hover:text-white transition-colors inline-block py-0.5">Accueil</a></li>
+                        <li><a href="{% url 'pricing' %}" class="hover:text-white transition-colors inline-block py-0.5">Tarifs</a></li>
                         <li><a href="/users/login/" class="hover:text-white transition-colors inline-block py-0.5">Connexion</a></li>
                         <li><a href="/users/register/" class="hover:text-white transition-colors inline-block py-0.5">Inscription</a></li>
                     </ul>
@@ -520,7 +693,7 @@
 
                 <!-- Légaux -->
                 <div class="order-3">
-                    <h4 class="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Légal</h4>
+                    <h3 class="text-white font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Légal</h3>
                     <ul class="space-y-1.5 sm:space-y-2 text-sm">
                         <li><a href="{% url 'mentions_legales' %}" class="hover:text-white transition-colors inline-block py-0.5">Mentions légales</a></li>
                         <li><a href="{% url 'politique_confidentialite' %}" class="hover:text-white transition-colors inline-block py-0.5">Politique de confidentialité</a></li>

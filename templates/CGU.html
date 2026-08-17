@@ -5,28 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conditions générales d'utilisation et de vente – JobPilot AI</title>
-    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    {% include "partials/_head_assets.html" %}
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
         .legal-content { max-width: 70ch; line-height: 1.7; color: #333333; }
         @media (min-width: 1024px) {
             .toc-sticky { position: sticky; top: 6rem; align-self: start; }
         }
     </style>
-    <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'], display: ['Space Grotesk', 'sans-serif'] } } } };
-    </script>
+    {% include "partials/_analytics.html" %}
 </head>
 <body class="bg-slate-50 font-sans text-slate-700 antialiased">
     <nav class="bg-white border-b border-slate-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <a href="{% url 'home' %}" class="flex items-center gap-2">
-                <img src="{% static 'images/Logo.png' %}" class="w-9 h-9 object-cover rounded-full" alt="Logo JobPilot">
+                <img src="{% static 'images/logo-96.webp' %}" class="w-9 h-9 object-cover rounded-full" alt="Logo JobPilot">
                 <span class="text-xl font-bold text-slate-900">JobPilot-AI</span>
             </a>
             <div class="flex items-center gap-4">
+                <a href="{% url 'pricing' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Tarifs</a>
                 <a href="{% url 'login' %}" class="text-slate-600 hover:text-[#125484] font-medium transition-colors">Connexion</a>
                 <a href="{% url 'register' %}" class="bg-[#125484] hover:bg-[#0f4470] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">S'inscrire</a>
             </div>
@@ -43,7 +39,7 @@
             <!-- Sommaire (sticky sur desktop) -->
             <aside class="toc-sticky mb-10 lg:mb-0">
                 <nav aria-label="Sommaire" class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Sommaire</h2>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Sommaire</p>
                     <ul class="space-y-2 text-sm">
                         <li><a href="#section-objet-acceptation" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Objet et acceptation</a></li>
                         <li><a href="#section-description" class="text-slate-600 hover:text-[#125484] transition-colors block py-1 border-l-2 border-transparent hover:border-[#125484] pl-3 -ml-px">Description du service</a></li>

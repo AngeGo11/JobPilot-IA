@@ -1,0 +1,127 @@
+/* Font Awesome Free 6.7.2 (licence CC BY 4.0) — sous-ensemble auto-hébergé.
+   Généré par `python scripts/build_icons.py` : ne pas éditer à la main.
+   101 icônes embarquées, police sous-ensemblée à 9 Ko (contre 155 Ko),
+   et plus aucune requête vers cdnjs.cloudflare.com. */
+@font-face{
+  font-family:"Font Awesome 6 Free";
+  font-style:normal;
+  font-weight:900;
+  font-display:block;
+  src:url("../webfonts/fa-solid-900.woff2") format("woff2");
+}
+.fa-solid,.fa-regular,.fas,.far{
+  font-family:"Font Awesome 6 Free";
+  font-weight:900;
+  -moz-osx-font-smoothing:grayscale;
+  -webkit-font-smoothing:antialiased;
+  display:var(--fa-display,inline-block);
+  font-style:normal;
+  font-variant:normal;
+  line-height:1;
+  text-rendering:auto;
+}
+.fa-fw{text-align:center;width:1.25em}
+.fa-spin{animation:fa-spin 2s linear infinite}
+@keyframes fa-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.fa-spin{animation-delay:-1ms;animation-duration:1ms;animation-iteration-count:1}}
+.fa-angle-double-left::before{content:var(--fa);--fa:"\f100"}
+.fa-angle-double-right::before{content:var(--fa);--fa:"\f101"}
+.fa-angle-left::before{content:var(--fa);--fa:"\f104"}
+.fa-angle-right::before{content:var(--fa);--fa:"\f105"}
+.fa-arrow-left::before{content:var(--fa);--fa:"\f060"}
+.fa-arrow-right::before{content:var(--fa);--fa:"\f061"}
+.fa-arrows-rotate::before{content:var(--fa);--fa:"\f021"}
+.fa-bars::before{content:var(--fa);--fa:"\f0c9"}
+.fa-basket-shopping::before{content:var(--fa);--fa:"\f291"}
+.fa-bell::before{content:var(--fa);--fa:"\f0f3"}
+.fa-bolt::before{content:var(--fa);--fa:"\f0e7"}
+.fa-brain::before{content:var(--fa);--fa:"\f5dc"}
+.fa-briefcase::before{content:var(--fa);--fa:"\f0b1"}
+.fa-building::before{content:var(--fa);--fa:"\f1ad"}
+.fa-bullseye::before{content:var(--fa);--fa:"\f140"}
+.fa-calendar::before{content:var(--fa);--fa:"\f133"}
+.fa-calendar-check::before{content:var(--fa);--fa:"\f274"}
+.fa-calendar-plus::before{content:var(--fa);--fa:"\f271"}
+.fa-chart-line::before{content:var(--fa);--fa:"\f201"}
+.fa-chart-pie::before{content:var(--fa);--fa:"\f200"}
+.fa-chart-simple::before{content:var(--fa);--fa:"\e473"}
+.fa-check::before{content:var(--fa);--fa:"\f00c"}
+.fa-check-circle::before{content:var(--fa);--fa:"\f058"}
+.fa-chevron-down::before{content:var(--fa);--fa:"\f078"}
+.fa-chevron-left::before{content:var(--fa);--fa:"\f053"}
+.fa-chevron-right::before{content:var(--fa);--fa:"\f054"}
+.fa-circle-check::before{content:var(--fa);--fa:"\f058"}
+.fa-circle-exclamation::before{content:var(--fa);--fa:"\f06a"}
+.fa-circle-info::before{content:var(--fa);--fa:"\f05a"}
+.fa-circle-xmark::before{content:var(--fa);--fa:"\f057"}
+.fa-clipboard-list::before{content:var(--fa);--fa:"\f46d"}
+.fa-clock::before{content:var(--fa);--fa:"\f017"}
+.fa-cloud-arrow-up::before{content:var(--fa);--fa:"\f0ee"}
+.fa-code::before{content:var(--fa);--fa:"\f121"}
+.fa-coins::before{content:var(--fa);--fa:"\f51e"}
+.fa-crown::before{content:var(--fa);--fa:"\f521"}
+.fa-ellipsis-v::before{content:var(--fa);--fa:"\f142"}
+.fa-envelope::before{content:var(--fa);--fa:"\f0e0"}
+.fa-envelope-circle-check::before{content:var(--fa);--fa:"\e4e8"}
+.fa-euro-sign::before{content:var(--fa);--fa:"\f153"}
+.fa-exclamation-circle::before{content:var(--fa);--fa:"\f06a"}
+.fa-exclamation-triangle::before{content:var(--fa);--fa:"\f071"}
+.fa-external-link-alt::before{content:var(--fa);--fa:"\f35d"}
+.fa-eye::before{content:var(--fa);--fa:"\f06e"}
+.fa-eye-slash::before{content:var(--fa);--fa:"\f070"}
+.fa-file-contract::before{content:var(--fa);--fa:"\f56c"}
+.fa-file-csv::before{content:var(--fa);--fa:"\f6dd"}
+.fa-file-lines::before{content:var(--fa);--fa:"\f15c"}
+.fa-file-pdf::before{content:var(--fa);--fa:"\f1c1"}
+.fa-file-pen::before{content:var(--fa);--fa:"\f31c"}
+.fa-filter::before{content:var(--fa);--fa:"\f0b0"}
+.fa-floppy-disk::before{content:var(--fa);--fa:"\f0c7"}
+.fa-folder-open::before{content:var(--fa);--fa:"\f07c"}
+.fa-gauge-high::before{content:var(--fa);--fa:"\f625"}
+.fa-gear::before{content:var(--fa);--fa:"\f013"}
+.fa-gift::before{content:var(--fa);--fa:"\f06b"}
+.fa-heading::before{content:var(--fa);--fa:"\f1dc"}
+.fa-heart-pulse::before{content:var(--fa);--fa:"\f21e"}
+.fa-home::before{content:var(--fa);--fa:"\f015"}
+.fa-inbox::before{content:var(--fa);--fa:"\f01c"}
+.fa-info-circle::before{content:var(--fa);--fa:"\f05a"}
+.fa-key::before{content:var(--fa);--fa:"\f084"}
+.fa-lightbulb::before{content:var(--fa);--fa:"\f0eb"}
+.fa-location-dot::before{content:var(--fa);--fa:"\f3c5"}
+.fa-lock::before{content:var(--fa);--fa:"\f023"}
+.fa-lock-open::before{content:var(--fa);--fa:"\f3c1"}
+.fa-magic::before{content:var(--fa);--fa:"\f0d0"}
+.fa-magnifying-glass::before{content:var(--fa);--fa:"\f002"}
+.fa-paper-plane::before{content:var(--fa);--fa:"\f1d8"}
+.fa-pen-to-square::before{content:var(--fa);--fa:"\f044"}
+.fa-phone::before{content:var(--fa);--fa:"\f095"}
+.fa-plus::before{content:var(--fa);--fa:"\2b"}
+.fa-quote-left::before{content:var(--fa);--fa:"\f10d"}
+.fa-receipt::before{content:var(--fa);--fa:"\f543"}
+.fa-refresh::before{content:var(--fa);--fa:"\f021"}
+.fa-rocket::before{content:var(--fa);--fa:"\f135"}
+.fa-rotate-right::before{content:var(--fa);--fa:"\f2f9"}
+.fa-sack-dollar::before{content:var(--fa);--fa:"\f81d"}
+.fa-scale-balanced::before{content:var(--fa);--fa:"\f24e"}
+.fa-screwdriver-wrench::before{content:var(--fa);--fa:"\f7d9"}
+.fa-search::before{content:var(--fa);--fa:"\f002"}
+.fa-shield-halved::before{content:var(--fa);--fa:"\f3ed"}
+.fa-shopping-bag::before{content:var(--fa);--fa:"\f290"}
+.fa-sign-out-alt::before{content:var(--fa);--fa:"\f2f5"}
+.fa-signal::before{content:var(--fa);--fa:"\f012"}
+.fa-sliders::before{content:var(--fa);--fa:"\f1de"}
+.fa-spinner::before{content:var(--fa);--fa:"\f110"}
+.fa-star::before{content:var(--fa);--fa:"\f005"}
+.fa-tags::before{content:var(--fa);--fa:"\f02c"}
+.fa-times::before{content:var(--fa);--fa:"\f00d"}
+.fa-trash::before{content:var(--fa);--fa:"\f1f8"}
+.fa-triangle-exclamation::before{content:var(--fa);--fa:"\f071"}
+.fa-upload::before{content:var(--fa);--fa:"\f093"}
+.fa-user::before{content:var(--fa);--fa:"\f007"}
+.fa-user-check::before{content:var(--fa);--fa:"\f4fc"}
+.fa-user-plus::before{content:var(--fa);--fa:"\f234"}
+.fa-user-slash::before{content:var(--fa);--fa:"\f506"}
+.fa-user-tie::before{content:var(--fa);--fa:"\f508"}
+.fa-users::before{content:var(--fa);--fa:"\f0c0"}
+.fa-wand-magic-sparkles::before{content:var(--fa);--fa:"\e2ca"}
+.fa-xmark::before{content:var(--fa);--fa:"\f00d"}

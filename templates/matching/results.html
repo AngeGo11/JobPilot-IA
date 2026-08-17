@@ -88,14 +88,14 @@
                                 {% endif %}
 
                                 <div class="flex items-center space-x-1">
-                        <span class="text-sm font-bold {% if match.score > 70 %}text-green-600{% elif match.score > 40 %}text-yellow-600{% else %}text-red-600{% endif %}">
-                            {{ match.score }}%
+                        <span class="text-sm font-bold {% if match.display_score > 70 %}text-green-600{% elif match.display_score > 40 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                            {{ match.display_score }}%
                         </span>
-                                    <i class="fa-solid fa-chart-line text-xs text-slate-400"></i>
+                                    <i class="fa-solid fa-chart-line text-xs text-slate-500"></i>
                                 </div>
                             </div>
 
-                            <h3 class="text-base md:text-lg font-bold text-slate-900 leading-tight mb-1">{{ match.job_offer.title|default:"Titre non disponible" }}</h3>
+                            <h2 class="text-base md:text-lg font-bold text-slate-900 leading-tight mb-1">{{ match.job_offer.title|default:"Titre non disponible" }}</h2>
                             <p class="text-sm text-slate-500 font-medium mb-4">
                                 <i class="fa-solid fa-building mr-1"></i> {{ match.job_offer.company_name|default:"Entreprise non spécifiée" }}
                             </p>
@@ -103,7 +103,7 @@
                             <!-- Score Bar -->
                             <div class="w-full bg-slate-200 rounded-full h-2 mb-4">
                                 <div class="bg-[#125484] from-blue-500 to-teal-400 h-2 rounded-full transition-all"
-                                     style="width: {{ match.score|default:0 }}%"></div>
+                                     style="width: {{ match.display_score|default:0 }}%"></div>
                             </div>
 
                             <!-- Description -->
@@ -112,7 +112,7 @@
                                     {{ match.job_offer.description|truncatewords:30 }}
                                 </p>
                             {% else %}
-                                <p class="text-slate-400 text-sm italic mb-4">Aucune description disponible</p>
+                                <p class="text-slate-500 text-sm italic mb-4">Aucune description disponible</p>
                             {% endif %}
 
                             <!-- Location & Contract -->
@@ -136,7 +136,7 @@
                                     <i class="fa-solid fa-external-link-alt mr-2 text-xs"></i>Voir l'offre
                                 </a>
                             {% else %}
-                                <span class="text-slate-400 text-sm order-1 sm:order-1 py-2 sm:py-0">Lien non disponible</span>
+                                <span class="text-slate-500 text-sm order-1 sm:order-1 py-2 sm:py-0">Lien non disponible</span>
                             {% endif %}
 
                             <div class="flex items-center gap-2 order-2 sm:order-2 w-full sm:w-auto">
@@ -162,9 +162,9 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-12 text-center">
                 <div class="max-w-md mx-auto">
                     <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-magnifying-glass text-2xl md:text-3xl text-slate-400"></i>
+                        <i class="fa-solid fa-magnifying-glass text-2xl md:text-3xl text-slate-500"></i>
                     </div>
-                    <h3 class="text-lg md:text-xl font-semibold text-slate-900 mb-2">Aucune offre trouvée</h3>
+                    <h2 class="text-lg md:text-xl font-semibold text-slate-900 mb-2">Aucune offre trouvée</h2>
                     <p class="text-slate-500 mb-4 text-sm md:text-base">
                         {% if job_title_used and job_title_used != 'Non détecté' %}
                             Aucune offre correspondant au poste "{{ job_title_used }}" n'a été trouvée pour le moment.
@@ -332,10 +332,10 @@
                         <i class="fa-solid fa-angle-left"></i>
                     </a>
                 {% else %}
-                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-left"></i>
             </span>
-                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-left"></i>
             </span>
                 {% endif %}
@@ -381,10 +381,10 @@
                         <i class="fa-solid fa-angle-double-right"></i>
                     </a>
                 {% else %}
-                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-right"></i>
             </span>
-                    <span class="px-3 py-2 text-sm font-medium text-slate-400 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
+                    <span class="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded-lg cursor-not-allowed">
                 <i class="fa-solid fa-angle-double-right"></i>
             </span>
                 {% endif %}

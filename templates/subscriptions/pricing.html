@@ -1,16 +1,50 @@
 {% extends 'base.html' %}
 
-{% block title %}Tarifs - JobPilot-AI{% endblock %}
+{% block title %}Tarifs JobPilot-AI – Gratuit, Pass 24h, Sprint et Pro{% endblock %}
+{% block meta_description %}Comparez les formules JobPilot-AI : 5 crédits offerts sans carte bancaire, Pass 24h à 2,99 €, Sprint à 5,99 €/semaine, Pro à 14,99 €/mois. Sans engagement.{% endblock %}
+{% block og_title %}Tarifs JobPilot-AI – Gratuit, Pass 24h, Sprint et Pro{% endblock %}
+{% block og_description %}5 crédits offerts à l'inscription, puis des formules à partir de 2,99 €. Comparez ce qui est inclus dans chaque offre.{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-slate-50 py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Retour accueil : pour un visiteur non connecté, `base.html` n'affiche
+             aucune barre de navigation. Sans ce lien, la page Tarifs est un
+             cul-de-sac dès qu'on y arrive depuis un moteur de recherche. -->
+        <a href="{% url 'home' %}"
+           class="inline-flex items-center gap-2 text-[#125484] hover:text-[#0f4470] font-medium mb-8 transition-colors group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-0.5 transition-transform" aria-hidden="true"></i>
+            Retour à l'accueil
+        </a>
+
         <!-- Header Section -->
-        <div class="text-center mb-16">
+        <div class="text-center mb-10">
             <h1 class="text-5xl font-bold text-slate-900 mb-4 font-display">Formules</h1>
             <p class="text-xl text-slate-600 max-w-2xl mx-auto">
                 Choisissez la formule qui correspond à vos besoins de recherche d'emploi
             </p>
+        </div>
+
+        <!-- Rappel de l'offre gratuite : c'est le point d'entrée du parcours, il
+             doit être visible avant les formules payantes. -->
+        <div class="max-w-3xl mx-auto mb-14">
+            <div class="bg-white border border-emerald-200 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div class="w-12 h-12 flex-shrink-0 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-gift text-emerald-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-lg font-bold text-slate-900 font-display">Formule gratuite</h2>
+                    <p class="text-sm text-slate-600">
+                        <strong>{{ site_settings.signup_free_credits|default:5 }} crédits offerts</strong> à la création du compte, sans carte bancaire.
+                        De quoi analyser votre CV, débloquer vos premières offres et générer une lettre de motivation.
+                    </p>
+                </div>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="w-full sm:w-auto px-6 py-3 text-center bg-emerald-600 text-white font-semibold rounded-full hover:bg-emerald-700 transition-all duration-200">
+                    Commencer gratuitement
+                </a>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Pricing Cards Section -->
@@ -23,7 +57,7 @@
                 </div>
                 
                 <!-- Title -->
-                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Pass 24h</h3>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 font-display">Pass 24h</h2>
                 
                 <!-- Subtext -->
                 <p class="text-slate-600 mb-6">Parfait pour une recherche intensive sur une journée</p>
@@ -94,7 +128,7 @@
                 </div>
                 
                 <!-- Title -->
-                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Sprint</h3>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 font-display">Sprint</h2>
                 
                 <!-- Subtext -->
                 <p class="text-slate-600 mb-6">Idéal pour une recherche active sur une semaine</p>
@@ -159,7 +193,7 @@
                 </div>
                 
                 <!-- Title -->
-                <h3 class="text-2xl font-bold text-slate-900 mb-2 font-display">Pro</h3>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 font-display">Pro</h2>
                 
                 <!-- Subtext -->
                 <p class="text-slate-600 mb-6">Pour une recherche longue durée ou en veille active</p>
@@ -226,9 +260,9 @@
                             <i class="fa-solid fa-shopping-bag text-[#125484] text-lg sm:text-xl"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="text-base sm:text-lg font-bold text-slate-900 font-display">Pack Recharge</h4>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900 font-display">Pack Recharge</h2>
                             <p class="text-xs sm:text-sm text-slate-600">10 crédits - Sans abonnement</p>
-                            <p class="text-xs sm:text-sm text-slate-400"><i>Profitez de toutes les fonctionnalités de JobPilot jusqu'à l'épuisement total de vos crédits.</i></p>
+                            <p class="text-xs sm:text-sm text-slate-500"><i>Profitez de toutes les fonctionnalités de JobPilot jusqu'à l'épuisement total de vos crédits.</i></p>
                         </div>
                     </div>
                     <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-2 sm:pt-0 border-t border-slate-100 sm:border-t-0">
@@ -259,6 +293,142 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tableau comparatif
+             Le contenu reflète le comportement réel du code :
+               - 5 crédits à la création du compte (CustomUser.ai_credits, défaut 5) ;
+               - 1 crédit débloque la série d'offres trouvées pour un CV
+                 (matching.views.unlock_jobs), génère une lettre ou optimise un CV ;
+               - les abonnés ne consomment pas de crédit (subscriptions.services.credits.debit) ;
+               - les alertes email exigent un abonnement actif, donc le Pack Recharge
+                 (crédits seuls, sans date de fin d'abonnement) n'y donne pas accès.
+             Toute évolution de ces règles doit être répercutée ici. -->
+        <section class="max-w-6xl mx-auto mt-20" aria-labelledby="comparatif-titre">
+            <div class="text-center mb-8">
+                <h2 id="comparatif-titre" class="text-3xl font-bold text-slate-900 font-display mb-3">Comparatif des formules</h2>
+                <p class="text-slate-600">Ce que contient précisément chaque offre.</p>
+            </div>
+
+            <p class="sm:hidden text-xs text-slate-500 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                Faites défiler le tableau horizontalement pour voir toutes les formules.
+            </p>
+            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white"
+                 tabindex="0" role="region" aria-label="Comparatif des formules, défilement horizontal">
+                <table class="w-full min-w-[46rem] text-sm text-left">
+                    <caption class="sr-only">
+                        Comparaison des formules JobPilot-AI : gratuite, Pass 24h, Sprint, Pro et Pack Recharge
+                    </caption>
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50">
+                            <th scope="col" class="px-4 py-4 font-semibold text-slate-900">Fonctionnalité</th>
+                            <th scope="col" class="px-4 py-4 font-semibold text-slate-900 text-center">
+                                Gratuit<span class="block font-normal text-xs text-slate-500">0 €</span>
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold text-slate-900 text-center">
+                                Pass 24h<span class="block font-normal text-xs text-slate-500">2,99 € une fois</span>
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold text-[#125484] text-center bg-[#125484]/5">
+                                Sprint<span class="block font-normal text-xs text-slate-600">5,99 € / semaine</span>
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold text-slate-900 text-center">
+                                Pro<span class="block font-normal text-xs text-slate-500">14,99 € / mois</span>
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold text-slate-900 text-center">
+                                Pack<span class="block font-normal text-xs text-slate-500">4,99 € une fois</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Durée de validité</th>
+                            <td class="px-4 py-3 text-center text-slate-600">Illimitée</td>
+                            <td class="px-4 py-3 text-center text-slate-600">24 heures</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">7 jours renouvelables</td>
+                            <td class="px-4 py-3 text-center text-slate-600">30 jours renouvelables</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Jusqu'à épuisement</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Crédits IA inclus</th>
+                            <td class="px-4 py-3 text-center text-slate-600">{{ site_settings.signup_free_credits|default:5 }} à l'inscription</td>
+                            <td class="px-4 py-3 text-center font-semibold text-[#125484]">Illimités</td>
+                            <td class="px-4 py-3 text-center font-semibold text-[#125484] bg-[#125484]/5">Illimités</td>
+                            <td class="px-4 py-3 text-center font-semibold text-[#125484]">Illimités</td>
+                            <td class="px-4 py-3 text-center text-slate-600">10</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Analyse du CV et détection du poste</th>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center bg-[#125484]/5"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Déblocage des offres trouvées</th>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit par CV</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit par CV</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Lettre de motivation générée par IA</th>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Optimisation du CV pour une offre</th>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Sans limite</td>
+                            <td class="px-4 py-3 text-center text-slate-600">1 crédit</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Alertes email sur les nouvelles offres</th>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-xmark text-slate-400" aria-hidden="true"></i><span class="sr-only">Non inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center bg-[#125484]/5"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-xmark text-slate-400" aria-hidden="true"></i><span class="sr-only">Non inclus</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Tableau de bord de suivi des candidatures</th>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center bg-[#125484]/5"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                            <td class="px-4 py-3 text-center"><i class="fa-solid fa-check text-emerald-600" aria-hidden="true"></i><span class="sr-only">Inclus</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Carte bancaire requise</th>
+                            <td class="px-4 py-3 text-center text-slate-600">Non</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Oui</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">Oui</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Oui</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Oui</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-medium text-slate-700">Renouvellement</th>
+                            <td class="px-4 py-3 text-center text-slate-600">—</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Aucun</td>
+                            <td class="px-4 py-3 text-center text-slate-600 bg-[#125484]/5">Automatique</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Automatique</td>
+                            <td class="px-4 py-3 text-center text-slate-600">Aucun</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+                Prix TTC. Les abonnements Sprint et Pro se renouvellent automatiquement ; pour interrompre le
+                renouvellement, écrivez à <a href="mailto:contact@jobpilot-ai.fr" class="underline hover:text-slate-700">contact@jobpilot-ai.fr</a>.
+                L'accès reste actif jusqu'à la fin de la période déjà payée.
+            </p>
+        </section>
     </div>
 </div>
 {% endblock %}

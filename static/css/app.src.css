@@ -1,0 +1,92 @@
+/* Source Tailwind compilée en `static/css/app.css` par `make css`.
+   C'est ce fichier-ci que l'on édite, jamais `app.css`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Polices auto-hébergées (plus aucun appel à fonts.googleapis.com) --- */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/outfit-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/outfit-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../fonts/space-grotesk-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../fonts/space-grotesk-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --- Animations de la page d'accueil (auparavant en <style> inline) --- */
+@layer components {
+  .float-animation { animation: float 6s ease-in-out infinite; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in-up-delay-1 { animation-delay: 0.1s; }
+  .fade-in-up-delay-2 { animation-delay: 0.2s; }
+  .fade-in-up-delay-3 { animation-delay: 0.3s; }
+
+  .hub-glow { animation: hub-glow 3s ease-in-out infinite; }
+  @keyframes hub-glow {
+    0%, 100% { box-shadow: 0 0 30px 5px rgba(18,84,132,0.12), 0 0 60px 15px rgba(18,84,132,0.06); }
+    50% { box-shadow: 0 0 40px 10px rgba(18,84,132,0.2), 0 0 80px 25px rgba(18,84,132,0.08); }
+  }
+
+  /* Motif décoratif de la section d'appel à l'action finale. Il était écrit en
+     valeur arbitraire Tailwind — `bg-[url('data:image/svg+xml,…')]` — contenant
+     des guillemets doubles, ce qui refermait l'attribut class au milieu de la
+     valeur : le motif ne s'est jamais affiché et le HTML était invalide. */
+  .cta-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .matching-card-float { animation: matching-float 4s ease-in-out infinite; }
+  .matching-card-float.delay-1 { animation-delay: 0.4s; }
+  .matching-card-float.delay-2 { animation-delay: 0.8s; }
+  .matching-card-float.delay-3 { animation-delay: 0.6s; }
+  .matching-card-float.delay-4 { animation-delay: 1s; }
+  @keyframes matching-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+}
+
+/* Respect de la préférence système : aucune animation décorative. */
+@media (prefers-reduced-motion: reduce) {
+  .float-animation,
+  .fade-in-up,
+  .hub-glow,
+  .matching-card-float {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}

@@ -1,0 +1,37 @@
+{% comment %}
+Google Analytics 4 — chargé uniquement si GA_MEASUREMENT_ID est renseigné
+(donc jamais en local ni dans les tests).
+
+Consent Mode v2 : les catégories analytics/publicité sont refusées par défaut,
+conformément à la doctrine CNIL sur Google Analytics. Tant qu'aucune bannière
+de consentement n'appelle `gtag('consent', 'update', {...})`, GA4 n'écrit pas
+de cookie et ne transmet que des pings anonymes (mesure dégradée mais licite).
+{% endcomment %}
+{% comment %}
+Préconnexion : googletagmanager sert le script, google-analytics reçoit les
+mesures. Ce sont les deux seules origines tierces qui subsistent sur les pages
+publiques — polices, icônes et CSS sont auto-hébergés.
+
+À noter : l'API Google Gemini n'apparaît pas ici à dessein. Elle est appelée
+depuis le serveur Django, jamais depuis le navigateur ; une préconnexion vers
+generativelanguage.googleapis.com ouvrirait une connexion TLS que la page
+n'utiliserait jamais, ce qui coûte au lieu de rapporter.
+{% endcomment %}
+{% if GA_MEASUREMENT_ID %}
+<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+<link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA_MEASUREMENT_ID }}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'wait_for_update': 500
+    });
+    gtag('js', new Date());
+    gtag('config', '{{ GA_MEASUREMENT_ID }}', { 'anonymize_ip': true });
+</script>
+{% endif %}

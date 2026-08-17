@@ -7,53 +7,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - JobPilot-AI</title>
-    <link rel="shortcut icon" href="{% static 'images/Logo.png' %}" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-    </style>
+    {% include "partials/_head_assets.html" %}
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                        display: ['Space Grotesk', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0f172a', // Bleu très foncé pour le fond de droite
-                        },
-                        'login-btn': '#2b6cb0',
-                        'login-btn-hover': '#2c5282',
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': {transform: 'translateY(0)'},
-                            '50%': {transform: 'translateY(-10px)'},
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
         .form-label {
             color: #4a5568;
@@ -124,6 +81,7 @@
 
 
     </style>
+    {% include "partials/_analytics.html" %}
 </head>
 <body class="min-h-screen flex flex-col lg:flex-row overflow-x-hidden font-sans bg-white">
 
@@ -132,7 +90,7 @@
     <div class="lg:hidden mb-4 md:mb-8">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 flex items-center justify-center overflow-hidden">
-                <img src="{% static 'images/Logo.png' %}" class="w-10 h-8 object-contain object-center"
+                <img src="{% static 'images/logo-96.webp' %}" class="w-10 h-8 object-contain object-center"
                      alt="Logo">
             </div>
             <span class="text-lg md:text-xl font-bold text-slate-900">JobPilot-AI</span>
@@ -143,7 +101,7 @@
         <div class="mb-6 md:mb-10">
             <h1 class="text-2xl md:text-4xl font-bold text-slate-900 mb-2">Connexion</h1>
             <p class="text-slate-500 text-sm md:text-base">Heureux de vous revoir. Entrez vos accès pour continuer votre recherche
-                d'emplois.</p>
+                d'emploi.</p>
         </div>
 
         <!-- Messages -->
@@ -161,7 +119,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-1 gap-3 mb-6 border-red">
             <a href="{% provider_login_url 'google' %}"
                class="flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-red-300 hover:bg-red-50 text-slate-700 font-medium min-h-[44px] py-2.5 px-4 rounded-lg transition-all text-sm group shadow-sm hover:shadow-md cursor-pointer decoration-0 w-full">
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg"
+                <img src="{% static 'images/google-color.svg' %}"
                      class="w-5 h-5 group-hover:scale-110 transition-transform shrink-0" alt="Google">
                 <span class="sm:hidden">Continuer avec Google</span>
                 <span class="hidden sm:inline">Google</span>
@@ -173,7 +131,7 @@
                 <div class="w-full border-t border-slate-100"></div>
             </div>
             <div class="relative flex justify-center text-xs uppercase"><span
-                    class="bg-white px-2 text-slate-400 font-medium">Ou avec email</span></div>
+                    class="bg-white px-2 text-slate-500 font-medium">Ou avec email</span></div>
         </div>
 
         <form method="POST" class="space-y-6">
@@ -202,7 +160,7 @@
                 <div class="relative">
                     {{ form.password }}
                     <button type="button" onclick="togglePassword()"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-600 cursor-pointer">
                         <i class="fa-regular fa-eye" id="eyeIcon"></i>
                     </button>
                 </div>
@@ -220,7 +178,7 @@
     </div>
 
     <div class="mt-6 lg:mt-0 lg:absolute lg:bottom-8 lg:left-20 px-4 lg:px-0">
-        <a href="{% url 'home' %}" class="min-h-[44px] flex items-center justify-center lg:justify-start text-xs text-slate-400 hover:text-slate-600 gap-2 py-2">
+        <a href="{% url 'home' %}" class="min-h-[44px] flex items-center justify-center lg:justify-start text-xs text-slate-500 hover:text-slate-600 gap-2 py-2">
             <i class="fa-solid fa-arrow-left"></i> Retour accueil
         </a>
     </div>
@@ -235,7 +193,7 @@
     <div class="relative z-10 flex items-center justify-center pt-8">
         <div>
             <img
-                    src="{% static 'images/Logo.png' %}"
+                    src="{% static 'images/logo-448.webp' %}"
                     alt="Logo JobPilot-AI"
                     class="w-56 h-56 rounded-full object-cover object-center shadow-xl"
                     loading="lazy">

@@ -15,15 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import TemplateView
 
+from JobPilot.sitemaps import SITEMAPS
+from JobPilot.views import HomeView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('', HomeView.as_view(), name='home'),
+    # --- SEO ---
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain'), name='robots_txt'),
     path('mentions-legales/', TemplateView.as_view(template_name='mentions_legales.html'), name='mentions_legales'),
     path('politique-confidentialite/', TemplateView.as_view(template_name='politiques_et_confidentialites.html'), name='politique_confidentialite'),
     path('cgu/', TemplateView.as_view(template_name='CGU.html'), name='cgu'),
@@ -32,6 +39,7 @@ urlpatterns = [
     path('matching/', include('matching.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('subscriptions/', include('subscriptions.urls')),
+    path('administration/', include('administration.urls')),
     path('accounts/', include('allauth.urls')),
 ]
 
