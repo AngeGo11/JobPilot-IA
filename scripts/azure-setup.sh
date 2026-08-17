@@ -85,25 +85,48 @@ fi
 bleu "2. Cache Redis (broker Celery + cache partagé)"
 # Coût : niveau Basic C0, de l'ordre de 15 à 20 EUR par mois.
 
+# Un abonnement neuf n'a pas forcément le fournisseur Microsoft.Cache
+# enregistré : sans ça, la création échoue sur MissingSubscriptionRegistration.
+ETAT_FOURNISSEUR=$(az provider show --namespace Microsoft.Cache \
+    --query registrationState -o tsv 2>/dev/null || echo "Unknown")
+if [ "$ETAT_FOURNISSEUR" != "Registered" ]; then
+    jaune "fournisseur Microsoft.Cache : $ETAT_FOURNISSEUR — enregistrement"
+    lancer az provider register --namespace Microsoft.Cache --wait --output none
+fi
+
 if az redis show --name "$REDIS_NAME" --resource-group "$RG" >/dev/null 2>&1; then
     vert "« $REDIS_NAME » existe déjà"
 else
     jaune "création de « $REDIS_NAME » (Basic C0, ~15-20 EUR/mois) — compter 15 à 20 min"
-    lancer az redis create \
-        --name "$REDIS_NAME" --resource-group "$RG" --location "$REGION" \
-        --sku Basic --vm-size c0 --minimum-tls-version 1.2 --output none
+    # `|| true` : le cache est un confort, pas un prérequis. Son échec ne doit
+    # pas empêcher de poser GA_MEASUREMENT_ID ni le reste de la configuration ;
+    # sans REDIS_URL l'application retombe simplement sur LocMemCache et
+    # l'exécution synchrone.
+    if $APPLY; then
+        az redis create \
+            --name "$REDIS_NAME" --resource-group "$RG" --location "$REGION" \
+            --sku Basic --vm-size c0 --minimum-tls-version 1.2 --output none || true
+    else
+        printf "    \033[2m[simulation] az redis create --name %s ...\033[0m\n" "$REDIS_NAME"
+    fi
 fi
 
-if $APPLY; then
+REDIS_PRET=false
+if $APPLY && az redis show --name "$REDIS_NAME" --resource-group "$RG" >/dev/null 2>&1; then
     REDIS_HOST=$(az redis show --name "$REDIS_NAME" --resource-group "$RG" --query hostName -o tsv)
     REDIS_KEY=$(az redis list-keys --name "$REDIS_NAME" --resource-group "$RG" --query primaryKey -o tsv)
     # rediss:// + port 6380 : Azure Cache impose TLS.
     REDIS_CACHE="rediss://:${REDIS_KEY}@${REDIS_HOST}:6380/1"
     REDIS_BROKER="rediss://:${REDIS_KEY}@${REDIS_HOST}:6380/0"
+    REDIS_PRET=true
     vert "hôte : $REDIS_HOST"
+elif $APPLY; then
+    rouge "Redis indisponible — les variables Redis/Celery ne seront pas posées."
+    rouge "L'application fonctionnera en cache local et exécution synchrone."
 else
     REDIS_CACHE="rediss://:<cle>@<hote>:6380/1"
     REDIS_BROKER="rediss://:<cle>@<hote>:6380/0"
+    REDIS_PRET=true
 fi
 
 # --------------------------------------------------------------------------- #
@@ -111,16 +134,21 @@ bleu "3. Variables d'application"
 
 # ssl_cert_reqs=none : Azure Cache présente un certificat que redis-py ne peut
 # pas valider par défaut faute de chaîne fournie dans l'image.
+REGLAGES=("GA_MEASUREMENT_ID=$GA_ID" "WEB_CONCURRENCY=4")
+if $REDIS_PRET; then
+    REGLAGES+=(
+        "REDIS_URL=${REDIS_CACHE}?ssl_cert_reqs=none"
+        "CELERY_BROKER_URL=${REDIS_BROKER}?ssl_cert_reqs=none"
+        "CELERY_RESULT_BACKEND=${REDIS_BROKER}?ssl_cert_reqs=none"
+        "CELERY_CONCURRENCY=2"
+    )
+    vert "GA_MEASUREMENT_ID, WEB_CONCURRENCY, REDIS_URL, CELERY_*"
+else
+    jaune "GA_MEASUREMENT_ID et WEB_CONCURRENCY seulement (pas de Redis)"
+fi
 lancer az webapp config appsettings set \
     --name "$APP_NAME" --resource-group "$RG" --output none \
-    --settings \
-        "GA_MEASUREMENT_ID=$GA_ID" \
-        "REDIS_URL=${REDIS_CACHE}?ssl_cert_reqs=none" \
-        "CELERY_BROKER_URL=${REDIS_BROKER}?ssl_cert_reqs=none" \
-        "CELERY_RESULT_BACKEND=${REDIS_BROKER}?ssl_cert_reqs=none" \
-        "CELERY_CONCURRENCY=2" \
-        "WEB_CONCURRENCY=4"
-vert "GA_MEASUREMENT_ID, REDIS_URL, CELERY_* , WEB_CONCURRENCY"
+    --settings "${REGLAGES[@]}"
 
 # --------------------------------------------------------------------------- #
 bleu "4. Commande de démarrage"
