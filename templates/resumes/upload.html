@@ -79,7 +79,7 @@
                             <div class="flex items-start">
                                 <i class="fa-solid fa-exclamation-circle text-red-600 mr-3 mt-0.5"></i>
                                 <div class="flex-1">
-                                    <h3 class="text-sm font-semibold text-red-800 mb-1">Erreurs</h3>
+                                    <h2 class="text-sm font-semibold text-red-800 mb-1">Erreurs</h2>
                                     <ul class="text-sm text-red-700 list-disc list-inside">
                                         {% for error in form.non_field_errors %}
                                             <li>{{ error }}</li>
@@ -152,7 +152,7 @@
                                             onchange="displayFileName(this)"
                                     >
                                 </div>
-                                <p class="text-xs text-slate-400 mt-2">
+                                <p class="text-xs text-slate-500 mt-2">
                                     <i class="fa-solid fa-info-circle mr-1"></i>
                                     Formats acceptés : PDF (max 10MB)
                                 </p>
@@ -168,7 +168,7 @@
                                     <span class="text-sm font-medium text-slate-700" id="file-name-text"></span>
                                 </div>
                                 <button type="button" onclick="clearFileInput()"
-                                        class="text-slate-400 hover:text-red-600">
+                                        class="text-slate-500 hover:text-red-600">
                                     <i class="fa-solid fa-times"></i>
                                 </button>
                             </div>

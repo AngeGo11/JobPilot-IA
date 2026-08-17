@@ -1,0 +1,16 @@
+{% load static %}{% comment %}
+Feuilles de style et icônes du site, en un seul point d'entrée.
+
+Tout est auto-hébergé : plus aucune requête vers cdn.tailwindcss.com,
+cdnjs.cloudflare.com ni fonts.googleapis.com. Conséquences :
+  - le CSS Tailwind est compilé (`make css`) au lieu d'être généré dans le
+    navigateur par 400 Ko de JavaScript bloquant ;
+  - la police d'icônes est réduite aux icônes réellement utilisées ;
+  - il n'y a plus de préconnexion tierce à négocier avant le premier rendu,
+    ni de fuite d'adresse IP vers Google Fonts (point RGPD).
+{% endcomment %}
+<link rel="preload" href="{% static 'fonts/outfit-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<link rel="stylesheet" href="{% static 'css/icons.css' %}">
+<link rel="icon" href="{% static 'images/favicon-32.png' %}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">

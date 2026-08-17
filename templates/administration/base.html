@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load administration_extras %}
+
+{% block title %}{% block admin_title %}Administration{% endblock %} – JobPilot-AI{% endblock %}
+
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+
+    <!-- En-tête back-office -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-900 text-white">
+                    <i class="fa-solid fa-shield-halved"></i>Back-office
+                </span>
+                {% if request.user.is_superuser %}
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    <i class="fa-solid fa-key"></i>Super-admin
+                </span>
+                {% endif %}
+            </div>
+            <h1 class="text-2xl md:text-4xl font-bold text-slate-900">{% block page_title %}Administration{% endblock %}</h1>
+            <p class="text-slate-500 mt-1 text-sm md:text-base">{% block page_subtitle %}{% endblock %}</p>
+        </div>
+        {% block header_actions %}{% endblock %}
+    </div>
+
+    <!-- Navigation des volets -->
+    <nav class="bg-white rounded-xl shadow-sm border border-slate-200 p-1.5 overflow-x-auto">
+        <div class="flex items-center gap-1 min-w-max">
+            {% with base="flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors" %}
+            <a href="{% url 'administration:overview' %}" class="{{ base }} {% if section == 'overview' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-gauge-high"></i>Vue d'ensemble
+            </a>
+            <a href="{% url 'administration:users' %}" class="{{ base }} {% if section == 'users' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-users"></i>Utilisateurs
+            </a>
+            <a href="{% url 'administration:revenue' %}" class="{{ base }} {% if section == 'revenue' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-euro-sign"></i>Revenus
+            </a>
+            <a href="{% url 'administration:content' %}" class="{{ base }} {% if section == 'content' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-briefcase"></i>Offres &amp; matching
+            </a>
+            <a href="{% url 'administration:settings' %}" class="{{ base }} {% if section == 'settings' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-sliders"></i>Paramètres
+            </a>
+            <a href="{% url 'administration:supervision' %}" class="{{ base }} {% if section == 'supervision' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-heart-pulse"></i>Supervision
+            </a>
+            <a href="{% url 'administration:audit' %}" class="{{ base }} {% if section == 'audit' %}bg-[#125484] text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="fa-solid fa-clipboard-list"></i>Journal
+            </a>
+            {% endwith %}
+        </div>
+    </nav>
+
+    {% block admin_content %}{% endblock %}
+</div>
+{% endblock %}

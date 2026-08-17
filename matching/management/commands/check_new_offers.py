@@ -46,6 +46,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.urls import reverse
 
+from administration.models import SiteSettings
+from administration.services.tasks import track_run
 from matching.models import JobAlert
 from matching.services.francetravail import FranceTravail
 
@@ -71,8 +73,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--min-score',
             type=int,
-            default=70,
-            help='Score minimum pour considérer une offre comme pertinente (défaut: 70).',
+            default=None,
+            help='Score minimum pour considérer une offre comme pertinente '
+                 '(défaut : valeur définie dans le back-office, 70 en secours).',
+        )
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help="Ignore l'interrupteur « alertes activées » du back-office.",
         )
         parser.add_argument(
             '--send-on-first-run',
@@ -81,10 +89,27 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # La trace d'exécution alimente la page de supervision du back-office :
+        # sans elle, un cron cassé passerait inaperçu.
+        with track_run("check_new_offers") as run:
+            self._handle(run, **options)
+
+    def _handle(self, run, **options):
         dry_run = options['dry_run']
         limit = options['limit']
-        min_score = options['min_score']
         send_on_first_run = options['send_on_first_run']
+
+        site_settings = SiteSettings.load()
+        if not site_settings.alerts_enabled and not options.get('force'):
+            message = "Alertes désactivées dans le back-office : aucune vérification."
+            self.stdout.write(self.style.WARNING(message))
+            run.message = message
+            return
+
+        # Le seuil du back-office s'applique sauf si --min-score est passé explicitement.
+        min_score = options['min_score']
+        if min_score is None:
+            min_score = site_settings.matching_min_score
 
         if dry_run:
             self.stdout.write(self.style.WARNING("Mode dry-run : aucun enregistrement ni email."))
@@ -118,12 +143,23 @@ class Command(BaseCommand):
             logger.exception("check_new_offers: FranceTravail init failed")
             return
 
+        processed = 0
+        failures = []
         for alert in alerts:
             try:
                 self._process_alert(alert, ft, dry_run, limit, min_score, send_on_first_run)
+                processed += 1
             except Exception as e:
+                failures.append(f"alerte {alert.pk} : {e}")
                 logger.exception("check_new_offers: erreur pour alerte %s", alert.pk)
                 self.stderr.write(self.style.ERROR(f"Alerte {alert.pk} : {e}"))
+
+        run.items_processed = processed
+        if failures:
+            # La commande reste en succès : quelques alertes en erreur ne doivent
+            # pas masquer le fait que le cron a bien tourné. Le détail est visible
+            # dans la supervision.
+            run.message = f"{len(failures)} alerte(s) en erreur — " + " ; ".join(failures[:5])
 
     def _process_alert(self, alert, ft, dry_run, limit, min_score, send_on_first_run=False):
         resume = alert.resume
@@ -172,6 +208,16 @@ class Command(BaseCommand):
             score = ft.calculate_match_score(resume_text, desc)
             if score >= min_score:
                 new_offers_data.append(r)
+
+        # Plafond défini dans le back-office : un email annonçant 80 offres n'est
+        # pas exploitable et dégrade la délivrabilité.
+        max_offers = SiteSettings.load().alerts_max_offers_per_email
+        if len(new_offers_data) > max_offers:
+            new_offers_data.sort(
+                key=lambda r: ft.calculate_match_score(resume_text, r.get('description') or ""),
+                reverse=True,
+            )
+            new_offers_data = new_offers_data[:max_offers]
 
         if not new_offers_data:
             if not dry_run:

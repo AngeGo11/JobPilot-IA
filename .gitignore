@@ -1,20 +1,33 @@
+# --- Secrets et environnement ---
 .env
-/media/
-./JobPilot/settings.py
+.env.*
+!.env.example
+config_azure
+
+# --- Python ---
 .venv
 __pycache__/
 *.pyc
 
-.DS_Store
-**/.DS_Store
-
-
-config_azure
-
-# Logs
+# --- Django ---
+/media/
+/staticfiles/
 /logs/*.log
 /logs/*.log.*
 !logs/.gitkeep
 
+# --- Outils et IDE ---
+.idea/
+.vscode/
+.pytest_cache/
+.ruff_cache/
+antenv/
 
-docs
+# --- OS ---
+.DS_Store
+**/.DS_Store
+
+# NOTE : `docs/` n'est volontairement plus ignoré — la documentation
+# (schémas, guides, générateurs .docx) doit être versionnée avec le code.
+# Seuls les binaires volumineux régénérables sont exclus :
+docs/**/*.docx

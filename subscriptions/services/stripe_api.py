@@ -90,8 +90,17 @@ def apply_plan_to_user(user_id, plan_slug):
         user.save(update_fields=['subscription_end_date', 'subscription_plan'])
         logger.info("Abonnement mis à jour: user_id=%s plan=%s jusqu'à %s", user_id, plan_slug, user.subscription_end_date)
     if plan_config.get('credits'):
-        user.ai_credits = (user.ai_credits or 0) + plan_config['credits']
-        user.save(update_fields=['ai_credits'])
+        # Passe par le registre : un achat doit laisser une trace vérifiable,
+        # c'est la contrepartie d'un paiement.
+        from subscriptions.services.credits import grant
+        from subscriptions.models import CreditEntry
+
+        grant(
+            user,
+            plan_config['credits'],
+            reason=CreditEntry.Reason.PURCHASE,
+            note=f"Achat « {plan_slug} »",
+        )
         logger.info("Crédits ajoutés: user_id=%s +%s (total=%s)", user_id, plan_config['credits'], user.ai_credits)
 
 

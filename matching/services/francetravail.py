@@ -110,6 +110,7 @@ class FranceTravail:
         Crée aussi le lien 'Match' avec l'utilisateur.
         """
         saved_matches = []
+        new_offer_ids = []
 
         for job_data in jobs_data:
             # 1. On crée ou récupère l'offre (pour éviter les doublons)
@@ -165,7 +166,21 @@ class FranceTravail:
                 match.save()
 
             saved_matches.append(match)
+            if created:
+                new_offer_ids.append(offer.pk)
             logging.info(f"  ✓ Offre sauvegardée: {offer.title} (Score: {score}%)")
+
+        # Vectorisation des offres nouvelles, en tâche de fond : l'appel
+        # d'embedding ne doit pas rallonger la recherche que le candidat attend.
+        if new_offer_ids:
+            try:
+                from matching.tasks import embed_offers_task, rescore_resume_matches_task
+
+                embed_offers_task.delay(offer_ids=new_offer_ids)
+                rescore_resume_matches_task.delay(resume.pk)
+            except Exception:
+                # Broker absent : le rattrapage planifié s'en chargera.
+                logging.warning("Vectorisation différée : file de tâches indisponible.")
 
         return saved_matches
 

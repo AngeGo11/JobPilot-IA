@@ -8,6 +8,9 @@ from django.views.generic import View, TemplateView
 from .forms import UserRegisterForm, UserLoginForm, UserUpdateForm, CustomPasswordChangeForm
 from .models import CandidateProfile
 from .services.welcome_email import send_welcome_email
+from administration.models import SiteSettings
+from subscriptions.models import CreditEntry
+from subscriptions.services.credits import grant
 import logging
 
 
@@ -26,10 +29,31 @@ def get_connection_success_message(user):
 
 
 def register(request):
+    # Les inscriptions peuvent être fermées depuis le back-office (lancement
+    # progressif, incident en cours). On bloque la vue entière, pas seulement le
+    # bouton, sinon un POST direct passerait quand même.
+    site_settings = SiteSettings.load()
+    if not site_settings.registrations_open:
+        messages.info(
+            request,
+            "Les inscriptions sont temporairement fermées. Merci de réessayer plus tard.",
+        )
+        return redirect('login')
+
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Crédits de bienvenue pilotés depuis le back-office, écrits au
+            # registre comme tout autre mouvement de crédit.
+            user.ai_credits = 0
+            user.save(update_fields=['ai_credits'])
+            grant(
+                user,
+                site_settings.signup_free_credits,
+                reason=CreditEntry.Reason.SIGNUP,
+                note="Crédits offerts à l'inscription",
+            )
             CandidateProfile.objects.get_or_create(user=user)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')  # Connexion directe après inscription
             request.session["user_id"] = user.id

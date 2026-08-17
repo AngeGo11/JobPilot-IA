@@ -1,0 +1,166 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Revenus{% endblock %}
+{% block page_title %}Revenus{% endblock %}
+{% block page_subtitle %}Encaissements Stripe réels — les paiements de test sont exclus des totaux{% endblock %}
+
+{% block admin_content %}
+
+{% if revenue.test_count %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+    <i class="fa-solid fa-flask text-amber-500 mt-0.5"></i>
+    <div class="text-sm text-amber-900">
+        <p class="font-semibold">
+            {{ revenue.test_count }} paiement{{ revenue.test_count|pluralize }} en mode test
+            ({{ revenue.test_total|floatformat:2 }} €) — exclu{{ revenue.test_count|pluralize }} des totaux.
+        </p>
+        <p class="mt-1">
+            Ces sessions <code class="text-xs bg-amber-100 px-1 py-0.5 rounded">cs_test_…</code>
+            proviennent du bac à sable Stripe : cet argent n'existe pas.
+            Les compter afficherait {{ revenue.test_total|add:revenue.total|floatformat:2 }} €
+            au lieu de {{ revenue.total|floatformat:2 }} €.
+            Ils restent visibles dans la liste ci-dessous, marqués comme tels.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="Encaissé réel (total)" value=revenue.total suffix="€" icon="fa-sack-dollar" color="text-emerald-600" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Encaissé (30 j)" value=revenue.total_30d suffix="€" icon="fa-euro-sign" color="text-emerald-600" delta=revenue.growth_30d url=None %}
+    {% include 'administration/_stat_card.html' with label="MRR estimé" value=revenue.mrr|floatformat:2 suffix="€" icon="fa-arrows-rotate" color="text-blue-500" hint="D'après les abonnements actifs" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Panier moyen" value=revenue.avg_basket|floatformat:2 suffix="€" icon="fa-basket-shopping" hint=None delta=None url=None %}
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="Clients payants réels" value=revenue.payers icon="fa-user-check" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Revenu par client" value=revenue.arpu suffix="€" icon="fa-chart-pie" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Transactions" value=revenue.count icon="fa-receipt" hint=None delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Abonnés actifs" value=users.premium icon="fa-crown" color="text-amber-500" hint=None delta=None url=None %}
+</div>
+
+{% if revenue.untracked_count %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5"></i>
+    <p class="text-sm text-amber-900">
+        {{ revenue.untracked_count }} transaction{{ revenue.untracked_count|pluralize }} sans montant enregistré
+        {{ revenue.untracked_count|pluralize:"est exclue,sont exclues" }} des totaux ci-dessus.
+        Il s'agit d'entrées créées avant l'ajout du champ montant sur les webhooks Stripe.
+    </p>
+</div>
+{% endif %}
+
+<!-- Encaissements par mois -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+    <h2 class="text-lg font-bold text-slate-900 mb-1">Encaissements par mois</h2>
+    <p class="text-sm text-slate-500 mb-6">6 derniers mois</p>
+    {% if monthly %}
+    <div class="flex items-end justify-between gap-2 md:gap-4 h-48">
+        {% for row in monthly %}
+        <div class="flex-1 h-full flex flex-col items-center justify-end gap-2">
+            <span class="text-xs font-bold text-slate-900">{{ row.total|floatformat:0 }} €</span>
+            <div class="w-full bg-[#125484] rounded-t transition-all duration-500 hover:bg-blue-600"
+                 style="height: {{ row.height }}%" title="{{ row.count }} transaction(s)"></div>
+            <span class="text-xs text-slate-500">{{ row.month|date:"M y" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-500 py-12 text-center">Aucun encaissement sur la période.</p>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+
+    <!-- Répartition par formule -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-5">Abonnements par formule</h2>
+        {% if plans %}
+        <div class="space-y-3">
+            {% for plan in plans %}
+            <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="font-medium text-slate-800">{{ plan.label }}</span>
+                    <span class="font-bold text-slate-900">{{ plan.count }}</span>
+                </div>
+                {% if plan.mrr %}
+                <p class="text-xs text-slate-500">{{ plan.mrr|floatformat:2 }} € de revenu mensuel récurrent</p>
+                {% else %}
+                <p class="text-xs text-slate-500">Paiement unique — hors MRR</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 py-8 text-center">Aucun abonnement actif.</p>
+        {% endif %}
+    </div>
+
+    <!-- Échéances -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 md:p-6 pb-3">
+            <h2 class="text-lg font-bold text-slate-900">Échéances sous 14 jours</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Abonnements à renouveler — cible d'une relance</p>
+        </div>
+        <div class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+            {% for u in expiring %}
+            <a href="{% url 'administration:user_detail' u.pk %}" class="flex items-center justify-between px-4 md:px-6 py-3 hover:bg-slate-50 transition-colors">
+                <div class="min-w-0">
+                    <p class="font-medium text-slate-900 truncate">{{ u.get_full_name|default:u.email }}</p>
+                    <p class="text-xs text-slate-500">{{ u.get_subscription_plan_display|default:"—" }}</p>
+                </div>
+                <span class="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full flex-shrink-0 ml-3">
+                    {{ u.subscription_end_date|date:"d/m/Y" }}
+                </span>
+            </a>
+            {% empty %}
+            <p class="px-6 py-12 text-sm text-slate-500 text-center">Aucune échéance dans les 14 prochains jours.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Transactions -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 md:p-6 pb-3">
+        <h2 class="text-lg font-bold text-slate-900">Transactions Stripe</h2>
+        <p class="text-sm text-slate-500 mt-0.5">{{ page_obj.paginator.count }} enregistrement{{ page_obj.paginator.count|pluralize }}</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-y border-slate-200">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Date</th>
+                    <th class="px-4 py-3">Client</th>
+                    <th class="px-4 py-3">Session Stripe</th>
+                    <th class="px-4 md:px-6 py-3 text-right">Montant</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for tx in page_obj %}
+                <tr class="hover:bg-slate-50 transition-colors {% if tx.is_test_mode %}bg-amber-50/40{% endif %}">
+                    <td class="px-4 md:px-6 py-3 text-slate-600 whitespace-nowrap">{{ tx.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'administration:user_detail' tx.user_id %}" class="text-[#125484] hover:underline font-medium">{{ tx.user.email }}</a>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500 max-w-xs truncate">
+                        {% if tx.is_test_mode %}
+                        <span class="inline-block mr-1.5 px-1.5 py-0.5 text-xs font-sans font-semibold rounded bg-amber-200 text-amber-900">TEST</span>
+                        {% endif %}{{ tx.stripe_session_id }}
+                    </td>
+                    <td class="px-4 md:px-6 py-3 text-right font-bold whitespace-nowrap {% if tx.is_test_mode %}text-amber-700 line-through decoration-1{% else %}text-slate-900{% endif %}">
+                        {% if tx.amount %}{{ tx.amount|floatformat:2 }} €{% else %}<span class="text-slate-500 font-normal">non renseigné</span>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-6 py-12 text-center text-slate-500">Aucune transaction enregistrée.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'administration/_pagination.html' %}
+
+{% endblock %}

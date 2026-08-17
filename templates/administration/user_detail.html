@@ -1,0 +1,277 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}{{ target.email }}{% endblock %}
+{% block page_title %}{{ target.get_full_name|default:target.email }}{% endblock %}
+{% block page_subtitle %}Inscrit le {{ target.date_joined|date:"d F Y à H:i" }}{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'administration:users' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+    <i class="fa-solid fa-arrow-left"></i>Retour à la liste
+</a>
+{% endblock %}
+
+{% block admin_content %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+
+    <!-- Colonne principale -->
+    <div class="lg:col-span-2 space-y-4 md:space-y-6">
+
+        <!-- Identité -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+            <div class="flex flex-wrap items-center gap-2 mb-5">
+                <h2 class="text-lg font-bold text-slate-900 mr-auto">Compte</h2>
+                {% if target.is_active %}
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Actif</span>
+                {% else %}
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">Désactivé</span>
+                {% endif %}
+                {% if target.is_staff %}
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-900 text-white">Équipe</span>
+                {% endif %}
+                {% if target.is_premium %}
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    <i class="fa-solid fa-crown mr-1"></i>{{ target.get_subscription_plan_display|default:"Premium" }}
+                </span>
+                {% endif %}
+            </div>
+
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Email</dt>
+                    <dd class="font-medium text-slate-900 break-all">{{ target.email }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Identifiant technique</dt>
+                    <dd class="font-medium text-slate-900">#{{ target.pk }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Dernière connexion</dt>
+                    <dd class="font-medium text-slate-900">{% if target.last_login %}{{ target.last_login|date:"d/m/Y à H:i" }}{% else %}Jamais{% endif %}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Crédits IA</dt>
+                    <dd class="font-medium text-slate-900">{{ target.ai_credits }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Fin d'abonnement</dt>
+                    <dd class="font-medium text-slate-900">
+                        {% if target.subscription_end_date %}{{ target.subscription_end_date|date:"d/m/Y à H:i" }}{% else %}—{% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Total dépensé</dt>
+                    <dd class="font-bold text-slate-900">{% if total_spent %}{{ total_spent|floatformat:2 }} €{% else %}—{% endif %}</dd>
+                </div>
+                {% if target.profile %}
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Localisation</dt>
+                    <dd class="font-medium text-slate-900">{{ target.profile.location|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-slate-500 mb-0.5">Code ROME cible</dt>
+                    <dd class="font-medium text-slate-900">{{ target.profile.target_rome_code|default:"—" }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        <!-- CV et alertes -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 md:p-6 pb-3">
+                <h2 class="text-lg font-bold text-slate-900">CV déposés ({{ resumes|length }})</h2>
+                <p class="text-sm text-slate-500 mt-0.5">Les fichiers ne sont pas téléchargeables depuis le back-office.</p>
+            </div>
+            <div class="divide-y divide-slate-100">
+                {% for resume in resumes %}
+                <div class="px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-900">
+                            {{ resume.title }}
+                            {% if resume.is_primary %}
+                            <span class="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Principal</span>
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Déposé le {{ resume.uploaded_at|date:"d/m/Y" }}
+                            {% if resume.detected_job_title %} · Poste détecté : {{ resume.detected_job_title }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% for alert in resume.job_alerts.all %}
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full {% if alert.is_active %}bg-emerald-100 text-emerald-800{% else %}bg-slate-100 text-slate-600{% endif %}">
+                            <i class="fa-solid fa-bell mr-1"></i>Alerte {% if alert.is_active %}active{% else %}inactive{% endif %}
+                        </span>
+                        {% endfor %}
+                        <span class="text-xs text-slate-500">{{ resume.detected_skills|length }} compétence{{ resume.detected_skills|length|pluralize }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="px-6 py-8 text-sm text-slate-500 text-center">Aucun CV déposé.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Registre des crédits -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 md:p-6 pb-3">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 class="text-lg font-bold text-slate-900">Registre des crédits</h2>
+                    {% if ledger_balance == target.ai_credits %}
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <i class="fa-solid fa-check mr-1"></i>Registre cohérent
+                    </span>
+                    {% else %}
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i>Écart : solde {{ target.ai_credits }}, registre {{ ledger_balance }}
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    Chaque mouvement de crédit, avec son motif. Répond à « pourquoi ai-je perdu un crédit ».
+                </p>
+            </div>
+            <div class="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                {% for entry in credit_history %}
+                <div class="px-4 md:px-6 py-3 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-900">
+                            {{ entry.get_reason_display }}
+                            {% if entry.operation %}
+                            <span class="ml-1 font-mono text-xs text-slate-500">{{ entry.operation }}</span>
+                            {% endif %}
+                        </p>
+                        {% if entry.note %}
+                        <p class="text-xs text-slate-500 mt-0.5">{{ entry.note }}</p>
+                        {% endif %}
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            {{ entry.created_at|date:"d/m/Y H:i" }}
+                            {% if entry.balance_after is not None %} · solde après : {{ entry.balance_after }}{% endif %}
+                        </p>
+                    </div>
+                    <span class="font-bold text-sm whitespace-nowrap flex-shrink-0 {% if entry.delta > 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {% if entry.delta > 0 %}+{% endif %}{{ entry.delta }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="px-6 py-8 text-sm text-slate-500 text-center">
+                    Aucun mouvement enregistré. Ce compte est antérieur au registre —
+                    lancez <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">manage.py reconcile_credits --fix</code>.
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 md:p-6 pb-3">
+                <h2 class="text-lg font-bold text-slate-900">Paiements</h2>
+            </div>
+            <div class="divide-y divide-slate-100">
+                {% for tx in transactions %}
+                <div class="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-900">{% if tx.amount %}{{ tx.amount|floatformat:2 }} €{% else %}Montant non enregistré{% endif %}</p>
+                        <p class="text-xs text-slate-500 font-mono truncate">{{ tx.stripe_session_id }}</p>
+                    </div>
+                    <span class="text-xs text-slate-500 whitespace-nowrap">{{ tx.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% empty %}
+                <p class="px-6 py-8 text-sm text-slate-500 text-center">Aucun paiement enregistré.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne latérale : activité et actions -->
+    <div class="space-y-4 md:space-y-6">
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Activité</h2>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                    <span class="text-sm text-slate-600">Matchs générés</span>
+                    <span class="font-bold text-slate-900">{{ match_stats.total }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                    <span class="text-sm text-slate-600">Offres débloquées</span>
+                    <span class="font-bold text-slate-900">{{ match_stats.unlocked }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                    <span class="text-sm text-slate-600">Candidatures envoyées</span>
+                    <span class="font-bold text-slate-900">{{ match_stats.applied }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions d'assistance -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 space-y-5">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Actions</h2>
+                <p class="text-sm text-slate-500 mt-0.5">Chaque action est enregistrée au journal d'audit.</p>
+            </div>
+
+            <!-- Crédits -->
+            <form method="post" action="{% url 'administration:user_action' target.pk %}" class="space-y-3 pb-5 border-b border-slate-100">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="grant_credits">
+                <p class="text-sm font-semibold text-slate-800">Ajuster les crédits IA</p>
+                {{ credits_form.amount }}
+                {{ credits_form.reason }}
+                <button type="submit" class="w-full px-4 py-2.5 rounded-lg bg-[#125484] text-white text-sm font-semibold hover:bg-[#0d3f63] transition-colors">
+                    <i class="fa-solid fa-coins mr-1.5"></i>Appliquer
+                </button>
+            </form>
+
+            <!-- Abonnement -->
+            <form method="post" action="{% url 'administration:user_action' target.pk %}" class="space-y-3 pb-5 border-b border-slate-100">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="extend_subscription">
+                <p class="text-sm font-semibold text-slate-800">Prolonger l'abonnement</p>
+                {{ extend_form.days }}
+                {{ extend_form.reason }}
+                <button type="submit" class="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-calendar-plus mr-1.5"></i>Prolonger
+                </button>
+            </form>
+
+            <!-- Activation -->
+            <form method="post" action="{% url 'administration:user_action' target.pk %}"
+                  onsubmit="return confirm('{% if target.is_active %}Désactiver{% else %}Réactiver{% endif %} le compte de {{ target.email|escapejs }} ?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_active">
+                <button type="submit"
+                        class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors {% if target.is_active %}bg-red-50 text-red-700 border border-red-200 hover:bg-red-100{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100{% endif %}">
+                    <i class="fa-solid {% if target.is_active %}fa-user-slash{% else %}fa-user-check{% endif %} mr-1.5"></i>
+                    {% if target.is_active %}Désactiver le compte{% else %}Réactiver le compte{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Journal lié à cet utilisateur -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 md:p-6 pb-3">
+                <h2 class="text-lg font-bold text-slate-900">Interventions récentes</h2>
+            </div>
+            <div class="divide-y divide-slate-100">
+                {% for entry in audit_entries %}
+                <div class="px-4 md:px-6 py-3">
+                    <p class="text-sm font-medium text-slate-800">{{ entry.get_action_display }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        {{ entry.created_at|date:"d/m/Y H:i" }}
+                        {% if entry.actor %} · {{ entry.actor.email }}{% endif %}
+                    </p>
+                    {% if entry.details.reason %}
+                    <p class="text-xs text-slate-500 mt-1 italic">« {{ entry.details.reason }} »</p>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="px-6 py-8 text-sm text-slate-500 text-center">Aucune intervention.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

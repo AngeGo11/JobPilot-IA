@@ -1,0 +1,27 @@
+{% load administration_extras %}
+{% comment %}
+Carte de statistique — reprend le style des cartes du dashboard candidat.
+Paramètres : label, value, icon, color (classe texte), suffix, delta, hint, url
+
+`{% comment %}` et non `{# … #}` : la syntaxe courte de Django ne couvre
+qu'une seule ligne. Sur plusieurs lignes, elle n'est pas reconnue comme un
+commentaire et le texte s'affiche tel quel dans la page.
+{% endcomment %}
+<div class="relative bg-white rounded-xl shadow-sm p-4 md:p-6 border border-slate-200 overflow-hidden transition-all duration-200 hover:shadow-md w-full">
+    <div class="relative z-10">
+        <p class="text-slate-500 text-xs font-medium uppercase tracking-wide mb-2">{{ label }}</p>
+        <p class="text-2xl md:text-4xl font-bold text-slate-900">{{ value }}{% if suffix %}<span class="text-lg md:text-xl font-semibold text-slate-500 ml-1">{{ suffix }}</span>{% endif %}</p>
+        {# `delta` non fourni se résout en chaîne vide, d'où le test explicite sur 0. #}
+        {% if delta or delta == 0 %}
+        <p class="mt-2 text-xs font-semibold {{ delta|trend_style }}">
+            <i class="fa-solid {{ delta|trend_icon }} mr-1"></i>{{ delta }} % sur 30 j
+        </p>
+        {% elif hint %}
+        <p class="mt-2 text-xs text-slate-500">{{ hint }}</p>
+        {% endif %}
+    </div>
+    <div class="absolute right-4 top-4 opacity-10">
+        <i class="fa-solid {{ icon|default:'fa-chart-simple' }} {{ color|default:'text-[#125484]' }} text-6xl"></i>
+    </div>
+    {% if url %}<a href="{{ url }}" class="absolute inset-0" aria-label="{{ label }}"></a>{% endif %}
+</div>

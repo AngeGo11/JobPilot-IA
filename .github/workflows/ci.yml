@@ -1,0 +1,110 @@
+name: CI
+
+# Exécuté sur chaque push et chaque pull request. Le workflow de déploiement
+# attend le succès de celui-ci : sans cette barrière, un test cassé partait
+# directement en production.
+on:
+  # Toutes les branches SAUF main : sur main, la CI est appelée par le workflow
+  # de déploiement via `needs`. Sans cette exclusion, un push sur main
+  # déclencherait deux exécutions identiques.
+  push:
+    branches-ignore: [main]
+  pull_request:
+  workflow_call:      # appelé par le workflow de déploiement
+
+# Un nouveau push sur la même branche annule l'exécution précédente : inutile
+# de payer des minutes pour valider un commit déjà remplacé.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests et contrôles
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # pgvector, et PG 16 comme en production : l'extension « vector » est
+        # requise par la migration matching.0010. Avec l'image postgres nue,
+        # `CREATE EXTENSION vector` échoue et la CI casse à chaque push.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: jobpilot_test
+          POSTGRES_USER: jobpilot
+          POSTGRES_PASSWORD: jobpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jobpilot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Valeurs factices : la suite de tests ne contacte aucun service externe.
+      # Elles existent uniquement pour satisfaire la lecture des settings.
+      DJANGO_SECRET_KEY: cle-de-test-uniquement-non-utilisee-en-production-0000
+      DEBUG: "false"
+      ENVIRONMENT: test
+      DATABASE_URL: postgres://jobpilot:jobpilot@127.0.0.1:5432/jobpilot_test
+      SITE_URL: http://127.0.0.1:8000
+      GEMINI_MAX_RPM: "10"
+      GEMINI_FAIR_USE_LIMIT: "50"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+
+      - name: Cohérence des dépendances
+        # `pip check` détecte les incompatibilités entre versions épinglées.
+        # Un environnement local où les paquets ont été installés un par un
+        # peut masquer un conflit que la résolution propre de la CI rejette :
+        # c'est arrivé avec redis épinglé en 7.x alors que celery 5.4 exige
+        # une version inférieure à 6.
+        run: pip check
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Feuille Tailwind à jour
+        # `static/css/app.css` est un artefact commité : sans ce garde-fou, une
+        # classe ajoutée dans un gabarit part en production sans son style.
+        run: |
+          make css
+          git diff --exit-code static/css/app.css \
+            || { echo "::error::static/css/app.css est périmé — lancez 'make css' et committez le résultat."; exit 1; }
+
+      - name: Analyse statique (ruff)
+        run: ruff check . --output-format=github
+        continue-on-error: true   # informatif tant que la base n'est pas nettoyée
+
+      - name: Contrôles Django
+        run: python manage.py check
+
+      - name: Migrations manquantes
+        # Échoue si un modèle a été modifié sans générer la migration
+        # correspondante — cause classique d'un déploiement qui casse en prod.
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Suite de tests
+        run: python manage.py test --verbosity 2
+
+      - name: Contrôles de déploiement
+        # `check --deploy` sur les réglages de production, sans démarrer le site.
+        env:
+          ENVIRONMENT: production
+          DJANGO_SETTINGS_MODULE: JobPilot.settings.prod
+          REDIS_URL: redis://127.0.0.1:6379/0
+        run: python manage.py check --deploy --fail-level WARNING

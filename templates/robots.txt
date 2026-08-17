@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /$
+Allow: /subscriptions/pricing/
+Allow: /cgu/
+Allow: /mentions-legales/
+Allow: /politique-confidentialite/
+
+# Espaces privés ou sans valeur d'indexation : on économise le budget de crawl
+Disallow: /admin/
+Disallow: /administration/
+Disallow: /accounts/
+Disallow: /dashboard/
+Disallow: /resumes/
+Disallow: /matching/
+Disallow: /users/settings/
+Disallow: /users/password-reset/
+Disallow: /subscriptions/success/
+
+Sitemap: {{ SITE_URL }}/sitemap.xml

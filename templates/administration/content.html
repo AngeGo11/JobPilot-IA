@@ -1,0 +1,246 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Offres &amp; matching{% endblock %}
+{% block page_title %}Offres &amp; matching{% endblock %}
+{% block page_subtitle %}Volumétrie du cœur métier : CV analysés, offres France Travail, matchs et alertes{% endblock %}
+
+{% block admin_content %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    {% include 'administration/_stat_card.html' with label="CV déposés" value=content.resumes.total icon="fa-file-pdf" hint=content.resumes.new_7d|stringformat:"s"|add:" cette semaine" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="CV analysés par l'IA" value=content.resumes.analysed icon="fa-wand-magic-sparkles" color="text-emerald-600" hint=content.resumes.analysed_rate|stringformat:"s"|add:" % du total" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Offres en base" value=content.offers.total icon="fa-briefcase" hint=content.offers.new_7d|stringformat:"s"|add:" cette semaine" delta=None url=None %}
+    {% include 'administration/_stat_card.html' with label="Alertes actives" value=content.alerts.active icon="fa-bell" color="text-amber-500" hint=content.alerts.total|stringformat:"s"|add:" au total" delta=None url=None %}
+</div>
+
+<!-- Comparaison des deux méthodes de scoring -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 md:p-6 pb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Matching sémantique</h2>
+            <p class="text-sm text-slate-500 mt-0.5">
+                Comparaison entre le score par mots-clés et le score sémantique, pour décider de la bascule.
+            </p>
+        </div>
+        {% if semantic.stats.enabled %}
+        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <i class="fa-solid fa-check mr-1"></i>Sémantique actif
+        </span>
+        {% else %}
+        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+            <i class="fa-solid fa-eye mr-1"></i>Mode ombre — calculé, non affiché
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Couverture -->
+    <div class="px-4 md:px-6 pb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <p class="text-xs uppercase tracking-wide text-slate-500">Offres vectorisées</p>
+            <p class="text-xl font-bold text-slate-900">{{ semantic.coverage.offers_embedded }} <span class="text-sm font-normal text-slate-500">/ {{ semantic.coverage.offers_total }}</span></p>
+            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div class="bg-[#125484] h-full rounded-full" style="width: {{ semantic.coverage.offers_rate }}%"></div>
+            </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <p class="text-xs uppercase tracking-wide text-slate-500">CV vectorisés</p>
+            <p class="text-xl font-bold text-slate-900">{{ semantic.coverage.resumes_embedded }} <span class="text-sm font-normal text-slate-500">/ {{ semantic.coverage.resumes_total }}</span></p>
+            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div class="bg-[#125484] h-full rounded-full" style="width: {{ semantic.coverage.resumes_rate }}%"></div>
+            </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+            <p class="text-xs uppercase tracking-wide text-slate-500">Matchs comparables</p>
+            <p class="text-xl font-bold text-slate-900">{{ semantic.stats.compared }} <span class="text-sm font-normal text-slate-500">/ {{ semantic.coverage.matches_total }}</span></p>
+            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div class="bg-[#125484] h-full rounded-full" style="width: {{ semantic.coverage.matches_rate }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    {% if semantic.stats.compared %}
+    <div class="px-4 md:px-6 pb-5 grid grid-cols-2 lg:grid-cols-4 gap-3 border-t border-slate-100 pt-4">
+        <div>
+            <p class="text-xs uppercase tracking-wide text-slate-500">Score moyen mots-clés</p>
+            <p class="text-2xl font-bold text-slate-900">{{ semantic.stats.avg_keyword }} %</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wide text-slate-500">Score moyen sémantique</p>
+            <p class="text-2xl font-bold text-slate-900">{{ semantic.stats.avg_semantic }} %</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wide text-red-600">Faux positifs évités</p>
+            <p class="text-2xl font-bold text-red-700">{{ semantic.stats.faux_positifs }}</p>
+            <p class="text-xs text-slate-500 mt-0.5">retenus par mots-clés, écartés par le sens</p>
+        </div>
+        <div>
+            <p class="text-xs uppercase tracking-wide text-emerald-700">Offres rattrapées</p>
+            <p class="text-2xl font-bold text-emerald-700">{{ semantic.stats.rattrapees }}</p>
+            <p class="text-xs text-slate-500 mt-0.5">ratées par mots-clés, pertinentes</p>
+        </div>
+    </div>
+
+    {% if semantic.divergent %}
+    <div class="border-t border-slate-100">
+        <p class="px-4 md:px-6 py-3 text-sm font-semibold text-slate-800">
+            Plus gros désaccords — à juger à l'œil avant de basculer
+        </p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-y border-slate-200">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <th class="px-4 md:px-6 py-2.5">CV</th>
+                        <th class="px-4 py-2.5">Offre proposée</th>
+                        <th class="px-4 py-2.5 text-right">Mots-clés</th>
+                        <th class="px-4 md:px-6 py-2.5 text-right">Sémantique</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in semantic.divergent %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 md:px-6 py-2.5 text-slate-700 truncate max-w-[14rem]">{{ m.resume.detected_job_title|default:m.resume.title }}</td>
+                        <td class="px-4 py-2.5 text-slate-700 truncate max-w-[16rem]">{{ m.job_offer.title }}</td>
+                        <td class="px-4 py-2.5 text-right font-semibold text-red-600">{{ m.score }} %</td>
+                        <td class="px-4 md:px-6 py-2.5 text-right font-semibold text-slate-900">{{ m.semantic_score }} %</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="px-6 py-8 text-sm text-slate-500 text-center border-t border-slate-100">
+        Aucune correspondance vectorisée pour l'instant. Lancez
+        <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">manage.py backfill_embeddings</code>
+        pour calculer les vecteurs du contenu existant.
+    </p>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+
+    <!-- Qualité du matching -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Matching</h2>
+        <p class="text-sm text-slate-500 mb-5">Score moyen : <span class="font-bold text-slate-900">{{ content.matches.avg_score }} %</span></p>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <span class="text-sm text-slate-600">Matchs générés</span>
+                <span class="font-bold text-slate-900">{{ content.matches.total }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <span class="text-sm text-slate-600">Débloqués (crédit consommé)</span>
+                <span class="font-bold text-slate-900">{{ content.matches.unlocked }} <span class="text-xs font-normal text-slate-500">({{ content.matches.unlock_rate }} %)</span></span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <span class="text-sm text-slate-600">Candidatures envoyées</span>
+                <span class="font-bold text-slate-900">{{ content.matches.applied }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                <span class="text-sm text-slate-600">Rejetés par le candidat</span>
+                <span class="font-bold text-slate-900">{{ content.matches.rejected }}</span>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-bold text-slate-900 mt-6 mb-3">Répartition par statut</h3>
+        <div class="space-y-2">
+            {% for row in match_status %}
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">{{ row.status }}</span>
+                <span class="font-semibold text-slate-900">{{ row.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Offres les plus consultées -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 md:p-6 pb-3">
+            <h2 class="text-lg font-bold text-slate-900">Offres les plus débloquées</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Ce qui intéresse réellement les candidats</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-y border-slate-200">
+                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <th class="px-4 md:px-6 py-3">Offre</th>
+                        <th class="px-4 py-3">Lieu</th>
+                        <th class="px-4 py-3 text-right">Matchs</th>
+                        <th class="px-4 md:px-6 py-3 text-right">Débloqués</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for offer in top_offers %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 md:px-6 py-3">
+                            <p class="font-medium text-slate-900 truncate max-w-xs">{{ offer.title }}</p>
+                            <p class="text-xs text-slate-500">{{ offer.company_name|default:"Entreprise non précisée" }}</p>
+                        </td>
+                        <td class="px-4 py-3 text-slate-600">{{ offer.location|default:"—" }}</td>
+                        <td class="px-4 py-3 text-right text-slate-600">{{ offer.match_count }}</td>
+                        <td class="px-4 md:px-6 py-3 text-right font-bold text-slate-900">{{ offer.unlocked_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="px-6 py-12 text-center text-slate-500">Aucun match généré pour l'instant.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Alertes -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 md:p-6 pb-3">
+        <h2 class="text-lg font-bold text-slate-900">Alertes emails</h2>
+        <p class="text-sm text-slate-500 mt-0.5">
+            {{ content.alerts.active }} active{{ content.alerts.active|pluralize }} ·
+            {{ content.alerts.stale }} sans vérification depuis 48 h ·
+            {{ content.alerts.never_checked }} jamais vérifiée{{ content.alerts.never_checked|pluralize }}
+        </p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-y border-slate-200">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Candidat</th>
+                    <th class="px-4 py-3">CV suivi</th>
+                    <th class="px-4 py-3">Poste ciblé</th>
+                    <th class="px-4 py-3">Dernière vérification</th>
+                    <th class="px-4 md:px-6 py-3">État</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for alert in page_obj %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 md:px-6 py-3">
+                        <a href="{% url 'administration:user_detail' alert.resume.user_id %}" class="text-[#125484] hover:underline font-medium">
+                            {{ alert.resume.user.email }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600 truncate max-w-[12rem]">{{ alert.resume.title }}</td>
+                    <td class="px-4 py-3 text-slate-600 truncate max-w-[14rem]">{{ alert.resume.detected_job_title|default:"—" }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap {% if alert.is_active and alert.last_checked and alert.last_checked < stale_threshold %}text-red-600 font-semibold{% else %}text-slate-600{% endif %}">
+                        {% if alert.last_checked %}{{ alert.last_checked|date:"d/m/Y H:i" }}{% else %}<span class="text-amber-600 font-semibold">Jamais</span>{% endif %}
+                    </td>
+                    <td class="px-4 md:px-6 py-3">
+                        {% if alert.is_active %}
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Active</span>
+                        {% else %}
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-12 text-center text-slate-500">Aucune alerte configurée.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'administration/_pagination.html' %}
+
+{% endblock %}

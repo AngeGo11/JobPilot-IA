@@ -1,16 +1,4 @@
-Django~=5.2.10
-dotenv~=0.9.9
-python-dotenv~=1.2.1
-dj-database-url~=2.2.0
-psycopg2-binary~=2.9.10
-requests~=2.32.5
-django-storages[azure]~=1.14.2
-pdfplumber
-google-genai
-reportlab
-django-allauth
-PyJWT
-stripe
-python-docx
-gunicorn
-whitenoise==6.6.0
+# Point d'entrée conservé pour compatibilité (Azure Oryx lance
+# `pip install -r requirements.txt` à la racine).
+# Le détail des dépendances vit dans requirements/.
+-r requirements/prod.txt

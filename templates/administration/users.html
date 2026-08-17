@@ -1,0 +1,153 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Utilisateurs{% endblock %}
+{% block page_title %}Utilisateurs{% endblock %}
+{% block page_subtitle %}{{ totals.total }} inscrit{{ totals.total|pluralize }} · {{ totals.premium }} abonné{{ totals.premium|pluralize }} · {{ totals.inactive }} compte{{ totals.inactive|pluralize }} désactivé{{ totals.inactive|pluralize }}{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'administration:export_users' %}"
+   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+    <i class="fa-solid fa-file-csv"></i>Exporter (CSV anonymisé)
+</a>
+{% endblock %}
+
+{% block admin_content %}
+
+<!-- Filtres -->
+<form method="get" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2">
+            <label for="q" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">Recherche</label>
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                <input type="search" id="q" name="q" value="{{ query }}" placeholder="Email, nom ou prénom"
+                       class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#125484] focus:border-[#125484]">
+            </div>
+        </div>
+        <div>
+            <label for="status" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">Statut</label>
+            <select id="status" name="status" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#125484]">
+                <option value="">Tous</option>
+                <option value="premium" {% if status == 'premium' %}selected{% endif %}>Abonnés actifs</option>
+                <option value="free" {% if status == 'free' %}selected{% endif %}>Sans abonnement</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Comptes désactivés</option>
+                <option value="staff" {% if status == 'staff' %}selected{% endif %}>Équipe</option>
+            </select>
+        </div>
+        <div>
+            <label for="plan" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">Formule</label>
+            <select id="plan" name="plan" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#125484]">
+                <option value="">Toutes</option>
+                {% for value, label in plans %}
+                <option value="{{ value }}" {% if plan == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 mt-4">
+        <label for="sort" class="text-xs font-medium uppercase tracking-wide text-slate-500">Trier par</label>
+        <select id="sort" name="sort" class="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#125484]">
+            <option value="-date_joined" {% if sort == '-date_joined' %}selected{% endif %}>Inscription (récent)</option>
+            <option value="date_joined" {% if sort == 'date_joined' %}selected{% endif %}>Inscription (ancien)</option>
+            <option value="-last_login" {% if sort == '-last_login' %}selected{% endif %}>Dernière connexion</option>
+            <option value="-spent" {% if sort == '-spent' %}selected{% endif %}>Montant dépensé</option>
+            <option value="-match_count" {% if sort == '-match_count' %}selected{% endif %}>Nombre de matchs</option>
+            <option value="-resume_count" {% if sort == '-resume_count' %}selected{% endif %}>Nombre de CV</option>
+            <option value="email" {% if sort == 'email' %}selected{% endif %}>Email (A→Z)</option>
+        </select>
+        <button type="submit" class="px-5 py-2 rounded-lg bg-[#125484] text-white text-sm font-semibold hover:bg-[#0d3f63] transition-colors">
+            <i class="fa-solid fa-filter mr-1.5"></i>Filtrer
+        </button>
+        {% if query or plan or status %}
+        <a href="{% url 'administration:users' %}" class="text-sm text-slate-500 hover:text-slate-800">Réinitialiser</a>
+        {% endif %}
+    </div>
+</form>
+
+<!-- Résultats -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-slate-600 px-1">
+    <p>
+        {% if page_obj.paginator.count %}
+        Affichage de <span class="font-semibold text-slate-900">{{ page_obj.start_index }}</span> à
+        <span class="font-semibold text-slate-900">{{ page_obj.end_index }}</span> sur
+        <span class="font-semibold text-slate-900">{{ page_obj.paginator.count }}</span> utilisateur{{ page_obj.paginator.count|pluralize }}
+        {% else %}
+        Aucun utilisateur ne correspond à ces critères.
+        {% endif %}
+    </p>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <p class="text-slate-500 font-medium">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</p>
+    {% endif %}
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Utilisateur</th>
+                    <th class="px-4 py-3">Inscription</th>
+                    <th class="px-4 py-3">Dernière connexion</th>
+                    <th class="px-4 py-3">Formule</th>
+                    <th class="px-4 py-3 text-right">Crédits</th>
+                    <th class="px-4 py-3 text-right">CV</th>
+                    <th class="px-4 py-3 text-right">Matchs</th>
+                    <th class="px-4 py-3 text-right">Dépensé</th>
+                    <th class="px-4 md:px-6 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for u in page_obj %}
+                <tr class="hover:bg-slate-50 transition-colors {% if not u.is_active %}opacity-60{% endif %}">
+                    <td class="px-4 md:px-6 py-3">
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <p class="font-semibold text-slate-900">{{ u.get_full_name|default:"—" }}</p>
+                                <p class="text-xs text-slate-500">{{ u.email }}</p>
+                            </div>
+                            {% if u.is_staff %}
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-900 text-white">Équipe</span>
+                            {% endif %}
+                            {% if not u.is_active %}
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Désactivé</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ u.date_joined|date:"d/m/Y" }}</td>
+                    <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
+                        {% if u.last_login %}{{ u.last_login|date:"d/m/Y" }}{% else %}<span class="text-slate-500">Jamais</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if u.is_premium %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <i class="fa-solid fa-crown"></i>{{ u.get_subscription_plan_display|default:"Premium" }}
+                        </span>
+                        {% else %}
+                        <span class="text-xs text-slate-500">Gratuit</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold text-slate-700">{{ u.ai_credits }}</td>
+                    <td class="px-4 py-3 text-right text-slate-600">{{ u.resume_count }}</td>
+                    <td class="px-4 py-3 text-right text-slate-600">{{ u.match_count }}</td>
+                    <td class="px-4 py-3 text-right font-semibold text-slate-900 whitespace-nowrap">
+                        {% if u.spent %}{{ u.spent|floatformat:2 }} €{% else %}<span class="text-slate-500">—</span>{% endif %}
+                    </td>
+                    <td class="px-4 md:px-6 py-3 text-right">
+                        <a href="{% url 'administration:user_detail' u.pk %}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#125484] hover:bg-blue-50 transition-colors">
+                            Détail <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="px-6 py-12 text-center text-slate-500">Aucun résultat.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'administration/_pagination.html' %}
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{# Pagination du back-office. `querystring` (optionnel) conserve les filtres actifs. #}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="flex items-center justify-center gap-1.5" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+       class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+    </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <span class="px-3.5 py-2 rounded-lg text-sm font-semibold bg-[#125484] text-white">{{ num }}</span>
+        {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a href="?page={{ num }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+           class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+       class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+    </a>
+    {% endif %}
+</nav>
+{% endif %}

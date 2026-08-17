@@ -1,0 +1,99 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Paramètres{% endblock %}
+{% block page_title %}Paramètres généraux{% endblock %}
+{% block page_subtitle %}
+    Dernière modification le {{ instance.updated_at|date:"d/m/Y à H:i" }}{% if instance.updated_by %} par {{ instance.updated_by.email }}{% endif %}
+{% endblock %}
+
+{% block admin_content %}
+
+{% if instance.maintenance_mode %}
+<div class="bg-red-50 border border-red-200 rounded-xl p-4 md:p-5 flex items-start gap-3">
+    <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mt-0.5"></i>
+    <div>
+        <p class="font-bold text-red-900">Le mode maintenance est actif</p>
+        <p class="text-sm text-red-700 mt-1">Les visiteurs voient une page d'indisponibilité. L'équipe (comptes <code>is_staff</code>) et les webhooks Stripe continuent d'accéder au site.</p>
+    </div>
+</div>
+{% endif %}
+
+<form method="post" class="space-y-4 md:space-y-6">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 text-sm">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Disponibilité -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Disponibilité du site</h2>
+        <p class="text-sm text-slate-500 mb-5">Coupure planifiée et ouverture des inscriptions</p>
+        <div class="space-y-5">
+            {% include 'administration/_field.html' with field=form.maintenance_mode %}
+            {% include 'administration/_field.html' with field=form.maintenance_message %}
+            {% include 'administration/_field.html' with field=form.registrations_open %}
+        </div>
+    </div>
+
+    <!-- Quotas -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Quotas et règles métier</h2>
+        <p class="text-sm text-slate-500 mb-5">Ces valeurs s'appliquent aux nouveaux comptes et aux prochains calculs de matching</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {% include 'administration/_field.html' with field=form.signup_free_credits %}
+            {% include 'administration/_field.html' with field=form.max_resumes_per_user %}
+            {% include 'administration/_field.html' with field=form.matching_min_score %}
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Alertes emails</h2>
+        <p class="text-sm text-slate-500 mb-5">Emails envoyés par la tâche <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded">check_new_offers</code></p>
+        <div class="space-y-5">
+            {% include 'administration/_field.html' with field=form.alerts_enabled %}
+            {% include 'administration/_field.html' with field=form.alerts_max_offers_per_email %}
+        </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+        <h2 class="text-lg font-bold text-slate-900 mb-1">Communication</h2>
+        <p class="text-sm text-slate-500 mb-5">Informations affichées aux utilisateurs</p>
+        <div class="space-y-5">
+            {% include 'administration/_field.html' with field=form.contact_email %}
+            {% include 'administration/_field.html' with field=form.support_notice %}
+        </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+        <button type="submit" class="px-6 py-3 rounded-lg bg-[#125484] text-white font-semibold hover:bg-[#0d3f63] transition-colors">
+            <i class="fa-solid fa-floppy-disk mr-2"></i>Enregistrer les paramètres
+        </button>
+        <a href="{% url 'administration:overview' %}" class="px-6 py-3 rounded-lg text-slate-600 font-medium hover:bg-slate-100 transition-colors">Annuler</a>
+    </div>
+</form>
+
+<!-- Variables d'environnement -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6">
+    <h2 class="text-lg font-bold text-slate-900 mb-1">Configuration technique</h2>
+    <p class="text-sm text-slate-500 mb-5">
+        Ces valeurs proviennent des variables d'environnement et se modifient sur l'hébergeur, pas ici.
+        Les valeurs elles-mêmes ne sont jamais affichées.
+    </p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for item in environment %}
+        <div class="flex items-center justify-between p-3 rounded-lg border {% if item.configured %}bg-emerald-50 border-emerald-200{% else %}bg-red-50 border-red-200{% endif %}">
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-slate-800 truncate">{{ item.label }}</p>
+                <p class="text-xs text-slate-500 font-mono truncate">{{ item.name }}</p>
+            </div>
+            <i class="fa-solid {% if item.configured %}fa-circle-check text-emerald-600{% else %}fa-circle-xmark text-red-600{% endif %} text-lg ml-2 flex-shrink-0"></i>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

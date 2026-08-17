@@ -10,11 +10,23 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 import logging
 from resumes.models import Resume
-from .models import JobMatch, JobAlert
+from .models import AIJob, JobMatch, JobAlert
 from .services import consume_credit, refund_credit
 from .services.francetravail import FranceTravail
 from .services.ai_letter_generator import AILetterGenerator
 from .forms import CoverLetterGenerationForm, CoverLetterEditForm, CoverLetterRefineForm
+from .tasks import (
+    generate_cover_letter_task,
+    optimize_cv_task,
+    refine_cover_letter_task,
+)
+from .use_cases import (
+    AIOperation,
+    AIOperationError,
+    InsufficientCredits,
+    MSG_NO_CREDIT,
+    MSG_OVERLOADED,
+)
 from resumes.services.ai_optimizer import AIOptimizer
 from utils.gemini_safe import FairUseExceeded, GeminiServiceUnavailable
 
@@ -28,6 +40,74 @@ MSG_IA_SURCHARGE_NO_CREDIT = (
 MSG_IA_SURCHARGE_JSON = (
     "Nos serveurs d'IA sont momentanément surchargés. Aucun crédit n'a été décompté. Veuillez réessayer dans quelques instants."
 )
+
+
+def _job_payload(job, success_message=None):
+    """Représentation JSON d'un traitement IA, commune à toutes les vues."""
+    payload = {
+        'task_id': job.task_id,
+        'status': job.status,
+        'operation': job.operation,
+        'poll_url': reverse('ai_job_status', kwargs={'task_id': job.task_id}),
+    }
+
+    if job.status == AIJob.Status.SUCCESS:
+        payload['success'] = True
+        payload['message'] = success_message or 'Traitement terminé.'
+        # `refined_letter` et `data` : noms attendus par le JavaScript existant
+        # du workspace, conservés pour ne rien casser côté interface.
+        result = job.result or {}
+        if 'letter' in result:
+            payload['refined_letter'] = result['letter']
+        if 'suggestions' in result:
+            payload['data'] = result['suggestions']
+        payload['new_credits'] = job.user.ai_credits or 0
+
+    elif job.status == AIJob.Status.FAILURE:
+        payload['success'] = False
+        payload['error'] = job.error or MSG_OVERLOADED
+
+    else:
+        payload['success'] = True
+        payload['pending'] = True
+        payload['message'] = "Traitement en cours…"
+
+    return payload
+
+
+def _job_response(request, job, success_message=None):
+    """
+    Réponse à l'enfilement d'un traitement.
+
+    - 200 si le travail est déjà terminé (mode synchrone, sans broker) ;
+    - 202 « Accepted » sinon : le navigateur interroge `poll_url`.
+
+    Les deux formes portent la même charge utile, pour que le JavaScript n'ait
+    qu'un seul format à comprendre.
+    """
+    payload = _job_payload(job, success_message)
+    if job.status == AIJob.Status.FAILURE:
+        return JsonResponse(payload, status=job.error_status or 503)
+    if job.status == AIJob.Status.SUCCESS:
+        return JsonResponse(payload, status=200)
+    return JsonResponse(payload, status=202)
+
+
+@login_required
+def ai_job_status(request, task_id):
+    """
+    État d'un traitement IA.
+
+    Le filtre sur `user` est le contrôle d'accès : sans lui, connaître un
+    identifiant de tâche suffirait à lire la lettre de motivation d'un autre
+    candidat.
+    """
+    job = get_object_or_404(AIJob, task_id=task_id, user=request.user)
+    payload = _job_payload(job)
+    status = 200
+    if job.status == AIJob.Status.FAILURE:
+        status = job.error_status or 503
+    return JsonResponse(payload, status=status)
 
 
 class FindJobsLoadingView(LoginRequiredMixin, TemplateView):
@@ -321,65 +401,24 @@ def quick_refine_cover_letter(request, match_id):
                 'success': False,
                 'error': "Le CV n'a pas de texte extrait. Veuillez ré-uploader le CV."
             }, status=400)
-        if not consume_credit(request.user):
-            return JsonResponse({
-                'success': False,
-                'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
-                'redirect': reverse('pricing'),
-            }, status=402)
-        request.user.refresh_from_db()
         try:
-            generator = AILetterGenerator()
-            generated_letter = generator.generate_cover_letter(
-                resume=resume,
+            job = AIOperation('generate_letter').enqueue(
+                request.user,
+                generate_cover_letter_task,
                 job_match=match,
-                tone="professional",
-                user_id=request.user.id,
+                match_id=match.pk,
+                resume_id=resume.pk,
+                user_id=request.user.pk,
             )
-            return JsonResponse({
-                'success': True,
-                'refined_letter': generated_letter,
-                'message': 'Lettre de motivation générée avec succès ! Vous pouvez maintenant la modifier et la sauvegarder.',
-                'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
-            })
-        except (BrokenPipeError, ConnectionError):
-            refund_credit(request.user)
-            logger.info("Client déconnecté (BrokenPipe/ConnectionError) lors de la génération lettre, crédit remboursé user_id=%s", request.user.pk)
-            return JsonResponse({
-                'success': False,
-                'error': MSG_IA_SURCHARGE_NO_CREDIT,
-            }, status=499)
-        except FairUseExceeded:
-            refund_credit(request.user)
-            return JsonResponse({
-                'success': False,
-                'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte). Ne vous inquiétez pas, AUCUN crédit n'a été décompté."
-            }, status=429)
-        except GeminiServiceUnavailable:
-            refund_credit(request.user)
-            return JsonResponse({
-                'success': False,
-                'error': MSG_IA_SURCHARGE_NO_CREDIT,
-            }, status=503)
-        except ValueError as e:
-            refund_credit(request.user)
-            return JsonResponse({
-                'success': False,
-                'error': f"Erreur de validation : {str(e)}. Aucun crédit n'a été décompté."
-            }, status=400)
-        except Exception as e:
-            try:
-                refund_credit(request.user)
-            except Exception:
-                pass
-            try:
-                logger.exception("Erreur lors de la génération de la lettre user_id=%s : %s", request.user.pk, e)
-            except Exception:
-                pass
-            return JsonResponse({
-                'success': False,
-                'error': MSG_IA_SURCHARGE_JSON,
-            }, status=503)
+        except InsufficientCredits:
+            return JsonResponse(
+                {'success': False, 'error': MSG_NO_CREDIT, 'redirect': reverse('pricing')},
+                status=402,
+            )
+        except AIOperationError as exc:
+            return JsonResponse({'success': False, 'error': exc.message}, status=exc.status)
+
+        return _job_response(request, job)
 
     # --- improve / formalize / grammar / length : validation du texte puis crédit puis IA
     current_text = request.POST.get('cover_letter_content', match.cover_letter_content)
@@ -388,14 +427,6 @@ def quick_refine_cover_letter(request, match_id):
             'success': False,
             'error': "Vous devez d'abord rédiger une lettre de motivation."
         }, status=400)
-    if not consume_credit(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
-            'redirect': reverse('pricing'),
-        }, status=402)
-
-    request.user.refresh_from_db()
     action_mapping = {
         'improve': {
             'type': 'custom',
@@ -417,62 +448,25 @@ def quick_refine_cover_letter(request, match_id):
     action_config = action_mapping.get(action, action_mapping['improve'])
 
     try:
-        generator = AILetterGenerator()
-        final_instructions = generator._build_refinement_instructions(
-            action_config['instructions'],
-            action_config['type']
+        job = AIOperation(f'refine_{action}').enqueue(
+            request.user,
+            refine_cover_letter_task,
+            job_match=match,
+            match_id=match.pk,
+            current_text=current_text,
+            instructions=action_config['instructions'],
+            improvement_type=action_config['type'],
+            user_id=request.user.pk,
         )
-        refined_letter = generator.refine_cover_letter(
-            current_text,
-            final_instructions,
-            user_id=request.user.id,
+    except InsufficientCredits:
+        return JsonResponse(
+            {'success': False, 'error': MSG_NO_CREDIT, 'redirect': reverse('pricing')},
+            status=402,
         )
-        match.cover_letter_content = refined_letter
-        match.save()
-        return JsonResponse({
-            'success': True,
-            'refined_letter': refined_letter,
-            'message': 'Votre lettre a été améliorée avec succès !',
-            'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
-        })
-    except (BrokenPipeError, ConnectionError):
-        refund_credit(request.user)
-        logger.info("Client déconnecté lors de l'amélioration lettre, crédit remboursé user_id=%s", request.user.pk)
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_NO_CREDIT,
-        }, status=499)
-    except FairUseExceeded:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte). Ne vous inquiétez pas, AUCUN crédit n'a été décompté."
-        }, status=429)
-    except GeminiServiceUnavailable:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_NO_CREDIT,
-        }, status=503)
-    except ValueError as e:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': f"Erreur de validation : {str(e)}. Aucun crédit n'a été décompté."
-        }, status=400)
-    except Exception as e:
-        try:
-            refund_credit(request.user)
-        except Exception:
-            pass
-        try:
-            logger.exception("Erreur lors de l'amélioration de la lettre user_id=%s : %s", request.user.pk, e)
-        except Exception:
-            pass
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_JSON,
-        }, status=503)
+    except AIOperationError as exc:
+        return JsonResponse({'success': False, 'error': exc.message}, status=exc.status)
+
+    return _job_response(request, job, success_message='Votre lettre a été améliorée avec succès !')
 
 
 @login_required
@@ -577,66 +571,26 @@ def optimize_cv_view(request, match_id):
             'error': "Offre d'emploi introuvable."
         }, status=400)
 
-    if not consume_credit(request.user):
-        return JsonResponse({
-            'success': False,
-            'error': "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
-            'redirect': reverse('pricing'),
-        }, status=402)
-
-    request.user.refresh_from_db()
     try:
-        optimizer = AIOptimizer()
-        result = optimizer.optimize_for_offer(
-            cv_text=resume.extracted_text,
-            job_description=job_offer.description or '',
-            job_title=job_offer.title or '',
-            user_id=request.user.id,
+        job = AIOperation('optimize_cv').enqueue(
+            request.user,
+            optimize_cv_task,
+            job_match=match,
+            match_id=match.pk,
+            resume_id=resume.pk,
+            user_id=request.user.pk,
         )
-        return JsonResponse({
-            'success': True,
-            'data': result,
-            'message': "Suggestions d'adaptation du CV générées avec succès.",
-            'new_credits': getattr(request.user, 'ai_credits', 0) or 0,
-        })
-    except (BrokenPipeError, ConnectionError):
-        refund_credit(request.user)
-        logger.info("Client déconnecté lors de l'optimisation CV, crédit remboursé user_id=%s", request.user.pk)
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_NO_CREDIT,
-        }, status=499)
-    except FairUseExceeded:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte). Ne vous inquiétez pas, AUCUN crédit n'a été décompté."
-        }, status=429)
-    except GeminiServiceUnavailable:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_NO_CREDIT,
-        }, status=503)
-    except ValueError as e:
-        refund_credit(request.user)
-        return JsonResponse({
-            'success': False,
-            'error': str(e) + " Aucun crédit n'a été décompté."
-        }, status=400)
-    except Exception as e:
-        try:
-            refund_credit(request.user)
-        except Exception:
-            pass
-        try:
-            logger.exception("Erreur CV Optimizer user_id=%s : %s", request.user.pk, e)
-        except Exception:
-            pass
-        return JsonResponse({
-            'success': False,
-            'error': MSG_IA_SURCHARGE_JSON,
-        }, status=503)
+    except InsufficientCredits:
+        return JsonResponse(
+            {'success': False, 'error': MSG_NO_CREDIT, 'redirect': reverse('pricing')},
+            status=402,
+        )
+    except AIOperationError as exc:
+        return JsonResponse({'success': False, 'error': exc.message}, status=exc.status)
+
+    return _job_response(
+        request, job, success_message="Suggestions d'adaptation du CV générées avec succès."
+    )
 
 
 @login_required
@@ -658,86 +612,32 @@ def refine_cover_letter(request, match_id):
     if request.method == 'POST':
         form = CoverLetterRefineForm(request.POST)
         if form.is_valid():
-            if not consume_credit(request.user):
-                messages.error(
-                    request,
-                    "Vous n'avez plus de crédits. Veuillez recharger votre compte pour utiliser l'analyse IA.",
-                )
-                return redirect('pricing')
             instructions = form.cleaned_data['instructions']
             improvement_type = form.cleaned_data.get('improvement_type', 'custom')
 
-            try:
+            def action():
                 generator = AILetterGenerator()
-
-                # Construire les instructions finales selon le type d'amélioration
                 final_instructions = generator._build_refinement_instructions(
-                    instructions,
-                    improvement_type
+                    instructions, improvement_type
                 )
-
-                # Appeler le service de raffinement
-                refined_letter = generator.refine_cover_letter(
+                return generator.refine_cover_letter(
                     match.cover_letter_content,
                     final_instructions,
                     user_id=request.user.id,
                 )
 
-                # Sauvegarder la lettre améliorée
-                match.cover_letter_content = refined_letter
-                match.save()
+            try:
+                match.cover_letter_content = AIOperation('refine_letter').run(request.user, action)
+            except InsufficientCredits:
+                messages.error(request, MSG_NO_CREDIT)
+                return redirect('pricing')
+            except AIOperationError as exc:
+                messages.error(request, exc.message)
+                return redirect('refine_cover_letter', match_id=match_id)
 
-                messages.success(
-                    request,
-                    'Votre lettre de motivation a été améliorée avec succès !'
-                )
-
-                # Rediriger vers le workspace pour voir le résultat
-                return redirect('application_workspace', match_id=match_id)
-
-            except (BrokenPipeError, ConnectionError):
-                try:
-                    refund_credit(request.user)
-                except Exception:
-                    pass
-                logger.info("Client déconnecté lors du raffinement lettre (refine_cover_letter), crédit remboursé user_id=%s", request.user.pk)
-                messages.error(request, MSG_IA_SURCHARGE_NO_CREDIT)
-                return redirect('refine_cover_letter', match_id=match_id)
-            except FairUseExceeded:
-                try:
-                    refund_credit(request.user)
-                except Exception:
-                    pass
-                messages.warning(
-                    request,
-                    "L'IA chauffe ! Pause café obligatoire (limite de sécurité atteinte). Ne vous inquiétez pas, AUCUN crédit n'a été décompté."
-                )
-                return redirect('refine_cover_letter', match_id=match_id)
-            except GeminiServiceUnavailable:
-                try:
-                    refund_credit(request.user)
-                except Exception:
-                    pass
-                messages.error(request, MSG_IA_SURCHARGE_NO_CREDIT)
-                return redirect('refine_cover_letter', match_id=match_id)
-            except ValueError as e:
-                try:
-                    refund_credit(request.user)
-                except Exception:
-                    pass
-                messages.error(request, f"Erreur de validation : {str(e)}. Aucun crédit n'a été décompté.")
-                return redirect('refine_cover_letter', match_id=match_id)
-            except Exception as e:
-                try:
-                    refund_credit(request.user)
-                except Exception:
-                    pass
-                try:
-                    logger.exception("Erreur lors de l'amélioration de la lettre (refine_cover_letter) user_id=%s : %s", request.user.pk, e)
-                except Exception:
-                    pass
-                messages.error(request, MSG_IA_SURCHARGE_NO_CREDIT)
-                return redirect('refine_cover_letter', match_id=match_id)
+            match.save(update_fields=['cover_letter_content'])
+            messages.success(request, 'Votre lettre de motivation a été améliorée avec succès !')
+            return redirect('application_workspace', match_id=match_id)
     else:
         form = CoverLetterRefineForm()
     

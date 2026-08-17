@@ -1,0 +1,67 @@
+{% extends 'administration/base.html' %}
+{% load administration_extras %}
+
+{% block admin_title %}Journal d'audit{% endblock %}
+{% block page_title %}Journal d'audit{% endblock %}
+{% block page_subtitle %}Toutes les actions réalisées depuis le back-office{% endblock %}
+
+{% block admin_content %}
+
+<form method="get" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-5 flex flex-wrap items-end gap-3">
+    <div class="flex-1 min-w-[14rem]">
+        <label for="action" class="block text-xs font-medium uppercase tracking-wide text-slate-500 mb-1.5">Type d'action</label>
+        <select id="action" name="action" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#125484]">
+            <option value="">Toutes</option>
+            {% for value, label in actions %}
+            <option value="{{ value }}" {% if action == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="px-5 py-2.5 rounded-lg bg-[#125484] text-white text-sm font-semibold hover:bg-[#0d3f63] transition-colors">
+        <i class="fa-solid fa-filter mr-1.5"></i>Filtrer
+    </button>
+    {% if action %}
+    <a href="{% url 'administration:audit' %}" class="px-4 py-2.5 text-sm text-slate-500 hover:text-slate-800">Réinitialiser</a>
+    {% endif %}
+</form>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 md:px-6 py-3">Date</th>
+                    <th class="px-4 py-3">Administrateur</th>
+                    <th class="px-4 py-3">Action</th>
+                    <th class="px-4 py-3">Cible</th>
+                    <th class="px-4 py-3">Détails</th>
+                    <th class="px-4 md:px-6 py-3">IP</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for entry in page_obj %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 md:px-6 py-3 text-slate-600 whitespace-nowrap">{{ entry.created_at|date:"d/m/Y H:i:s" }}</td>
+                    <td class="px-4 py-3 text-slate-700">{{ entry.actor.email|default:"—" }}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">{{ entry.get_action_display }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600">{{ entry.target|default:"—" }}</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs max-w-md">
+                        {% for key, value in entry.details.items %}
+                        <span class="inline-block mr-2 whitespace-nowrap"><span class="font-semibold">{{ key }}</span> : {{ value }}</span>
+                        {% empty %}—{% endfor %}
+                    </td>
+                    <td class="px-4 md:px-6 py-3 font-mono text-xs text-slate-500">{{ entry.ip_address|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="px-6 py-12 text-center text-slate-500">Aucune entrée dans le journal.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'administration/_pagination.html' %}
+
+{% endblock %}

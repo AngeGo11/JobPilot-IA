@@ -84,9 +84,9 @@
                             <span class="text-sm font-medium text-slate-700">Score</span>
                             <div class="w-20 bg-slate-200 rounded-full h-2 overflow-hidden">
                                 <div class="bg-[#125484] h-2 rounded-full transition-all"
-                                     style="width: {{ match.score }}%"></div>
+                                     style="width: {{ match.display_score }}%"></div>
                             </div>
-                            <span class="text-sm font-bold text-slate-900 tabular-nums">{{ match.score }}%</span>
+                            <span class="text-sm font-bold text-slate-900 tabular-nums">{{ match.display_score }}%</span>
                         </div>
                     </div>
                 </div>
@@ -201,7 +201,7 @@
                             <button
                                     type="button"
                                     id="tinymce_toolbar_toggle"
-                                    class="absolute top-2 right-2 z-20 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
+                                    class="absolute top-2 right-2 z-20 p-2 text-slate-600 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
                                     title="Afficher/Masquer la barre d'outils"
                                     aria-label="Toggle toolbar"
                             >
@@ -368,9 +368,9 @@
                                 // Visual feedback: change button color when toolbar is active
                                 if (isVisible) {
                                     toggleBtn.classList.remove('text-[#125484]');
-                                    toggleBtn.classList.add('text-slate-400');
+                                    toggleBtn.classList.add('text-slate-500');
                                 } else {
-                                    toggleBtn.classList.remove('text-slate-400');
+                                    toggleBtn.classList.remove('text-slate-500');
                                     toggleBtn.classList.add('text-[#125484]');
                                 }
                             }
@@ -434,14 +434,9 @@
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
             // Appel AJAX à l'API
-            fetch(`{% url 'quick_refine_cover_letter' match.id %}`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-                .then(response => response.json())
+            // postAIJob : gère de façon transparente la réponse 202 et
+            // l'interrogation du statut jusqu'au résultat final.
+            window.postAIJob(`{% url 'quick_refine_cover_letter' match.id %}`, formData)
                 .then(data => {
                     if (data.success) {
                         if (typeof window.updateCreditBalance === 'function' && data.new_credits !== undefined) {
@@ -546,12 +541,7 @@
             const matchId = {{ match.id }};
             const formData = new FormData();
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-            fetch(`/matching/optimize-cv/${matchId}/`, {
-                method: 'POST',
-                body: formData,
-                headers: {'X-Requested-With': 'XMLHttpRequest'}
-            })
-                .then(response => response.json())
+            window.postAIJob(`/matching/optimize-cv/${matchId}/`, formData)
                 .then(data => {
                     loading.classList.add('hidden');
                     if (data.success && data.data) {
