@@ -225,8 +225,16 @@
             <div class="px-4 md:px-6 py-3">
                 <div class="flex flex-wrap items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 text-xs font-bold rounded {{ entry.level|log_level_style }}">{{ entry.level }}</span>
-                    <span class="text-xs text-slate-500">{{ entry.timestamp }}</span>
-                    <span class="text-xs font-mono text-slate-500">{{ entry.module }}:{{ entry.line }}</span>
+                    <span class="text-xs text-slate-500">{{ entry.last_seen_at|date:"d/m/Y H:i:s" }}</span>
+                    <span class="text-xs font-mono text-slate-500">{{ entry.module }}:{{ entry.line_number }}</span>
+                    {% if entry.is_recurring %}
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">
+                        {{ entry.occurrences }} occurrences
+                    </span>
+                    {% endif %}
+                    {% if entry.path %}
+                    <span class="text-xs font-mono text-slate-500">{{ entry.method }} {{ entry.path|truncatechars:44 }}</span>
+                    {% endif %}
                 </div>
                 <p class="text-sm text-slate-800 break-words">{{ entry.message }}</p>
                 {% if entry.traceback %}
