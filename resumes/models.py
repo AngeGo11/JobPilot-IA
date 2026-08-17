@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.conf import settings
+from pgvector.django import VectorField
 
 
 class Resume(models.Model):
@@ -35,6 +36,24 @@ class Resume(models.Model):
 
     # Infos extraites (ex: {"years_exp": 3, "level": "Junior"})
     parsed_data = models.JSONField("Métadonnées IA", default=dict, blank=True)
+
+    # --- Matching sémantique ---
+    embedding = VectorField(
+        "Vecteur sémantique",
+        dimensions=768,  # text-embedding-004
+        null=True,
+        blank=True,
+    )
+    embedding_fingerprint = models.CharField(
+        "Empreinte du texte vectorisé", max_length=64, blank=True
+    )
+    embedded_at = models.DateTimeField("Vectorisé le", null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            # Liste des CV d'un utilisateur, du plus récent au plus ancien.
+            models.Index(fields=["user", "-uploaded_at"], name="resume_user_uploaded_idx"),
+        ]
 
     def __str__(self):
         return f"{self.title} ({self.user.email})"

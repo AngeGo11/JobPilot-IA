@@ -16,4 +16,6 @@ urlpatterns = [
     path('optimize-cv/<int:match_id>/', views.optimize_cv_view, name='optimize_cv'),
     path('alert/<int:resume_id>/', views.toggle_job_alert, name='toggle_job_alert'),
     path('alert/<int:resume_id>/status/', views.job_alert_status, name='job_alert_status'),
+    # État d'un traitement IA lancé en tâche de fond.
+    path('taches/<str:task_id>/', views.ai_job_status, name='ai_job_status'),
 ]
