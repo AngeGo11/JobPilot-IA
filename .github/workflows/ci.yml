@@ -4,10 +4,19 @@ name: CI
 # attend le succès de celui-ci : sans cette barrière, un test cassé partait
 # directement en production.
 on:
+  # Toutes les branches SAUF main : sur main, la CI est appelée par le workflow
+  # de déploiement via `needs`. Sans cette exclusion, un push sur main
+  # déclencherait deux exécutions identiques.
   push:
-    branches: [main]
+    branches-ignore: [main]
   pull_request:
-  workflow_call:      # permet au workflow de déploiement de l'appeler
+  workflow_call:      # appelé par le workflow de déploiement
+
+# Un nouveau push sur la même branche annule l'exécution précédente : inutile
+# de payer des minutes pour valider un commit déjà remplacé.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
@@ -16,7 +25,10 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        # pgvector, et PG 16 comme en production : l'extension « vector » est
+        # requise par la migration matching.0010. Avec l'image postgres nue,
+        # `CREATE EXTENSION vector` échoue et la CI casse à chaque push.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: jobpilot_test
           POSTGRES_USER: jobpilot
